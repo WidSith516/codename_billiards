@@ -3,7 +3,7 @@
 > 更新：本次会话末｜最新提交：`f37a7b5`｜**门禁：GATES PASS，344/344，确定性哈希 `ac58b3fa1fa73896`**
 > 本文件是**单一入口**：想知道「现在有什么、能不能玩、下一步做什么」，读这一页即可。
 > 细节见 `策划案/REWIND_port_plan_v1.md`（主文档）、`策划案/REWIND_core_params_v1.md`（参数锁定表）、
-> `docs/KNOWN_PITFALLS.md`（已知陷阱与误判记录）。
+> `docs/KNOWN_PITFALLS.md`（已知陷阱与误判记录）、`godot/BAND_REPORT.md`（底部装饰带 + 并行会话保留声明）。
 
 ---
 
@@ -28,6 +28,7 @@
 | **Godot 物理内核** | ✅ **344/344 断言**，跨进程确定性一致，负向对照可失败 | `powershell -File godot\run_gates.ps1` |
 | **可玩表现层（M2）** | ✅ **可玩**：瞄准预测、时间分层轨迹、回溯可视化、scrubbing、调试叠层 | `godot/M2_REPORT.md` + 7 张截图 |
 | **关卡产线** | ✅ 容差 ±2.42–2.73°，袋口余量 24 px，无开局重叠 | `godot/LEVELS.md`、`tools/author/` |
+| **上下装饰带（倒带波形）** | ✅ 稳态金正弦 ⇄ 倒带反向+RGB分离+颜色拉伸；两条镜像同源；门禁哈希未变 | `godot/BAND_REPORT.md` + `godot/evidence/band_*.png` |
 | 内容量 | ❌ **仅 4 关，且是同一构造家族** | `godot/levels/README.md` |
 | 人工试玩 | ❌ **从未发生** | — |
 
@@ -106,6 +107,10 @@
 node tools\h5harness\run_tests.mjs
 node tools\h5harness\run_balance.mjs
 python tools\analysis\const_audit.py
+
+# 底部装饰带：3 张钉相位捕获 + 2 张实机捕获 + 数值比较（需要 d3d12）
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\analysis\capture_band.ps1
+tools\godot\godot_console.exe --headless --path godot res://scenes/play.tscn -- --selftest=band
 
 # Godot 内核门禁：344/344 + 跨进程确定性 + 负向对照（必须 exit 0）
 powershell -NoProfile -ExecutionPolicy Bypass -File godot\run_gates.ps1
