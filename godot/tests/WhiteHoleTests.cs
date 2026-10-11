@@ -141,29 +141,13 @@ public static class WhiteHoleTests
         t.Check("W03 evidence", true, $"speed={w.Cue.Speed:F0}px/s");
     }
 
-    /// <summary>The shipped level carries a white hole and still clears.</summary>
-    public static void W04_ShippedLevelHasAWhiteHole(TestRunner t)
+    /// <summary>The first level uses its original two-object layout without an energy zone.</summary>
+    public static void W04_ShippedLevelHasNoWhiteHole(TestRunner t)
     {
-        t.Section("W04 - the shipped level carries a white hole");
+        t.Section("W04 - the shipped level has no white hole");
 
         var lvl = LevelLoader.Load(LevelLoader.LevelDirectory + "/corridor.json");
-        t.CheckAtLeast("the shipped level declares a white hole", lvl.WhiteHoles.Count, 1);
-
-        var peak = 0.0;
-        for (var i = 0; i < lvl.WhiteHoles.Count; i++)
-        {
-            var h = lvl.WhiteHoles[i];
-            t.Check("hole " + i + " has a positive radius", h.Radius > 0.0, "r=" + h.Radius.ToString("F0"));
-            t.Check("hole " + i + " is inside the table box",
-                h.Center.X > lvl.TableLeft && h.Center.X < lvl.TableRight
-                && h.Center.Y > lvl.TableTop && h.Center.Y < lvl.TableBottom,
-                $"({h.Center.X:F0},{h.Center.Y:F0})");
-            t.Check("hole " + i + " gains energy", h.Gain > 1.0, "gain=" + h.Gain.ToString("F2"));
-            t.Check("hole " + i + " respects the speed cap", h.MaxSpeed <= lvl.Config.SpeedCap + 1e-9,
-                $"max={h.MaxSpeed:F0} cap={lvl.Config.SpeedCap:F0}");
-            if (h.MaxSpeed > peak) peak = h.MaxSpeed;
-        }
-
-        t.Check("W04 evidence", true, $"holes={lvl.WhiteHoles.Count} maxSpeed={peak:F0}");
+        t.Check("the shipped level has no white hole", lvl.WhiteHoles.Count == 0);
+        t.Check("the shipped level has two object balls", new World(lvl).ObjectBallCount == 2);
     }
 }

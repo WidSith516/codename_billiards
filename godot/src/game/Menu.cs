@@ -314,9 +314,8 @@ public partial class Menu : Node2D
         if (!entry.Unlocked) return;
 
         SelectedLevelId = entry.Id;
-        // The tutorial bubble shows on the first level the player ever opens, and only if they have
-        // not already cleared anything (i.e. a returning player is not re-taught).
-        TutorialPending = LevelCatalog.TotalStars() == 0;
+        // Automatic coaching is temporarily disabled.
+        TutorialPending = false;
         GetTree().ChangeSceneToFile("res://scenes/play.tscn");
     }
 

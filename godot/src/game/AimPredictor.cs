@@ -108,17 +108,37 @@ public static class AimPredictor
         public bool ShotUsed;
         public bool Won;
         public Prediction Value;
+        private World _world;
+        private int _shotsUsed;
+        private bool _frozen;
+        private bool _rewinding;
+        private Vec2[] _positions = Array.Empty<Vec2>();
+        private Vec2[] _velocities = Array.Empty<Vec2>();
+        private bool[] _pocketed = Array.Empty<bool>();
 
         public bool Matches(World w, double angle, double power)
         {
-            return Value != null
-                   && Value.Valid
+            if (!(Value != null
+                   && ReferenceEquals(_world, w)
                    && HistoryCount == w.Cue.History.Count
-                   && Tick == w.Tick
+                   // Before the first strike, an unchanged resting world has the same future.
+                   // Later shots retain the tick key because white-hole cooldowns depend on time.
+                   && (Tick == w.Tick || (w.Tick > Tick && _shotsUsed == 0 && w.AtRest()))
+                   && _shotsUsed == w.ShotsUsed
+                   && _frozen == w.Frozen
+                   && _rewinding == w.Rewinding
                    && ShotUsed == w.ShotUsed
                    && Won == w.Won
                    && Math.Abs(Angle - angle) < 1e-9
-                   && Math.Abs(Power - power) < 1e-9;
+                   && Math.Abs(Power - power) < 1e-9)) return false;
+
+            for (var i = 0; i < w.Balls.Length; i++)
+            {
+                var ball = w.Balls[i];
+                if (!ball.Position.Equals(_positions[i]) || !ball.Velocity.Equals(_velocities[i])
+                    || ball.Pocketed != _pocketed[i]) return false;
+            }
+            return true;
         }
 
         public void Store(World w, double angle, double power, Prediction p)
@@ -130,6 +150,22 @@ public static class AimPredictor
             ShotUsed = w.ShotUsed;
             Won = w.Won;
             Value = p;
+            _world = w;
+            _shotsUsed = w.ShotsUsed;
+            _frozen = w.Frozen;
+            _rewinding = w.Rewinding;
+            if (_positions.Length != w.Balls.Length)
+            {
+                _positions = new Vec2[w.Balls.Length];
+                _velocities = new Vec2[w.Balls.Length];
+                _pocketed = new bool[w.Balls.Length];
+            }
+            for (var i = 0; i < w.Balls.Length; i++)
+            {
+                _positions[i] = w.Balls[i].Position;
+                _velocities[i] = w.Balls[i].Velocity;
+                _pocketed[i] = w.Balls[i].Pocketed;
+            }
         }
 
         public void Invalidate() => Value = null;
@@ -221,12 +257,15 @@ public static class AimPredictor
 
             prevCue = cuePos;
             prevVel = cueVel;
-            prevObjectVel = SnapshotObjectVelocities(ghost);
+            for (var i = 0; i < ghost.Balls.Length; i++) prevObjectVel[i] = ghost.Balls[i].Velocity;
+
+            // A weak shot may stop without contacting anything. There is no remaining path to trace.
+            if (ghost.AtRest() || ghost.Won || ghost.Frozen) break;
         }
 
         // Where does the cue stop? Continue the same clone: the clone is the future.
         var extra = 0;
-        while (extra < maxSteps * 4 && !ghost.Won)
+        while (extra < maxSteps * 4 && !ghost.Won && !ghost.Frozen && !ghost.AtRest())
         {
             ghost.Step();
             extra++;

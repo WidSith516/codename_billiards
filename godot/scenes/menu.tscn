@@ -1,4 +1,4 @@
-[gd_scene load_steps=2 format=3 uid="uid://drewindmenu0001"]
+[gd_scene format=3 uid="uid://gyk5g3ny3rum"]
 
 [ext_resource type="Script" path="res://src/game/Menu.cs" id="1_menu"]
 

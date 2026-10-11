@@ -72,6 +72,7 @@ public partial class Play : Node2D
 
     private Font _font;
     private Texture2D _tableTexture;
+    private Node2D _tableBackground;
     private double _accumulator;
     private double _wallClock;
 
@@ -130,6 +131,7 @@ public partial class Play : Node2D
     // ---------------------------------------------------------------- timing
     private readonly List<double> _frameMs = new List<double>();
     private double _lastFrameAt;
+    private double _lastFrameMs;
     private double _drawMs;
     private double _simMs;
     private double _maxFrameMs;
@@ -291,6 +293,17 @@ public partial class Play : Node2D
         var levelPath = levelId.StartsWith("res://") ? levelId : $"res://levels/{levelId}.json";
         _level = LevelLoader.Load(levelPath);
         _world = new World(_level);
+
+        // Godot retains this draw list. The starfield and rails only need to be submitted once.
+        _tableBackground = new Node2D { Name = "TableBackground", ShowBehindParent = true };
+        _tableBackground.Draw += () =>
+        {
+            _tableBackground.DrawRect(new Rect2(-600, -600, 2400, 2000), Palette.RoomBg);
+            var inner = new Rect2((float)_level.TableLeft, (float)_level.TableTop,
+                (float)_level.TableWidth, (float)_level.TableHeight);
+            if (Palette.ActiveTheme == 0) DrawSpaceTable(inner, _tableBackground);
+        };
+        AddChild(_tableBackground);
 
         // The event-sound differencing baseline. It MUST be set here, the moment the world exists,
         // and not down with the audio setup: every --selftest / --trace-shot branch below returns
@@ -1019,7 +1032,7 @@ public partial class Play : Node2D
     private void PrepareBench(string mode)
     {
         GD.Print($"[play] bench={mode}");
-        if (mode == "idle")
+        if (mode == "idle" || mode == "aim-sweep")
         {
             SetAim(7.0, 170.0);
             return;
@@ -1089,10 +1102,19 @@ public partial class Play : Node2D
         UpdateTutorial();
         PlayEventSounds();
         _simMs = (Time.GetTicksUsec() - t0) / 1000.0;
+    }
 
+    public override void _Process(double delta)
+    {
+        if (_world == null) return;
+
+        if (_benchMode == "aim-sweep") SetAim(7.0 + 15.0 * Math.Sin(_frames * 0.1), 170.0);
+
+        // Prepare presentation once per rendered frame, after all fixed physics ticks. Redrawing
+        // from _PhysicsProcess rebuilds the entire canvas up to eight times during a slow frame.
         // Live telemetry. Absence of this was half of why two dead-main-loop bugs survived: in live
         // mode the game printed nothing at all, so there was no signal to read.
-        if (_stateName == null && _frames > 0 && _frames % 120 == 0)
+        if (_verbose && _stateName == null && _frames > 0 && _frames % 120 == 0)
         {
             GD.Print($"[live] frame={_frames} tick={_world.Tick} simT={_world.Time:F2} " +
                      $"cue=({_world.Cue.Position.X:F0},{_world.Cue.Position.Y:F0}) v={_world.Cue.Speed:F0} " +
@@ -1125,15 +1147,12 @@ public partial class Play : Node2D
         // The band must be advanced AFTER the steps above, so the phase delta it reads is this
         // frame's real rewind and not the previous frame's remainder.
         UpdateBand(delta);
-    }
-
-    public override void _Process(double delta)
-    {
         var now = Time.GetTicksUsec() / 1000.0;
         if (_lastFrameAt > 0.0)
         {
             var ms = now - _lastFrameAt;
-            _frameMs.Add(ms);
+            _lastFrameMs = ms;
+            if (_outPath != null || _benchMode != null) _frameMs.Add(ms);
             if (ms > _maxFrameMs) _maxFrameMs = ms;
         }
 
@@ -1789,6 +1808,7 @@ public partial class Play : Node2D
 
     private void DrawRoom()
     {
+        if (_tableBackground != null) return;
         // Node coordinates, scaled into the canvas by ViewScale. The rects are sized so the visible
         // window (0..928 x 0..500 at scale 1.12) is fully covered.
         //
@@ -1824,7 +1844,7 @@ public partial class Play : Node2D
         // character comes from.
         if (Palette.ActiveTheme == 0)
         {
-            DrawSpaceTable(inner);
+            if (_tableBackground == null) DrawSpaceTable(inner, this);
             DrawPockets();
             DrawWhiteHoles();
             return;
@@ -1898,17 +1918,17 @@ public partial class Play : Node2D
     /// The physics box is the CLOTH rectangle: the rail band is drawn strictly outside it, so the visible
     /// cushion edge is the same line the kernel bounces off.
     /// </summary>
-    private void DrawSpaceTable(Rect2 inner)
+    private void DrawSpaceTable(Rect2 inner, CanvasItem ci)
     {
         // ---- rails, outside the physics box
         const float railThick = 26.0f;
         var outer = inner.Grow(railThick);
-        DrawRect(outer, Palette.RailShadow);
-        DrawRect(outer.Grow(-3.0f), Palette.RailWood);
-        DrawRect(outer.Grow(-3.0f), Palette.RailLight, false, 1.0f);
+        ci.DrawRect(outer, Palette.RailShadow);
+        ci.DrawRect(outer.Grow(-3.0f), Palette.RailWood);
+        ci.DrawRect(outer.Grow(-3.0f), Palette.RailLight, false, 1.0f);
 
         // ---- cloth
-        DrawRect(inner, Palette.Felt);
+        ci.DrawRect(inner, Palette.Felt);
 
         // Nebula wash: a few large, very faint discs so the void is not a flat fill. Fixed positions.
         var nebula = new[]
@@ -1919,7 +1939,7 @@ public partial class Play : Node2D
         };
         foreach (var (nx, ny, nr, col) in nebula)
         {
-            DrawCircle(new Vector2(inner.Position.X + inner.Size.X * nx, inner.Position.Y + inner.Size.Y * ny),
+            ci.DrawCircle(new Vector2(inner.Position.X + inner.Size.X * nx, inner.Position.Y + inner.Size.Y * ny),
                 inner.Size.X * nr, col, true, -1.0f, true);
         }
 
@@ -1950,23 +1970,23 @@ public partial class Play : Node2D
                 var y = inner.Position.Y + (float)(NextUnit() * inner.Size.Y);
                 // A few stars are warm, so the field is not one flat colour.
                 var col = NextUnit() < 0.12 ? warm : star;
-                DrawCircle(new Vector2(x, y), radius, new Color(col.R, col.G, col.B, alpha), true, -1.0f, true);
+                ci.DrawCircle(new Vector2(x, y), radius, new Color(col.R, col.G, col.B, alpha), true, -1.0f, true);
             }
         }
 
         // ---- cushion bevel, inside the rail band but outside the cloth
-        DrawRect(inner.Grow(8.0f), Palette.CushionLight, false, 3.0f);
-        DrawRect(inner, Palette.CushionInner, false, 2.0f);
+        ci.DrawRect(inner.Grow(8.0f), Palette.CushionLight, false, 3.0f);
+        ci.DrawRect(inner, Palette.CushionInner, false, 2.0f);
 
         // ---- faint quarter markers, so angles can still be judged
         for (var i = 1; i < 4; i++)
         {
             var x = inner.Position.X + inner.Size.X * i / 4.0f;
-            DrawLine(new Vector2(x, inner.Position.Y), new Vector2(x, inner.Position.Y + 10.0f), Palette.FeltGrid, 1.0f);
-            DrawLine(new Vector2(x, inner.End.Y - 10.0f), new Vector2(x, inner.End.Y), Palette.FeltGrid, 1.0f);
+            ci.DrawLine(new Vector2(x, inner.Position.Y), new Vector2(x, inner.Position.Y + 10.0f), Palette.FeltGrid, 1.0f);
+            ci.DrawLine(new Vector2(x, inner.End.Y - 10.0f), new Vector2(x, inner.End.Y), Palette.FeltGrid, 1.0f);
             var y = inner.Position.Y + inner.Size.Y * i / 4.0f;
-            DrawLine(new Vector2(inner.Position.X, y), new Vector2(inner.Position.X + 10.0f, y), Palette.FeltGrid, 1.0f);
-            DrawLine(new Vector2(inner.End.X - 10.0f, y), new Vector2(inner.End.X, y), Palette.FeltGrid, 1.0f);
+            ci.DrawLine(new Vector2(inner.Position.X, y), new Vector2(inner.Position.X + 10.0f, y), Palette.FeltGrid, 1.0f);
+            ci.DrawLine(new Vector2(inner.End.X - 10.0f, y), new Vector2(inner.End.X, y), Palette.FeltGrid, 1.0f);
         }
     }
 
@@ -2273,7 +2293,7 @@ public partial class Play : Node2D
             Trail = _trail,
             RewindVis = _rewindVis,
             Aim = _aimCache.Value,
-            FrameMs = _frameMs.Count > 0 ? _frameMs[_frameMs.Count - 1] : 0.0,
+            FrameMs = _lastFrameMs,
             MaxFrameMs = _maxFrameMs,
             DrawMs = _drawMs,
             SimMs = _simMs,
@@ -2634,6 +2654,25 @@ public partial class Play : Node2D
         GD.Print($"[selftest] prediction cases={cases} worstDeviationPx={worst:E3} ballContacts={ballContacts} " +
                  $"railContacts={railContacts} predictedRest={stops}");
         Check("prediction deviation is zero (exact, not approximate)", worst <= 1e-9, $"worst={worst:E3}px");
+
+        // Clock-only updates must reuse a preview; real state/input changes must invalidate it.
+        var idle = new World(_level);
+        var cache = new AimPredictor.Cache();
+        cache.Store(idle, 7.0, 170.0, AimPredictor.Trace(idle, 7.0, 170.0));
+        idle.RunSteps(120);
+        Check("idle physics ticks retain the aim cache", cache.Matches(idle, 7.0, 170.0), $"tick={idle.Tick}");
+        Check("angle and power changes invalidate the aim cache",
+            !cache.Matches(idle, 8.0, 170.0) && !cache.Matches(idle, 7.0, 169.0), "changed input");
+        Check("a different world cannot reuse the aim cache",
+            !cache.Matches(idle.Clone(), 7.0, 170.0), "world identity");
+        cache.Store(idle, 7.0, 170.0, cache.Value);
+        idle.Balls[1].Position += new Vec2(1.0, 0.0);
+        Check("object movement invalidates the aim cache", !cache.Matches(idle, 7.0, 170.0), "moved object");
+        idle.Reset();
+        Check("reset invalidates the aim cache", !cache.Matches(idle, 7.0, 170.0), $"tick={idle.Tick}");
+        var weak = AimPredictor.Trace(idle, 0.0, idle.Config.MinPower);
+        Check("a resting prediction stops before the 4000-step limit",
+            weak.Steps < 4000, $"steps={weak.Steps}");
     }
 
     /// <summary>
