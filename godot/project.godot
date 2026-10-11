@@ -1,5 +1,5 @@
 ; REWIND — one-shot time-rewind billiards.
-; Milestone M1: deterministic physics kernel (no menus, no level select, no audio).
+; Milestone M1: deterministic physics kernel. Milestone M2: playable presentation layer.
 ;
 ; HAND-AUTHORED. In this environment Godot does NOT generate project.godot/.csproj/.sln
 ; headlessly: --build-solutions implies --editor and hangs on an interactive prompt.
@@ -10,10 +10,11 @@ config_version=5
 [application]
 
 config/name="REWIND"
-config/description="One-shot time-rewind billiards — M1 physics kernel."
-; The main scene is the playable kernel view. A headless run must also exit 0
-; (`--headless --path godot --quit`), which any Node-based main scene satisfies.
-run/main_scene="res://scenes/kernel.tscn"
+config/description="One-shot time-rewind billiards — M2 playable presentation layer."
+; The main scene is the playable view (M2). A headless run must still exit 0
+; (`--headless --path godot --quit`), which any Node-based main scene satisfies;
+; scenes/kernel.tscn (the M1 minimal view) is kept and still runnable.
+run/main_scene="res://scenes/play.tscn"
 config/features=PackedStringArray("4.7", "C#", "GL Compatibility")
 ; Harmless safety net for captured-to-file stdout (measured as not required in 4.7.2 here).
 run/flush_stdout_on_print=true

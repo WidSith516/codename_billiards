@@ -172,11 +172,13 @@ public static class Program
             var ok = Geo.PotReachability(level, pos, cut.Normal, pc, Geo.PocketR, out var why);
             Console.WriteLine($"  debugPot reachable={ok} {why}");
         }
+        var options = Search.ForwardOptions(recipe, take: 12);
         Console.WriteLine($"  forward options: {(options.Count == 0 ? "none" : "")}");
         foreach (var o in options)
             Console.WriteLine($"    pocket {Geo.PocketName(o.Pocket)} arc {Geo.N(o.Arc)} predictedWindow {Geo.N(o.Window)} deg");
 
-        var solveOptions = new SolveOptions { Powers = recipe.Powers };        if (Num("trace", 0) > 0) solveOptions.Trace = Console.WriteLine;
+        var solveOptions = new SolveOptions { Powers = recipe.Powers };
+        if (Num("trace", 0) > 0) solveOptions.Trace = Console.WriteLine;
         var sol = Metrics.Solve(level, recipe.AimDeg, solveOptions);
         if (sol == null)
         {

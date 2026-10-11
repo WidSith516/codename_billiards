@@ -136,7 +136,7 @@ public static class Hud
     /// </summary>
     private static void DrawLeftPanel(CanvasItem ci, Font font, Model m)
     {
-        var rect = new Rect2(6, 36, 246, 518);
+        var rect = new Rect2(6, 34, 246, 476);
         ci.DrawRect(rect, Palette.PanelBg);
         ci.DrawRect(rect, Palette.PanelEdge, false, 1.0f);
 
@@ -152,14 +152,14 @@ public static class Hud
         DrawPowerMeter(ci, font, x, 104, m);
 
         // --- REWIND BUDGET ------------------------------------------------- y 160 .. 206
-        Text(ci, font, x, 160, "REWIND BUDGET", 12, Palette.TextDim);
+        Text(ci, font, x, 168, "REWIND BUDGET", 12, Palette.TextDim);
         var segMax = m.RewindSegmentsMax > 0 ? m.RewindSegmentsMax.ToString(CultureInfo.InvariantCulture) : "inf";
-        Text(ci, font, x, 177, $"segments {m.RewindSegmentsUsed} / {segMax}", 12,
+        Text(ci, font, x, 185, $"segments {m.RewindSegmentsUsed} / {segMax}", 12,
             m.RewindSegmentsMax > 0 && m.RewindSegmentsUsed >= m.RewindSegmentsMax ? Palette.Bad : Palette.TextMain);
-        DrawBudgetBar(ci, font, x, 184, m);
+        DrawBudgetBar(ci, font, x, 192, m);
 
         // --- TRAIL --------------------------------------------------------- y 216 .. 285
-        Text(ci, font, x, 218, "TRAIL", 12, Palette.TextDim);
+        Text(ci, font, x, 230, "TRAIL", 12, Palette.TextDim);
         var rows = new (string Key, string Value, Color C)[]
         {
             ("points", m.HistoryEntries.ToString(CultureInfo.InvariantCulture), Palette.TextMain),
@@ -167,7 +167,7 @@ public static class Hud
             ("turn-backs", m.TurnBacks.ToString(CultureInfo.InvariantCulture), Palette.TurnMarker),
             ("turn-forwards", m.TurnForwards.ToString(CultureInfo.InvariantCulture), Palette.TurnForwardMarker),
         };
-        var ry = 235.0f;
+        var ry = 247.0f;
         foreach (var row in rows)
         {
             Text(ci, font, x, ry, row.Key, 12, Palette.TextDim);
@@ -183,9 +183,9 @@ public static class Hud
         // --- transport hint ------------------------------------------------ y 306 .. 322
         if (m.ShotUsed && !m.Won)
         {
-            Text(ci, font, x, 300, m.Rewinding ? (m.Scrubbing ? "P  release at marker" : "P  pause + scrub") : "hold R  rewind",
+            Text(ci, font, x, 312, m.Rewinding ? (m.Scrubbing ? "P  release at marker" : "P  pause + scrub") : "hold R  rewind",
                 12, Palette.RewindCue);
-            Text(ci, font, x, 316, m.Rewinding ? "release R  resume" : "release R  keep stored v", 12, Palette.TextDim);
+            Text(ci, font, x, 328, m.Rewinding ? "release R  resume" : "release R  keep stored v", 12, Palette.TextDim);
         }
 
         // --- CONTROLS, pinned to the panel bottom --------------------------- y 436 .. 540
@@ -210,10 +210,10 @@ public static class Hud
 
         if (!string.IsNullOrEmpty(m.Message))
         {
-            var rect2 = new Rect2(258, 496, 776, 58);
+            var rect2 = new Rect2(262, 494, 700, 50);
             ci.DrawRect(rect2, new Color(0.03f, 0.05f, 0.05f, 0.92f));
             ci.DrawRect(rect2, m.MessageColor, false, 2.0f);
-            Text(ci, font, rect2.Position.X + 12, rect2.Position.Y + 35, m.Message, 15, m.MessageColor);
+            Text(ci, font, rect2.Position.X + 12, rect2.Position.Y + 31, m.Message, 14, m.MessageColor);
         }
     }
 
@@ -228,12 +228,12 @@ public static class Hud
         var blocks = new (string Name, float Top, float Bottom)[]
         {
             ("strike", 50, 81),
-            ("power", 104, 150),
-            ("budget", 160, 206),
-            ("trail", 218, 287),
-            ("transport", 300, 316),
-            ("controls", 36 + 518 - 108 - 10, 36 + 518 - 108 + 21 + 5 * 14),
-            ("message", 496, 552),
+            ("power", 104, 154),
+            ("budget", 168, 214),
+            ("trail", 230, 299),
+            ("transport", 312, 328),
+            ("controls", 34 + 476 - 108 - 10, 34 + 476 - 108 + 21 + 5 * 14),
+            ("message", 494, 544),
         };
         for (var i = 0; i < blocks.Length; i++)
         {
@@ -309,7 +309,7 @@ public static class Hud
 
     public static void DrawDebug(CanvasItem ci, Font font, Model m)
     {
-        var rect = new Rect2(700, 36, 334, 518);
+        var rect = new Rect2(696, 34, 268, 476);
         ci.DrawRect(rect, new Color(0.02f, 0.03f, 0.035f, 0.92f));
         ci.DrawRect(rect, Palette.SessionStripe, false, 1.0f);
 

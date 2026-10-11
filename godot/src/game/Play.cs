@@ -36,6 +36,9 @@ public partial class Play : Node2D
     // ------------------------------------------------------------------ config
     private const int MaxStepsPerFrame = 8;
 
+    /// <summary>Playfield scale: the table geometry comes from the level, this only fills the canvas.</summary>
+    private const float ViewScale = 1.045f;
+
     private World _world;
     private LevelData _level;
     private readonly AimPredictor.Cache _aimCache = new AimPredictor.Cache();
@@ -95,6 +98,14 @@ public partial class Play : Node2D
     {
         _font = ThemeDB.FallbackFont;
 
+        // The table is 910x434 px inside a 1040x560 canvas, which left a dead strip at the bottom and
+        // made the playfield read cramped. Scaling the whole view (kernel coordinates are untouched)
+        // fills the canvas without cropping playable geometry: at 1.045 the rails span
+        // 25*1.045=26 .. 1014*1.045=1060 horizontally and 20*1.045=21 .. 505*1.045=528 vertically, so
+        // only decorative wood falls outside the frame. The HUD is drawn in node coordinates and its
+        // panels were resized for this scale.
+        Scale = new Vector2(ViewScale, ViewScale);
+
         var levelId = Arg("--level=") ?? LevelIds.Corridor;
         _outPath = Arg("--out=");
         _stateName = Arg("--state=") ?? "aim";
@@ -109,7 +120,16 @@ public partial class Play : Node2D
         var levelPath = levelId.StartsWith("res://") ? levelId : $"res://levels/{levelId}.json";
         _level = LevelLoader.Load(levelPath);
         _world = new World(_level);
-        _trail = new TimelineTrail(this) { ShowTrail = !HasArg("--no-trail"), DebugDraw = HasArg("--trace-draw") };
+        _trail = new TimelineTrail(this)
+        {
+            ShowTrail = !HasArg("--no-trail"),
+            ShowGhost = !HasArg("--no-ghost"),
+            ShowSessionStripes = !HasArg("--no-stripes"),
+            ShowTurnMarkers = !HasArg("--no-turns"),
+            HaloPass = !HasArg("--no-halo"),
+            ChunkVertices = IntArg("--chunk=", 2048),
+            DebugDraw = HasArg("--trace-draw"),
+        };
 
         GD.Print($"[play] level={_level.Id} name=\"{_level.Name}\" balls={_world.Balls.Length} " +
                  $"objectBalls={_world.ObjectBallCount} pockets={_level.Pockets.Count}");
@@ -121,6 +141,13 @@ public partial class Play : Node2D
                  $"ticks={ProjectSettings.GetSetting("physics/common/physics_ticks_per_second", -1)} " +
                  $"textureFilter={ProjectSettings.GetSetting("rendering/textures/canvas_textures/default_texture_filter", -1)}");
         GD.Print("[play] KERNEL_VIEW_READY");
+
+        if (_selfTestMode == "gradient")
+        {
+            // Needs real frames, so it runs from _Process rather than here.
+            StartGradientCheck();
+            return;
+        }
 
         if (_selfTestMode != null)
         {
@@ -594,6 +621,19 @@ public partial class Play : Node2D
         _lastFrameAt = now;
         _frames++;
 
+        // The gradient check reads back the framebuffer, so it must run in a real (non-headless)
+        // frame, after the trail has actually been drawn at least once.
+        if (_gradientCheckPending && _frames >= 6)
+        {
+            _gradientCheckPending = false;
+            _freezeWorld = true;
+            RunGradientCheck();
+            GD.Print($"=== M2 selftest summary: {_checksRun - _checksFailed}/{_checksRun} checks passed ===");
+            GD.Print(_checksFailed == 0 ? "M2 SELFTEST PASS" : $"M2 SELFTEST FAIL: {_checksFailed} check(s) failed");
+            GetTree().Quit(_checksFailed == 0 ? 0 : 1);
+            return;
+        }
+
         if (_outPath == null || _captureQuit) return;
         if (_frames < Math.Max(_minFrames, _captureFrames)) return;
 
@@ -970,14 +1010,24 @@ public partial class Play : Node2D
         if (_debugOverlay) Hud.DrawDebug(this, _font, BuildHudModel());
 
         _drawMs = (Time.GetTicksUsec() - t0) / 1000.0;
+        if (HasArg("--trace-draw") && _frames % 60 == 0)
+        {
+            GD.Print($"[draw] frame={_frames} authored={_drawMs:F2}ms verts={_trail.CachedVertexCount} " +
+                     $"drawCalls={Performance.GetMonitor(Performance.Monitor.RenderTotalDrawCallsInFrame)} " +
+                     $"prims={Performance.GetMonitor(Performance.Monitor.RenderTotalPrimitivesInFrame)} " +
+                     $"objs={Performance.GetMonitor(Performance.Monitor.RenderTotalObjectsInFrame)} " +
+                     $"proc={Performance.GetMonitor(Performance.Monitor.TimeProcess) * 1000.0:F2}ms");
+        }
         _authoredVertexCounts = _trail.CachedVertexCount;
     }
 
     private void DrawRoom()
     {
-        DrawRect(new Rect2(0, 0, 1040, 560), Palette.RoomBg);
-        DrawRect(new Rect2(20, 16, 1000, 528), Palette.RailWood);
-        DrawRect(new Rect2(30, 26, 980, 508), Palette.RailInner);
+        // Node coordinates, scaled into the canvas by ViewScale. The rects are sized so the visible
+        // window (0..928 x 0..500 at scale 1.12) is fully covered.
+        DrawRect(new Rect2(0, 0, 940, 505), Palette.RoomBg);
+        DrawRect(new Rect2(18, 14, 900, 478), Palette.RailWood);
+        DrawRect(new Rect2(27, 24, 882, 460), Palette.RailInner);
     }
 
     private void DrawTable()
@@ -1228,6 +1278,74 @@ public partial class Play : Node2D
         var problems = Hud.PanelLayoutSelfCheck();
         Check("HUD blocks are ordered, on-screen and non-overlapping", problems.Count == 0,
             problems.Count == 0 ? "7 blocks 36..554 on a 1040x560 canvas" : string.Join("; ", problems));
+    }
+
+    /// <summary>
+    /// Prepare a long trail and let the frame loop sample the RENDERED pixels along it. The colour
+    /// gradient is a visual claim, so it is checked against the framebuffer rather than against the
+    /// colour array the view thinks it submitted.
+    /// </summary>
+    private void StartGradientCheck()
+    {
+        SetAim(7.0, 170.0);
+        FireShot();
+        Settle();
+        _gradientCheckPending = true;
+        GD.Print($"[gradient] playfield scaled to {ViewScale}x; trail vertices={_world.Cue.History.Count}");
+    }
+
+    private bool _gradientCheckPending;
+
+    /// <summary>Sample the framebuffer along the trail and report the old-to-new luminance ramp.</summary>
+    private void RunGradientCheck()
+    {
+        var image = GetViewport().GetTexture().GetImage();
+        if (image == null)
+        {
+            Check("gradient check could obtain the framebuffer", false, "GetImage returned null");
+            return;
+        }
+
+        var samples = _world.Cue.History.Count;
+        var count = 12;
+        var lumas = new double[count];
+        var detail = "";
+        for (var i = 0; i < count; i++)
+        {
+            // Old end first, new end last.
+            var idx = (int)Math.Round((double)i / (count - 1) * (samples - 1));
+            var p = _world.Cue.History[idx].Position;
+            var px = Math.Clamp((int)Math.Round(p.X * ViewScale), 0, image.GetWidth() - 1);
+            var py = Math.Clamp((int)Math.Round(p.Y * ViewScale), 0, image.GetHeight() - 1);
+
+            // The drawn line is ~2 px wide, so take the brightest pixel in a small neighbourhood.
+            var best = 0.0;
+            for (var dy = -3; dy <= 3; dy++)
+            {
+                for (var dx = -3; dx <= 3; dx++)
+                {
+                    var x = px + dx;
+                    var y = py + dy;
+                    if (x < 0 || y < 0 || x >= image.GetWidth() || y >= image.GetHeight()) continue;
+                    var c = image.GetPixel(x, y);
+                    var l = 0.2126 * c.R + 0.7152 * c.G + 0.0722 * c.B;
+                    if (l > best) best = l;
+                }
+            }
+
+            lumas[i] = best;
+            detail += $"{best:F3} ";
+        }
+
+        var oldest = (lumas[0] + lumas[1] + lumas[2]) / 3.0;
+        var newest = (lumas[count - 1] + lumas[count - 2] + lumas[count - 3]) / 3.0;
+        GD.Print($"[gradient] samples={samples} luminance(old->new)= {detail}");
+        GD.Print($"[gradient] oldestAvg={oldest:F4} newestAvg={newest:F4} ratio={(newest / Math.Max(1e-9, oldest)):F2}");
+
+        Check("the drawn trail is measurably brighter at the newest end", newest > oldest * 1.25,
+            $"oldest={oldest:F4} newest={newest:F4} ratio={(newest / Math.Max(1e-9, oldest)):F2}");
+        Check("both ends are drawn (neither is background)", oldest > 0.12 && newest > 0.12,
+            $"oldest={oldest:F4} newest={newest:F4}");
     }
 
     /// <summary>Print per-step cue state so a prediction mismatch can be attributed, not guessed.</summary>

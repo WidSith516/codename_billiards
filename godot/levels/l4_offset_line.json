@@ -1,0 +1,179 @@
+{
+  "id": "l4_offset_line",
+  "name": "corridor offset off the pocket axis: the strike-potted ball takes a real cut",
+  "table": {
+    "left": 65,
+    "right": 975,
+    "top": 63,
+    "bottom": 497
+  },
+  "ballRadius": 12.2,
+  "pockets": [
+    {
+      "x": 65,
+      "y": 63,
+      "r": 24
+    },
+    {
+      "x": 520,
+      "y": 63,
+      "r": 24
+    },
+    {
+      "x": 975,
+      "y": 63,
+      "r": 24
+    },
+    {
+      "x": 65,
+      "y": 497,
+      "r": 24
+    },
+    {
+      "x": 520,
+      "y": 497,
+      "r": 24
+    },
+    {
+      "x": 975,
+      "y": 497,
+      "r": 24
+    }
+  ],
+  "balls": [
+    {
+      "id": 0,
+      "type": "cue",
+      "x": 505,
+      "y": 275
+    },
+    {
+      "id": 1,
+      "type": "object",
+      "x": 506.7033975815039,
+      "y": 307
+    },
+    {
+      "id": 2,
+      "type": "object",
+      "x": 508.4137172576569,
+      "y": 145
+    }
+  ],
+  "budget": {
+    "maxSegments": 1,
+    "maxDistance": 0
+  },
+  "authoring": {
+    "tool": "tools/author (tolerance-aware level authoring tool)",
+    "mechanism": "corridor offset off the pocket axis: the strike-potted ball takes a real cut",
+    "notes": "corridor offset off the pocket axis: the strike-potted ball takes a real cut",
+    "limits": {
+      "marginFloorPx": 8,
+      "corridorArcFloorPx": 100,
+      "angleHalfWidthDeg": 2,
+      "powerWindowPx": 10,
+      "cueStartHalfWidthPx": 2
+    },
+    "measured": {
+      "objectCount": 2,
+      "spawnGapPx": 32.04530485610448,
+      "corridorLengthPx": 128.508763,
+      "settleArcPx": 111.549902,
+      "settled": 1,
+      "settleSteps": 37,
+      "angleHalfWidthDeg": 3.546875,
+      "angleHalfWidthMarginDeg": 2.453125,
+      "negativeHalfWidthDeg": 2.453125,
+      "positiveHalfWidthDeg": 2.5625,
+      "islandDeg": 3.609375,
+      "powerMin": 96,
+      "powerMax": 170,
+      "cueStartHalfWidthPx": 2.1875,
+      "strikeOnlyBest": 1,
+      "strikeOnlyBestAngle": -92.5,
+      "strikeOnlyBestPower": 66.482759,
+      "strikeOnlyStepDeg": 0.5,
+      "strikeOnlyPowers": 30,
+      "nominalWorstMarginPx": 24,
+      "nominalCrawlPx": 10
+    },
+    "portability": {
+      "subStep0.5": "OK (margin 24 px, releaseArc 102, release moved 0 px)",
+      "subStep2.0": "OK (margin 24 px, releaseArc 102, release moved 0 px)",
+      "dt1/240": "OK (margin 24 px, releaseArc 102, release moved 0 px)",
+      "dt1/60": "NOT CLEAR (1/2)"
+    },
+    "witnesses": [
+      {
+        "label": "nominal",
+        "angle": -90,
+        "power": 96,
+        "releaseArc": 102,
+        "crawl": 10,
+        "minMargin": 24,
+        "objectCount": 2,
+        "captures": [
+          {
+            "ballId": 2,
+            "pocketIndex": 1,
+            "marginPx": 24,
+            "travelPx": 59.090908
+          },
+          {
+            "ballId": 1,
+            "pocketIndex": 4,
+            "marginPx": 24,
+            "travelPx": 166.910083
+          }
+        ]
+      },
+      {
+        "label": "edgeNegative",
+        "angle": -92.453125,
+        "power": 120,
+        "releaseArc": 102,
+        "crawl": 74,
+        "minMargin": 8.076546,
+        "objectCount": 2,
+        "captures": [
+          {
+            "ballId": 2,
+            "pocketIndex": 1,
+            "marginPx": 8.076546,
+            "travelPx": 64.142859
+          },
+          {
+            "ballId": 1,
+            "pocketIndex": 4,
+            "marginPx": 21.440406,
+            "travelPx": 167.191165
+          }
+        ]
+      },
+      {
+        "label": "edgePositive",
+        "angle": -87.4375,
+        "power": 168,
+        "releaseArc": 102,
+        "crawl": 16,
+        "minMargin": 8.01503,
+        "objectCount": 2,
+        "captures": [
+          {
+            "ballId": 2,
+            "pocketIndex": 1,
+            "marginPx": 8.01503,
+            "travelPx": 63.82107
+          },
+          {
+            "ballId": 1,
+            "pocketIndex": 4,
+            "marginPx": 21.307011,
+            "travelPx": 166.639711
+          }
+        ]
+      }
+    ]
+  }
+}

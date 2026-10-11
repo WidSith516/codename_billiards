@@ -153,6 +153,9 @@ public sealed class Recipe
         level.Id = Id;
         level.Name = Name;
         level.AddCue(CuePos.X, CuePos.Y);
+        // the level FILE must say "type":"cue" for ball 0 (AddCue only sets the enum); otherwise a
+        // reloaded level fails LevelData.Validate with "ball 0 must be the cue ball".
+        level.Balls[0].DeclaredType = "cue";
         var nextId = 1;
 
         Vec2 backdoorPos;
@@ -180,15 +183,18 @@ public sealed class Recipe
         if (!InBox(level, backdoorPos, 0.0)) Rejects.Add("backdoor ball touches a rail");
         if ((backdoorPos - CuePos).Length < Geo.TwoR + 1.0) Rejects.Add("backdoor ball overlaps the cue at spawn");
 
-        // the backdoor ball must actually be potted by the reverse pass: same departure line, same
-        // capture rule as the kernel (a corner pocket may legitimately need a cushion first)
+        // the backdoor ball must actually be potted by the reverse pass, on a RAIL-FREE run into the
+        // capture circle: a pot that only arrives after a cushion bounce has its real approach line
+        // off the pocket centre (measured: a 28 deg off-bisector corner approach lands with 1.78 px
+        // of margin even though the design line ran through the centre), which is the exact rim-graze
+        // the old levels shipped.
         if (!BackdoorExplicit)
         {
             var frame = Geo.Dir(AimDeg + 180.0);
             var potCut = Geo.SolveCut(CuePos, frame, chordPocket(level, BackdoorPocket).Center, BackdoorLBack, Limits.MarginFloorPx);
-            if (potCut.Ok && !Geo.PotReachability(level, backdoorPos, potCut.Normal,
-                    chordPocket(level, BackdoorPocket).Center, level.Pockets[BackdoorPocket].Radius, out var whyPot))
-                Rejects.Add("backdoor pot unreachable: " + whyPot);
+            if (potCut.Ok && !Geo.StraightPotIsLegal(level, backdoorPos, potCut.Normal,
+                    chordPocket(level, BackdoorPocket).Center, out var whyPot))
+                Rejects.Add("backdoor pot not rail-free: " + whyPot);
         }
 
         // the whole level (cue + backdoor ball) is on the table: measure the real corridor
@@ -241,7 +247,7 @@ public sealed class Recipe
 
             if (!clear) continue;
 
-            if (!Geo.PotReachability(level, pos, cut.Normal, pocket.Center, pocket.Radius, out var why))
+            if (!Geo.StraightPotIsLegal(level, pos, cut.Normal, pocket.Center, out var why))
             {
                 if (keepRejects) Rejects.Add($"forward pot at arc {Geo.N(spec.Arc)} illegal: {why}");
                 continue;

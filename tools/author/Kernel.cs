@@ -80,6 +80,9 @@ public sealed class PlayResult
     /// <summary>Arc length the rule crawled backwards during the rewind session (kernel's RewindDistanceUsed).</summary>
     public double CrawlDistance = double.NaN;
 
+    /// <summary>The cue's velocity handed to it by the release (diagnostics: is it really -stored v?).</summary>
+    public Vec2 ReleaseVelocity;
+
     public int Ticks;
     public bool RewindStarted;
     public bool RewindEndedAtStart;   // crawled all the way to the history start -> velocity forced to 0
@@ -369,6 +372,7 @@ public static class Kernel
             result.ReleaseArc = idx < arcs.Length ? arcs[idx] : double.NaN;
             result.CrawlDistance = world.RewindDistanceUsed;
             world.EndRewind();
+            result.ReleaseVelocity = world.Cue.Velocity;
         }
 
         while (!world.Frozen && steps++ < MaxSteps)

@@ -1,0 +1,5 @@
+# build + run artifacts of the authoring tool (never committed)
+.tmp/
+bin/
+obj/
+emit_*.log
