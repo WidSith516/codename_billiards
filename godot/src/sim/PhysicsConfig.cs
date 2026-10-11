@@ -141,6 +141,28 @@ public sealed class PhysicsConfig
     /// <summary>LOCKED. Rewind impulse coefficient; must stay &lt;= 1.</summary>
     public double RewindImpulseK = 1.0;
 
+    /// <summary>
+    /// NOT LOCKED (this is a deliberate addition, and it does not touch the locked model).
+    ///
+    /// Fraction of the LAUNCH SPEED added to the cue's release velocity PER OBJECT BALL POTTED, when
+    /// the player lets go of the rewind. 0.5 means one pot grants half the launch speed again.
+    ///
+    /// Why it is here rather than on <see cref="RewindImpulseK"/>: that coefficient multiplies the
+    /// impulse handed to an OBJECT ball in a rewind contact, and §7 of the params table locks it to
+    /// &lt;= 1 precisely so the player's energy can only come from the strike and the rails. This bonus
+    /// adds speed to the CUE's release -- nothing is amplified through a collision, so the locked
+    /// rule is untouched -- while still paying the player back for a pot.
+    ///
+    /// Why it exists at all: the cue is the only ball that can be rewound, so once it runs out of
+    /// speed the level is over and no amount of skill recovers it. Rewarding a pot with speed makes a
+    /// good strike sustainable instead of terminal, which is the difference between a puzzle and a
+    /// game.
+    ///
+    /// The total is still clamped by <see cref="SpeedCap"/>, so a big multi-pot break cannot push the
+    /// cue past what the integrator is tuned for.
+    /// </summary>
+    public double RewindPotBonus = 0.5;
+
     /// <summary>LOCKED. Pocket capture radius, px.</summary>
     public double PocketRadius = 24.0;
 

@@ -147,6 +147,15 @@ public partial class TestMain : Node
             Run(runner, "S02", LevelSolvabilityTests.S02_ShippedLevelIsForgiving);
         }
 
+        if (suite == "all" || suite == "pot")
+        {
+            Run(runner, "P01", PotBonusTests.P01_NoPotMeansNoBonus);
+            Run(runner, "P02", PotBonusTests.P02_PotGrantsTheBonus);
+            Run(runner, "P03", PotBonusTests.P03_BonusRespectsTheSpeedCap);
+            Run(runner, "P04", PotBonusTests.P04_LockedRewindModelIsUntouched);
+        }
+
+
         if (negative)
         {
             // An acceptance gate that cannot fail is worse than no gate.

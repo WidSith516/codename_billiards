@@ -295,6 +295,7 @@ public sealed class World
         Rewinding = false;
         RewindSegmentsUsed = 0;
         RewindDistanceUsed = 0.0;
+        LaunchSpeed = 0.0;
         _track = null;
         _cursor = 0;
         _u = 0.0;
@@ -363,9 +364,17 @@ public sealed class World
         Cue.Velocity = Vec2.FromAngleDegrees(angleDegrees) * speed;
         Cue.Pocketed = false;
         ShotUsed = true;
+        LaunchSpeed = speed;         // basis for the pot bonus on rewind release
         Inputs.Add(new InputCommand { Tick = Tick, Kind = InputKind.Shot, A = angleDegrees, B = power });
         return true;
     }
+
+    /// <summary>
+    /// The speed the cue was launched with by <see cref="Shot"/>. The pot bonus on rewind release is
+    /// a fraction of this, so the reward scales with how hard the player hit rather than being a
+    /// flat grant.
+    /// </summary>
+    public double LaunchSpeed { get; private set; }
 
     /// <summary>
     /// Begin rewinding the cue ball: freeze a read-only snapshot of the history as it is now and
@@ -406,13 +415,65 @@ public sealed class World
     /// <summary>
     /// Release: the cue keeps the reverse of the stored velocity at the current history entry
     /// (locked: release velocity is the stored v negated, decoupled from the 240 px/s crawl).
+    ///
+    /// PLUS the pot bonus: every object ball pocketed grants an extra
+    /// <see cref="PhysicsConfig.RewindPotBonus"/> of the launch speed, added along the release
+    /// direction. This is the answer to the core frustration -- the cue is the only ball that can be
+    /// rewound, so once it runs out of speed the level is over and no amount of skill helps. Rewarding
+    /// a pot with speed makes potting pay for the next attempt instead of ending the run.
+    ///
+    /// Deliberately NOT put on RewindImpulseK: that coefficient multiplies the impulse given to an
+    /// OBJECT ball during a rewind contact and is locked at &lt;= 1 by §7 of the params table, whose
+    /// stated intent is that the player's energy comes from the strike and the rails, never from
+    /// rewind amplification. Adding a release-speed bonus keeps that rule intact -- nothing is
+    /// amplified through a collision -- while still paying the player back for a pot.
     /// </summary>
     public void EndRewind()
     {
         if (!Rewinding) return;
-        Cue.Velocity = ReverseReleaseVelocity();
+        Cue.Velocity = ReverseReleaseVelocityWithBonus();
         EndRewindInternal(zeroVelocity: false);
         Inputs.Add(new InputCommand { Tick = Tick, Kind = InputKind.RewindEnd });
+    }
+
+    private Vec2 ReverseReleaseVelocityWithBonus()
+    {
+        var baseVel = ReverseReleaseVelocity();
+        if (PocketedObjectCount <= 0 || Config.RewindPotBonus <= 0.0) return baseVel;
+
+        var speed = baseVel.Length;
+        Vec2 dir;
+        if (speed > 1e-6)
+        {
+            dir = baseVel / speed;
+        }
+        else if (_track != null && _track.Length >= 2 && _cursor <= 0)
+        {
+            // Released at the very START of the track, where the stored velocity is zero (the cue was
+            // at rest when the level began). A pot bonus must still let the player resume, or "rewind
+            // all the way home and let go" would silently cancel the reward. Direction: forward along
+            // the path they originally took, i.e. the reverse of the first recorded heading.
+            var forward = _track[1].Position - _track[0].Position;
+            if (forward.LengthSquared < 1e-12) return baseVel;
+            dir = forward.Normalized();
+        }
+        else if (_track != null && _track.Length > 0)
+        {
+            // Mid-track but the stored speed is zero, which can happen where the cue was momentarily
+            // stationary. Use the local heading for direction.
+            var heading = _track[_cursor].Velocity;
+            dir = heading.LengthSquared > 1e-12 ? heading.Normalized() : new Vec2(0.0, 1.0);
+        }
+        else
+        {
+            return baseVel;
+        }
+
+        // POT BONUS: a fraction of the launch speed per potted ball, capped by the global speed cap so
+        // a multi-pot break cannot push the cue past what the integrator is tuned for.
+        var bonus = Config.RewindPotBonus * LaunchSpeed * PocketedObjectCount;
+        var total = Math.Min(speed + bonus, Config.SpeedCap);
+        return dir * total;
     }
 
     private Vec2 ReverseReleaseVelocity()
