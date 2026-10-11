@@ -38,6 +38,10 @@ tools/analysis/iltest/
 # godot/.tmp/ 会存放 nuget 缓存、VBCSCompiler 分析器、dotnet CLI home 等构建产物
 # （实测可达数百 MB）。它们全部可再生，绝不入库。
 godot/.tmp/
-godot/**/obj/
-godot/**/bin/
 tools/solver/.tmp/
+
+# ── .NET 构建产物（任意深度的 obj/bin 都不入库）──────────────────────────────
+# 注意：早期版本写成 `godot/**/obj/`，那只覆盖 godot/ 一层；
+# tools/author/ 一类的辅助工程同样会产生 obj/bin，故改为全局模式。
+**/obj/
+**/bin/

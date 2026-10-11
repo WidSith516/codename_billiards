@@ -95,6 +95,11 @@ public partial class TestMain : Node
             Run(runner, "K17", InvariantTests.K17_RewindCrawlIsDecoupled);
         }
 
+        if (suite == "all" || suite == "levels")
+        {
+            Run(runner, "L01", LevelToleranceTests.L01_AuthoredLevelTolerance);
+        }
+
         if (negative)
         {
             // An acceptance gate that cannot fail is worse than no gate.

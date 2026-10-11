@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Tolerance-aware level authoring tool (milestone M3/M4 level work).
+
+    WHY THIS FILE EXISTS AND WHY IT LINKS THE KERNEL SOURCES:
+      * The old levels were tuned against a *re-implementation* of the physics and were therefore
+        not portable (tools/verify_solver/REPORT.md section 5c/10.4). To author against the
+        SHIPPING kernel instead, this project compiles `godot/src/sim/*.cs` VERBATIM - the same
+        files the Godot assembly builds. There is no second copy of the physics, so the tool cannot
+        drift from the kernel.
+      * `godot/src/sim` is deliberately engine-free C# (no `using Godot` anywhere in it), which is
+        exactly what makes this possible; `godot/REPORT.md` section 1 states that as an
+        architecture rule.
+      * Godot is NOT involved anywhere in this tool: it is a plain net8.0 console app.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <RootNamespace>Rewind.Author</RootNamespace>
+    <AssemblyName>AuthorTool</AssemblyName>
+    <LangVersion>latest</LangVersion>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="*.cs" />
+    <!-- the shipping kernel's simulation core, compiled from its own source files -->
+    <Compile Include="..\..\godot\src\sim\*.cs" />
+  </ItemGroup>
+</Project>
