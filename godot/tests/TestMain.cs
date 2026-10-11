@@ -120,6 +120,9 @@ public partial class TestMain : Node
             Run(runner, "B01", CollisionBoostTests.B01_BoostAcceleratesTheStruckBall);
             Run(runner, "B02", CollisionBoostTests.B02_DefaultBoostIsANoOp);
             Run(runner, "B03", CollisionBoostTests.B03_ShippedLevelCarriesTheBoost);
+            Run(runner, "R00", CueRetentionTests.R00_RetentionTable);
+            Run(runner, "R01", CueRetentionTests.R01_CueKeepsUsefulSpeedAfterHeadOn);
+            Run(runner, "R02", CueRetentionTests.R02_ShippedLevelRetainsCueSpeed);
         }
 
         if (negative)

@@ -59,6 +59,13 @@ public static class Hud
         public Color MessageColor = Palette.TextMain;
         public bool Debug;
 
+        /// <summary>
+        /// Show the whole left panel (rules, power, rewind budget, controls). F1 turns it off so
+        /// the playfield can be seen clean for recording and screenshots. The top bar stays: it is
+        /// one thin line and carries the numbers that actually matter while playing.
+        /// </summary>
+        public bool ShowPanel = true;
+
         /// <summary>Remaining rail speed boosts for the cue ball; a negative value means unlimited.</summary>
         public int WallBoostsRemaining = -1;
 
@@ -79,7 +86,9 @@ public static class Hud
     public static void Draw(CanvasItem ci, Font font, Model m)
     {
         DrawTopBar(ci, font, m);
-        DrawLeftPanel(ci, font, m);
+        // F1 hides the entire left panel, not just the numeric block: for a gameplay slice the
+        // panel is the single biggest thing covering the table.
+        if (m.ShowPanel) DrawLeftPanel(ci, font, m);
     }
 
     // --------------------------------------------------------------- top bar
@@ -243,7 +252,7 @@ public static class Hud
             ("P", "暂停 + 微调"),
             ("← / →", "移动释放点"),
             ("空格", "重置（调试）"),
-            ("F1 / F2 / F3", "调试 / 残影 / 轨迹"),
+            ("F1 / F2 / F3", "隐藏面板 / 残影 / 轨迹"),
         };
         var ky = cy + 21;
         foreach (var line in controls)

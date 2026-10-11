@@ -66,6 +66,10 @@
   },
   "physics": {
     "types": {
+      "cue": {
+        "mass": 2.0,
+        "restitution": 0.92
+      },
       "object": {
         "collisionBoost": 1.45
       }

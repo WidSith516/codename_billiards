@@ -77,6 +77,10 @@ public partial class Play : Node2D
 
     // ---------------------------------------------------------------- hud state
     private bool _debugOverlay;
+
+    /// <summary>Whether the whole left HUD panel is drawn. F1 toggles it so a recording sees a
+    /// clean table; the top bar is always drawn.</summary>
+    private bool _showHud = true;
     private bool _verbose;
     private double _messageTimer;
     private string _message = "";
@@ -957,7 +961,15 @@ public partial class Play : Node2D
                 break;
 
             case Key.F1:
-                if (key.Pressed) _debugOverlay = !_debugOverlay;
+                // F1 hides the ENTIRE left panel, and shows the numeric debug readings when the
+                // panel is visible. Keeping both on one key means one press gives a clean playfield
+                // for recording, and pressing again restores both the rules and the numbers.
+                if (key.Pressed)
+                {
+                    _showHud = !_showHud;
+                    _debugOverlay = _showHud;
+                }
+
                 break;
 
             case Key.F2:
@@ -1410,6 +1422,7 @@ public partial class Play : Node2D
             Message = _messageTimer > 0.0 ? _message : "",
             MessageColor = _messageColor,
             Debug = _debugOverlay,
+            ShowPanel = _showHud,
             WallBoostsRemaining = _world.Cue != null && _world.Cue.WallBoostsRemaining.HasValue
                 ? _world.Cue.WallBoostsRemaining.Value
                 : -1,
@@ -1495,11 +1508,12 @@ public partial class Play : Node2D
         Check("Enter releases at the scrubbed point", !_world.Rewinding && !_rewindVis.Scrubbing,
             $"rewinding={_world.Rewinding} scrubbing={_rewindVis.Scrubbing} speed={_world.Cue.Speed:F1}");
 
-        // 6. F1 toggles the debug overlay through the real key handler.
+        // 6. F1 toggles the panel (and, with it, the debug readings).
         _UnhandledInput(KeyEvent(Key.F1, true));
-        Check("F1 toggles the debug overlay", _debugOverlay, $"debugOverlay={_debugOverlay}");
+        Check("F1 hides the left panel", !_showHud, $"showHud={_showHud}");
+        Check("F1 shows the debug readings with the panel", _debugOverlay, $"debugOverlay={_debugOverlay}");
         _UnhandledInput(KeyEvent(Key.F1, true));
-        Check("F1 toggles it back", !_debugOverlay, $"debugOverlay={_debugOverlay}");
+        Check("F1 toggles it back", _showHud && !_debugOverlay, $"showHud={_showHud} debug={_debugOverlay}");
 
         GD.Print($"=== M2 selftest summary: {_checksRun - _checksFailed}/{_checksRun} checks passed ===");
         GD.Print(_checksFailed == 0 ? "M2 SELFTEST PASS" : $"M2 SELFTEST FAIL: {_checksFailed} check(s) failed");
