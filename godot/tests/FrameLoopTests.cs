@@ -148,4 +148,44 @@ public static class FrameLoopTests
             $"strikeOnly={afterStrike} potted={w.PocketedObjectCount}/{objectCount} " +
             $"releaseArc={releaseArc:F1}px settleSteps={settleSteps}");
     }
+
+    /// <summary>
+    /// Live play must never start frozen.
+    ///
+    /// The game shipped twice-broken and both failures were completely silent -- it rendered, it
+    /// accepted the drag, and the ball simply never moved:
+    ///   1. the frame accumulator added the step size instead of the frame time, so no step ran;
+    ///   2. after that was fixed, the startup path still unconditionally ran the scripted-capture
+    ///      preparation, whose last act is to freeze the world so screenshots are reproducible.
+    /// Both were invisible to a suite that only ever drove World.Step() directly, which is exactly
+    /// why this file exists.
+    /// </summary>
+    public static void F04_LivePlayIsNotFrozen(TestRunner t)
+    {
+        t.Section("F04 - live play never starts frozen");
+
+        t.Check("no --state means live play, not a capture", !Play.IsScriptedCapture(null));
+        t.Check("--state=aim is a capture", Play.IsScriptedCapture("aim"));
+        t.Check("--state=win is a capture", Play.IsScriptedCapture("win"));
+
+        // The consequence: a live-shaped world must actually advance when driven by the frame loop.
+        var w = new World(LevelLoader.Load(LevelLoader.LevelDirectory + "/corridor.json"));
+        t.Check("the strike is accepted", w.Shot(-90.0, 96.0));
+
+        var dt = w.Config.SimulationStep;
+        var acc = 0.0;
+        var steps = 0;
+        var start = w.Cue.Position;
+        for (var f = 0; f < 30; f++)
+        {
+            var n = Play.PlanFrameSteps(ref acc, 1.0 / 60.0, dt);
+            for (var i = 0; i < n; i++) { w.Step(); steps++; }
+        }
+
+        var moved = (w.Cue.Position - start).Length;
+        t.CheckAtLeast("half a second of live frames moves the cue ball", moved, 1.0);
+        t.CheckAtLeast("the frame loop issued steps", steps, 50);
+
+        t.Check("F04 evidence", true, $"moved={moved:F1}px steps={steps}");
+    }
 }

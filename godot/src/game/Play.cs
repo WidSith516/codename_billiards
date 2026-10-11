@@ -61,7 +61,9 @@ public partial class Play : Node2D
 
     // ---------------------------------------------------------------- capture
     private string _outPath;
-    private string _stateName = "aim";
+    // Null unless the caller explicitly asks for a scripted capture state. This MUST default to
+    // null rather than "aim": see the guard around PrepareState in _Ready.
+    private string _stateName;
     private int _captureFrames = 6;
     private int _minFrames = 4;
     private int _frames;
@@ -131,6 +133,17 @@ public partial class Play : Node2D
         return font;
     }
 
+    /// <summary>
+    /// True only when the caller explicitly asked for a scripted capture state.
+    ///
+    /// Extracted as a pure function because the original inline logic defaulted the state name to
+    /// "aim", so PrepareState always ran, always ended by freezing the world, and the shipping game
+    /// therefore never stepped its simulation: striking did nothing at all. That failure is silent
+    /// (the game renders and accepts input normally), so it needs a test that does not depend on
+    /// reading the screen. A null state name means live play and must never freeze.
+    /// </summary>
+    public static bool IsScriptedCapture(string stateName) => stateName != null;
+
     public override void _Ready()
     {
         _font = LoadUiFont();
@@ -151,7 +164,12 @@ public partial class Play : Node2D
 
         var levelId = Arg("--level=") ?? LevelIds.Corridor;
         _outPath = Arg("--out=");
-        _stateName = Arg("--state=") ?? "aim";
+        // Only a scripted capture prepares a frozen state. Defaulting this to "aim" (as it did)
+        // meant PrepareState ran on EVERY launch, and PrepareState ends by setting _freezeWorld,
+        // so the shipping game started with the world frozen and _world.Step() was never called:
+        // the cue ball could not move. It also meant every screenshot we ever captured came from
+        // a frozen world, so the visual evidence loop could never have caught it.
+        _stateName = Arg("--state=");
         _captureFrames = IntArg("--capture-frames=", 6);
         _minFrames = IntArg("--min-frames=", 4);
         _benchMode = Arg("--bench=");
@@ -206,6 +224,17 @@ public partial class Play : Node2D
             return;
         }
 
+        if (HasArg("--liveselftest"))
+        {
+            // Prove, in a LIVE (unfrozen) run, that a strike actually moves the ball and that a
+            // rewind can then finish the level. This drives the real _PhysicsProcess path rather
+            // than calling World.Step() directly, which is the whole point: two separate freezes
+            // (a broken accumulator, then an always-on capture freeze) let the game ship with a
+            // completely dead main loop while every direct-step test passed.
+            RunLiveSelfTest();
+            return;
+        }
+
         if (HasArg("--trace-shot"))
         {
             if (HasArg("--trace-path")) TracePath(DoubleArg("--angle=", 90.0), DoubleArg("--power=", 170.0));
@@ -228,7 +257,76 @@ public partial class Play : Node2D
             return;
         }
 
-        PrepareState(_stateName);
+        if (_stateName != null) PrepareState(_stateName);
+
+        // Live-play invariant: unless the caller asked for a scripted capture, the world must be
+        // free to step. This is asserted here (and covered by F04) because a frozen world is
+        // completely silent -- the game renders, accepts your drag, and simply never moves.
+        GD.Print($"[play] live={(_stateName == null)}\n[play] freezeWorld={_freezeWorld} paused={_rewindVis.Paused}");
+        if (_stateName == null && _freezeWorld) GD.PushError("[play] live mode started FROZEN - the ball will not move");
+    }
+
+    /// <summary>
+    /// Live-path self test: strike, let the REAL frame loop run, then rewind and finish the level.
+    ///
+    /// Everything here goes through the same code a human's input would reach. A test that calls
+    /// World.Step() directly cannot catch a dead main loop; this can.
+    /// </summary>
+    private void RunLiveSelfTest()
+    {
+        var fail = 0;
+        GD.Print($"[selftest] live path: freezeWorld={_freezeWorld} paused={_rewindVis.Paused}");
+        if (_freezeWorld) { GD.Print("[selftest] FAIL: live mode started frozen"); fail++; }
+
+        var start = _world.Cue.Position;
+        SetAim(-90.0, 96.0);
+        GD.Print($"[selftest] aiming angle={_aimAngle} power={_aimPower}");
+        FireShot();
+        if (!_world.ShotUsed) { GD.Print("[selftest] FAIL: the strike was not accepted"); fail++; }
+
+        // Run the real accumulate-and-step loop for ~2 s of simulated time.
+        var dt = _world.Config.SimulationStep;
+        var frames = 0;
+        while (_world.Time < 2.0 && frames < 2000)
+        {
+            var n = PlanFrameSteps(ref _accumulator, 1.0 / 60.0, dt);
+            for (var i = 0; i < n; i++) _world.Step();
+            frames++;
+        }
+
+        var moved = (_world.Cue.Position - start).Length;
+        GD.Print($"[selftest] after {frames} live frames: cue moved {moved:F1} px, " +
+                 $"tick={_world.Tick} history={_world.Cue.History.Count} potted={_world.PocketedObjectCount}/{_world.ObjectBallCount}");
+        if (moved < 50.0) { GD.Print("[selftest] FAIL: the cue ball barely moved"); fail++; }
+        if (_world.Cue.History.Count < 10) { GD.Print("[selftest] FAIL: history was not recorded"); fail++; }
+        if (_world.HasNonFiniteState()) { GD.Print("[selftest] FAIL: non-finite state"); fail++; }
+
+        // Finish it: rewind to the witness release arc, then release.
+        _world.Settle();
+        var afterStrike = _world.PocketedObjectCount;
+        if (!_world.StartRewind()) { GD.Print("[selftest] FAIL: rewind refused"); fail++; }
+        else
+        {
+            var track = _world.RewindTrack;
+            var arcs = new double[track == null ? 0 : track.Length];
+            for (var i = 1; i < arcs.Length; i++)
+                arcs[i] = arcs[i - 1] + (track[i].Position - track[i - 1].Position).Length;
+            var guard = 0;
+            while (_world.Rewinding && guard++ < 20000)
+            {
+                var cur = _world.RewindCursor;
+                if (cur >= 0 && cur < arcs.Length && arcs[cur] <= 102.0) break;
+                _world.Step();
+            }
+            _world.EndRewind();
+            _world.Settle();
+        }
+
+        GD.Print($"[selftest] strikeOnly={afterStrike} final={_world.PocketedObjectCount}/{_world.ObjectBallCount} won={_world.Won}");
+        if (!_world.Won) { GD.Print("[selftest] FAIL: the level did not clear"); fail++; }
+
+        GD.Print(fail == 0 ? "[selftest] PASS" : $"[selftest] FAIL ({fail} problem(s))");
+        GetTree().Quit(fail == 0 ? 0 : 1);
     }
 
     private static string Arg(string prefix)
@@ -658,6 +756,16 @@ public partial class Play : Node2D
             if (!_rewindVis.Paused && !_freezeWorld) _world.Step();
         }
         _simMs = (Time.GetTicksUsec() - t0) / 1000.0;
+
+        // Live telemetry. Absence of this was half of why two dead-main-loop bugs survived: in live
+        // mode the game printed nothing at all, so there was no signal to read.
+        if (_stateName == null && _frames > 0 && _frames % 120 == 0)
+        {
+            GD.Print($"[live] frame={_frames} tick={_world.Tick} simT={_world.Time:F2} " +
+                     $"cue=({_world.Cue.Position.X:F0},{_world.Cue.Position.Y:F0}) v={_world.Cue.Speed:F0} " +
+                     $"hist={_world.Cue.History.Count} rewinding={_world.Rewinding} " +
+                     $"potted={_world.PocketedObjectCount}/{_world.ObjectBallCount} won={_world.Won}");
+        }
 
         // The trail is the view's own cache of the kernel's append-only history: it must be kept in
         // step with the world exactly once per frame, before anything is drawn or inspected. The

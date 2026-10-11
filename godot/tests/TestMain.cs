@@ -108,6 +108,7 @@ public partial class TestMain : Node
             Run(runner, "F01", FrameLoopTests.F01_FrameAccumulatorAdvancesSimulation);
             Run(runner, "F02", FrameLoopTests.F02_StrikeMovesTheCueBallInRealTime);
             Run(runner, "F03", FrameLoopTests.F03_ShippedLevelIsClosedLoopSolvable);
+            Run(runner, "F04", FrameLoopTests.F04_LivePlayIsNotFrozen);
         }
 
         if (negative)
