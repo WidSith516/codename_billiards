@@ -200,6 +200,25 @@ public sealed class SimStats
 
     /// <summary>How many times a ball was energised by a white hole.</summary>
     public int WhiteHoleActivations;
+
+    /// <summary>Event cards the player has taken this run.</summary>
+    public int CardsTaken;
+
+    /// <summary>Rewind allowances refunded by the tibo card.</summary>
+    public int TiboRefunds;
+
+    /// <summary>Ball-ball collisions that were made non-losing (or momentum-stacking) by Antimatter.</summary>
+    public int AntimatterBoosts;
+
+    /// <summary>Death-throe kicks delivered by a second rapid R tap.</summary>
+    public int DeathThroeKicks;
+
+    /// <summary>Rapid-tap clusters whose third and later taps were ignored by the "only two" rule.</summary>
+    public int RapidTapsSuppressed;
+
+    /// <summary>True once the balloon card has ended the run.</summary>
+    public int BalloonFailures;
+
     public long SubStepIntervals;
     public int StepGuardHits;
 
@@ -216,6 +235,13 @@ public sealed class SimStats
         BallBallContacts = other.BallBallContacts;
         RailContacts = other.RailContacts;
         PocketCaptures = other.PocketCaptures;
+        WhiteHoleActivations = other.WhiteHoleActivations;
+        CardsTaken = other.CardsTaken;
+        TiboRefunds = other.TiboRefunds;
+        AntimatterBoosts = other.AntimatterBoosts;
+        DeathThroeKicks = other.DeathThroeKicks;
+        RapidTapsSuppressed = other.RapidTapsSuppressed;
+        BalloonFailures = other.BalloonFailures;
         SubStepIntervals = other.SubStepIntervals;
         StepGuardHits = other.StepGuardHits;
     }

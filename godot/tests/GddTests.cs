@@ -349,8 +349,35 @@ public static class GddTests
         t.Check("exactly one rail transform", transitions == 1, "transforms=" + transitions);
         t.Check("lock: not the prototype's x1.5", Math.Abs(w.Cue.Speed - 740.0 * 1.5) > 1.0,
             "x1.5 would be " + TestRunner.N(740.0 * 1.5));
-        t.CheckAtMost("cap stays below the worst-case collision bound", w.Config.SpeedCap, 2070.0,
-            "cap=" + w.Config.SpeedCap);
+
+        // ---------------------------------------------------------------------------------------
+        // The cap.
+        //
+        // This used to assert `SpeedCap <= 2070`, i.e. "stay within a hair of the old 2000 so the
+        // integrator's precision budget is not disturbed". That invariant has since been deliberately
+        // lifted twice -- to 5600 for the rail engine, which alone needs 1258 + 3*1258 = 5032, and then
+        // to 8000 for the event cards and the death-throe kick. So the old bound no longer describes a
+        // requirement; it described a value.
+        //
+        // The requirement that DOES still hold, and is the real reason the cap exists, is that the
+        // integrator stays exact at the top of the range: a ball at the cap must still be resolved by
+        // analytic time of impact with the chord budget intact, and no state may go non-finite. That is
+        // asserted below and in K05/K06/K07 rather than by pinning the number.
+        // ---------------------------------------------------------------------------------------
+        t.CheckAtLeast("the cap clears the rail engine's own ceiling",
+            w.Config.SpeedCap, w.Config.SpeedPerPower * w.Config.PowerMax * 4.0,
+            $"cap={w.Config.SpeedCap:F0} railCeiling=" +
+            $"{w.Config.SpeedPerPower * w.Config.PowerMax * 4.0:F0}");
+
+        // Run the cue at the cap and confirm nothing degrades: this is the property the old numeric
+        // bound was a proxy for.
+        w.Cue.Velocity = new Vec2(w.Config.SpeedCap, 0.0);
+        for (var i = 0; i < 600; i++) w.Step();
+        t.Check("the state stays finite at the cap", !w.HasNonFiniteState());
+        t.Check("no sub-step assertion fired at the cap", w.AssertionFailure == null,
+            w.AssertionFailure ?? "clean");
+        t.Check("the cap is actually enforced", w.Cue.Speed <= w.Config.SpeedCap + 1e-6,
+            $"speed={w.Cue.Speed:F1} cap={w.Config.SpeedCap:F1}");
     }
 
     // ------------------------------------------------------------------- T08

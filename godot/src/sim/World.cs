@@ -170,6 +170,48 @@ public sealed class World
 
     public Ball Cue => Balls[0];
 
+    // ------------------------------------------------------------- event cards
+
+    /// <summary>Cards this run has taken plus their live state (friction scale, balloon, ...).</summary>
+    public CardState Cards { get; private set; } = new CardState();
+
+    /// <summary>Deterministic draw source. Lives in the world so a capture/restore round trip
+    /// reproduces the same three cards, which the solver depends on.</summary>
+    private uint _cardRng = 0xC0FFEEu;
+
+    /// <summary>
+    /// The pending draw, or null. Non-null means the simulation is WAITING for the player to pick a
+    /// card: the user asked for the draw to pause the game and require a choice, so this is a real
+    /// input-gated state, not a notification.
+    /// </summary>
+    public List<CardId> PendingDraw { get; private set; }
+
+    /// <summary>True while a draw is waiting for the player.</summary>
+    public bool AwaitingCardChoice => PendingDraw != null && PendingDraw.Count > 0;
+
+    /// <summary>How many draws have been offered this run (for the HUD / stats).</summary>
+    public int CardDraws { get; private set; }
+
+    /// <summary>Seed the draw. Only used by tests and by a level that wants a fixed hand.</summary>
+    public void SeedCards(uint seed) => _cardRng = seed == 0u ? 0xC0FFEEu : seed;
+
+    /// <summary>
+    /// Grant a card directly, without a draw, for tests that need to isolate ONE card's effect.
+    ///
+    /// It deliberately routes through the same <see cref="ApplyCard"/> the player's choice uses, so a
+    /// test can never pass against a parallel implementation of the card that the game does not run.
+    /// Refuses if the card has already been taken, matching the pool's own rule.
+    /// </summary>
+    public bool GrantCardForTest(CardId id)
+    {
+        if (Cards.Has(id)) return false;
+        var def = CardPool.Get(id);
+        if (def == null) return false;
+        Cards.Taken.Add(id);
+        ApplyCard(def);
+        return true;
+    }
+
     // ------------------------------------------------------------ diagnostics
 
     /// <summary>Intervals processed during the last step (sub-step budget observable).</summary>
@@ -327,6 +369,12 @@ public sealed class World
         _track = null;
         _cursor = 0;
         _u = 0.0;
+        _tapCount = 0;
+        _lastTapPosition = Vec2.Zero;
+        DeathThroeArmed = false;
+        PendingDraw = null;
+        CardDraws = 0;
+        Cards = new CardState();
         Inputs.Clear();
         Stats.Rewinds = 0;
         Stats.RewindContacts = 0;
@@ -336,6 +384,12 @@ public sealed class World
         Stats.PocketCaptures = 0;
         Stats.SubStepIntervals = 0;
         Stats.StepGuardHits = 0;
+        Stats.CardsTaken = 0;
+        Stats.TiboRefunds = 0;
+        Stats.AntimatterBoosts = 0;
+        Stats.DeathThroeKicks = 0;
+        Stats.RapidTapsSuppressed = 0;
+        Stats.BalloonFailures = 0;
         LastIntervals = 0;
         LastMaxIntervalTravel = 0.0;
         LastMaxIntervalRelativeTravel = 0.0;
@@ -408,15 +462,53 @@ public sealed class World
     /// Begin rewinding the cue ball: freeze a read-only snapshot of the history as it is now and
     /// put the cursor at its end. The live history keeps appending during the rewind (GDD §4.2),
     /// which is what makes A→B→C→D rewind as D→C→B→A.
+    ///
+    /// Returns true when a rewind started. <paramref name="deathThroe"/> is set when this start was
+    /// the SECOND tap of a rapid cluster, which the release will honour as a burst of speed.
     /// </summary>
-    public bool StartRewind()
+    public bool StartRewind() => StartRewind(out _);
+
+    /// <inheritdoc cref="StartRewind()"/>
+    public bool StartRewind(out bool deathThroe)
     {
+        deathThroe = false;
         if (Frozen || Won || Rewinding || !ShotUsed) return false;
         if (Budget.MaxSegments > 0 && RewindSegmentsUsed >= Budget.MaxSegments) return false;
         if (Budget.MaxDistance > 0.0 && RewindDistanceUsed >= Budget.MaxDistance) return false;
 
         var cue = Cue;
         if (cue.History.Count < 2) return false;
+
+        // ---- RAPID TAP RULE ----------------------------------------------------------------
+        //
+        // The user's rule: taps delivered within 10 px of each other count as at most TWO, and the
+        // second of them is a death-throe acceleration rather than another ordinary rewind.
+        //
+        // Measured by DISPLACEMENT since the previous tap, not by elapsed time: a time window would
+        // behave differently at 60 Hz and 144 Hz, and the rule is about the player hammering R while
+        // the ball is not going anywhere. A tap counts as the same cluster when the cue has moved
+        // less than RapidTapClusterPx since the last tap. Once the cue travels further than that --
+        // because the rewind actually took it somewhere -- the cluster resets to zero and the player
+        // gets two fresh taps.
+        //
+        // The consequence the rule must have: mashing R cannot buy unlimited rewinds, because the
+        // third and later taps in a cluster are refused outright rather than silently costing budget.
+        var moved = (cue.Position - _lastTapPosition).Length;
+        if (_tapCount == 0 || moved > Config.RapidTapClusterPx)
+        {
+            _tapCount = 0;
+        }
+
+        if (_tapCount >= Config.RapidTapMaxPerCluster)
+        {
+            Stats.RapidTapsSuppressed++;
+            _lastTapPosition = cue.Position;
+            return false;
+        }
+
+        if (_tapCount == 1) deathThroe = true;
+        _tapCount++;
+        _lastTapPosition = cue.Position;
 
         // Flush the current position so the snapshot ends exactly where the ball is standing:
         // without this the rewind would jump back by up to one sampling interval at press time.
@@ -434,11 +526,24 @@ public sealed class World
         }
 
         Rewinding = true;
+        DeathThroeArmed = deathThroe;
         RewindSegmentsUsed++;
         Stats.Rewinds++;
         Inputs.Add(new InputCommand { Tick = Tick, Kind = InputKind.RewindStart });
         return true;
     }
+
+    /// <summary>
+    /// Taps delivered in the current rapid cluster (0..<see cref="PhysicsConfig.RapidTapMaxPerCluster"/>).
+    /// Exposed so the HUD can tell the player "this tap is your last one".
+    /// </summary>
+    public int RapidTapCount => _tapCount;
+
+    /// <summary>True while the current rewind was started by the second tap of a cluster.</summary>
+    public bool DeathThroeArmed { get; private set; }
+
+    private int _tapCount;
+    private Vec2 _lastTapPosition;
 
     /// <summary>
     /// Release: the cue keeps the reverse of the stored velocity at the current history entry
@@ -511,10 +616,25 @@ public sealed class World
         var bonus = PocketedObjectCount > 0 && Config.RewindPotBonus > 0.0
             ? Config.RewindPotBonus * LaunchSpeed * PocketedObjectCount
             : 0.0;
+
+        // 1b. DEATH-THROE KICK: the second tap of a rapid cluster releases harder. This is an
+        // ADDITION on top of the stored speed, exactly like the pot bonus, so it composes in the same
+        // order and cannot inflate a release that had nothing stored.
+        if (DeathThroeArmed && Config.RapidTapBonusFrac > 0.0)
+        {
+            bonus += Config.RapidTapBonusFrac * LaunchSpeed;
+            Stats.DeathThroeKicks++;
+        }
+
         var total = speed + bonus;
 
         // 2. RELEASE FLOOR: never hand the player a dead ball. See RewindMinReleaseFrac for why.
-        var floor = Config.RewindMinReleaseFrac * LaunchSpeed;
+        // A death-throe kick raises the floor too: a desperate release that still produced a dead ball
+        // would make the mechanic a lie.
+        var floorFrac = Config.RewindMinReleaseFrac;
+        if (DeathThroeArmed && Config.RapidTapMinReleaseFrac > floorFrac)
+            floorFrac = Config.RapidTapMinReleaseFrac;
+        var floor = floorFrac * LaunchSpeed;
         if (total < floor) total = floor;
 
         total = Math.Min(total, Config.SpeedCap);
@@ -531,6 +651,7 @@ public sealed class World
     {
         if (!Rewinding) return;
         Rewinding = false;
+        DeathThroeArmed = false;
         if (zeroVelocity) Cue.Velocity = Vec2.Zero;
         _track = null;
         _cursor = 0;
@@ -557,6 +678,7 @@ public sealed class World
         else StepNormal();
 
         ClampSpeeds();
+        UpdateBalloon();
 
         if (LastIntervals > MaxObservedIntervals) MaxObservedIntervals = LastIntervals;
         if (LastMaxIntervalTravel > MaxObservedIntervalTravel)
@@ -962,6 +1084,10 @@ public sealed class World
     private void ApplyFriction(double h, double timeStart)
     {
         if (Config.FrictionDecel <= 0.0) return;
+        // ICE: the whole table's rolling deceleration is scaled. Applied to every ball, not only the
+        // cue, because the card says "the table's friction is reduced" -- an ice card that only made
+        // the cue slide would be a different, much weaker card.
+        var tableScale = Cards.FrictionScale <= 0.0 ? 1.0 : Cards.FrictionScale;
         for (var i = 0; i < Balls.Length; i++)
         {
             var b = Balls[i];
@@ -972,6 +1098,7 @@ public sealed class World
             // Per-type rolling deceleration: a heavy ball stops sooner than a light one. A negative
             // value inherits the global, so the locked constant stays authoritative by default.
             var decel = b.Params.FrictionDecel >= 0.0 ? b.Params.FrictionDecel : Config.FrictionDecel;
+            decel *= tableScale;
             var next = speed - decel * h;
             if (next <= 0.0)
             {
@@ -1318,12 +1445,37 @@ public sealed class World
         // It must scale what the impact ADDED, not the struck ball's whole velocity: otherwise a
         // ball that was already rolling would have its pre-existing motion amplified too, and the
         // result would depend on history rather than on the collision.
-        var struck = a.IsCue ? b : a;
-        var struckBoost = struck.Params.CollisionBoost;
+        var strike = a.IsCue ? b : a;
+        var struckBoost = strike.Params.CollisionBoost;
         if (struckBoost > 0.0 && Math.Abs(struckBoost - 1.0) > 1e-12)
         {
             var preVel = a.IsCue ? bPreVelocity : aPreVelocity;
-            struck.Velocity = preVel + (struck.Velocity - preVel) * struckBoost;
+            strike.Velocity = preVel + (strike.Velocity - preVel) * struckBoost;
+        }
+
+        // ANTIMATTER: "collisions no longer decelerate, and the lost momentum is stacked back in the
+        // reverse direction".
+        //
+        // A restitution below 1 means the pair's closing speed along the normal drops by
+        // (1 - e) * vAlong. That shortfall is the energy a normal collision throws away. This card
+        // adds it BACK along the reverse normal, scaled by AntimatterGain: at 1.0 the collision
+        // becomes perfectly non-losing, and above 1.0 the pair actually gains momentum, which is what
+        // "叠加" asks for.
+        //
+        // It must NOT be folded into the restitution coefficient: restitution is clamped to [0,1] by
+        // Validate() precisely because a coefficient above 1 is a divergence risk stated in the locked
+        // table. A separate additive term keeps that invariant intact and makes the card removable.
+        if (Cards.Antimatter)
+        {
+            var lost = (1.0 - restitution) * (-vAlong);
+            if (lost > 0.0)
+            {
+                var add = lost * Cards.AntimatterGain;
+                // Reverse normal: +n pushes b one way and a the other, exactly like the impulse above.
+                a.Velocity -= n * (add * (invA / invSum));
+                b.Velocity += n * (add * (invB / invSum));
+                Stats.AntimatterBoosts++;
+            }
         }
 
         if (Config.SpeedCap > 0.0)
@@ -1579,15 +1731,334 @@ public sealed class World
         b.Velocity = Vec2.Zero;
         Stats.PocketCaptures++;
 
-        // The CUE going down is not progress and must not trigger a win check; every OTHER ball counts,
-        // whatever its type. This used to test `Type != BallType.Object`, which meant potting a heavy or
-        // bomb ball was not counted at all.
-        if (b.IsCue) return;
+        // ------- the CUE going down is not progress -------------------------------------------
+        if (b.IsCue)
+        {
+            // tibo: the cue being pocketed is normally just a wasted ball, but this card turns it
+            // into a full refund of the rewind allowance, which is the whole point of the card.
+            ApplyTiboRefund();
+            return;
+        }
+
+        // ------- an OBJECT ball went down: this is where the reward lives -----------------------
+        //
+        // The user's rule: on a pot, draw three cards from the pool and make the player pick one.
+        // Queued rather than applied here because the choice is the player's, and the simulation has
+        // to stop until it is made. The win check is deliberately BELOW this so that the final pot of
+        // a level still draws -- otherwise the last, most satisfying pot of every level would be the
+        // one pot that gives nothing.
+        QueueCardDraw();
+
         if (PocketedObjectCount < ObjectBallCount) return;
         Won = true;
         Frozen = true;
         EndRewindInternal(zeroVelocity: true);
     }
+
+    /// <summary>Offer a fresh three-card draw, unless one is already waiting.</summary>
+    private void QueueCardDraw()
+    {
+        if (AwaitingCardChoice) return;
+        var hand = CardPool.Draw(ref _cardRng, Cards, 3);
+        if (hand.Count == 0) return;   // pool exhausted: nothing left to offer
+        PendingDraw = hand;
+        CardDraws++;
+    }
+
+    /// <summary>
+    /// Take one of the pending cards. Returns false when the index is out of range, which is how the
+    /// UI refuses a stray click. The chosen card is applied immediately -- the user asked for the
+    /// card to "take effect" on selection, not on some later trigger.
+    /// </summary>
+    public bool ChooseCard(int index)
+    {
+        if (!AwaitingCardChoice) return false;
+        if (index < 0 || index >= PendingDraw.Count) return false;
+
+        var id = PendingDraw[index];
+        PendingDraw = null;
+        Cards.Taken.Add(id);
+        ApplyCard(CardPool.Get(id));
+        return true;
+    }
+
+    /// <summary>Apply a card's effect. Every branch is idempotent in the sense that taking the same
+    /// card twice is impossible (<see cref="CardPool.Draw"/> excludes taken ids), so no branch has to
+    /// defend against being applied twice.</summary>
+    private void ApplyCard(CardDef def)
+    {
+        if (def == null) return;
+
+        switch (def.Id)
+        {
+            case CardId.Ice:
+                // Multiplicative so a future "take Ice twice" (a different pool) composes.
+                Cards.FrictionScale *= def.FrictionScale;
+                break;
+
+            case CardId.Antimatter:
+                Cards.Antimatter = true;
+                Cards.AntimatterGain = def.AntimatterGain;
+                break;
+
+            case CardId.Titan:
+                ApplyTitan(def);
+                break;
+
+            case CardId.Tibo:
+                // Nothing to do on acquisition: this card is a RULE about the cue being pocketed, and
+                // the rule is checked in Capture(). Recording it in Taken is the whole effect.
+                break;
+
+            case CardId.Balloon:
+                Cards.BalloonArmed = true;
+                break;
+
+            case CardId.TimeCocoon:
+                ApplyTimeCocoon(def);
+                break;
+        }
+
+        Stats.CardsTaken++;
+    }
+
+    /// <summary>
+    /// Titan: the cue's radius grows and its mass grows with it.
+    ///
+    /// Why the mass increase is the interesting half: an earlier fix for "a full-power head-on hit
+    /// leaves the cue with 2% of its speed" was to make the cue heavier, which is also why this card
+    /// costs mass. The radius is what makes it read visually and what makes it easier to contact
+    /// balls; the mass is the tax.
+    /// </summary>
+    private void ApplyTitan(CardDef def)
+    {
+        var cue = Cue;
+        cue.Radius *= def.TitanRadiusScale;
+        cue.Mass *= def.TitanMassScale;
+        cue.Params.Mass = cue.Mass;
+        Cards.Titan = true;
+
+        // A bigger cue may now overlap the rail box or another ball. Push it to a legal position
+        // rather than letting the next step resolve a large penetration in one go, which would look
+        // like a teleport.
+        ClampCueToTable(cue);
+        ResolveAllOverlaps();
+    }
+
+    /// <summary>
+    /// Time Cocoon: burn up to N rewind layers, put the cue back at its start position, and give the
+    /// player a fresh swing. The other balls do NOT move -- that is the card's stated identity, and
+    /// it is what makes it useful when the layout is already good and only the cue is stuck.
+    ///
+    /// "Immediately reduces at most 4 rewind layers" is read as CONSUMING the budget: the card spends
+    /// layers to buy the reset, so it is not a free retry. Burning more than the player has is
+    /// clamped rather than refused, so the card is never dead on arrival.
+    /// </summary>
+    private void ApplyTimeCocoon(CardDef def)
+    {
+        var burned = 0;
+        if (Budget.MaxSegments > 0)
+        {
+            for (var i = 0; i < def.MaxLayersBurned && RewindSegmentsUsed < Budget.MaxSegments; i++)
+            {
+                RewindSegmentsUsed++;
+                burned++;
+            }
+        }
+        else
+        {
+            burned = def.MaxLayersBurned;
+            RewindSegmentsUsed += burned;
+        }
+
+        Cards.LayersBurned = burned;
+
+        // Return the cue to where the level started it, kill its velocity and drop its history so
+        // the rewind verb starts from a clean slate.
+        var cue = Cue;
+        var spawn = Level.Balls[0];
+        if (Rewinding) EndRewindInternal(zeroVelocity: true);
+        cue.Position = new Vec2(spawn.X, spawn.Y);
+        cue.Velocity = Vec2.Zero;
+        cue.Pocketed = false;
+        cue.History.Reset(cue.Position, Vec2.Zero, Time);
+        _track = null;
+        _cursor = 0;
+        _u = 0.0;
+
+        // "gets one more swing": give the shot back, clamped to the level's own allowance so a level
+        // with maxShots 1 does not silently become a two-strike level.
+        if (ShotsUsed > 0) ShotsUsed--;
+
+        ClampCueToTable(cue);
+        ResolveAllOverlaps();
+    }
+
+    /// <summary>tibo: refill the rewind allowance when the cue is pocketed.</summary>
+    private void ApplyTiboRefund()
+    {
+        if (!Cards.Has(CardId.Tibo)) return;
+        RewindSegmentsUsed = 0;
+        RewindDistanceUsed = 0.0;
+        Stats.TiboRefunds++;
+    }
+
+    /// <summary>Keep a ball's centre inside the rail box. Used after a radius change.</summary>
+    private void ClampCueToTable(Ball b)
+    {
+        var x = b.Position.X;
+        var y = b.Position.Y;
+        if (x - b.Radius < Level.TableLeft) x = Level.TableLeft + b.Radius;
+        if (x + b.Radius > Level.TableRight) x = Level.TableRight - b.Radius;
+        if (y - b.Radius < Level.TableTop) y = Level.TableTop + b.Radius;
+        if (y + b.Radius > Level.TableBottom) y = Level.TableBottom - b.Radius;
+        b.Position = new Vec2(x, y);
+    }
+
+    // ------------------------------------------------------------------ balloon
+
+    /// <summary>
+    /// The balloon card, evaluated once per step after the physics has run.
+    ///
+    /// The card's bargain, exactly as specified: the next time the cue's speed reaches zero the run is
+    /// LOST -- but the cue flies up, and the first ball it touches is carried into a pocket.
+    ///
+    /// Why it is phrased as "reaches zero" rather than "is at rest": the kernel's locked friction rule
+    /// snaps a ball to exactly zero when its velocity crosses zero (§3), so "reached zero" is a real,
+    /// observable event rather than an epsilon test that a slow-moving ball could satisfy by accident.
+    /// The arm is one-shot: it fires once and then the card is spent, so a lost run cannot be
+    /// mistaken for a win if the carried ball happens to drop.
+    /// </summary>
+    private void UpdateBalloon()
+    {
+        if (!Cards.BalloonArmed || Cards.Lost || Won || Frozen) return;
+
+        // A rewind moves the cue kinematically, so its speed is not a "dead ball" signal: if the
+        // balloon fired mid-rewind the player could never use the rewind verb again.
+        if (Rewinding) return;
+
+        var cue = Cue;
+
+        if (Cards.BalloonFlying)
+        {
+            CarryBalloonTarget();
+            return;
+        }
+
+        if (cue.Speed > 1e-9) return;
+
+        // The cue has stopped: the balloon takes flight.
+        Cards.BalloonFlying = true;
+        Cards.BalloonTarget = -1;
+        Stats.BalloonFailures++;
+
+        // Fly to the nearest ball and carry it. Flying is modelled as an immediate decision rather
+        // than as a visible arc, because the kernel has no notion of height and faking one with a
+        // velocity would corrupt the deterministic physics. The VIEW draws the arc.
+        var target = NearestBallTo(cue);
+        if (target < 0)
+        {
+            LoseRun("气球飞起时台上已经没有可带走的球");
+            return;
+        }
+
+        Cards.BalloonTarget = target;
+    }
+
+    /// <summary>
+    /// Second half of the balloon flight: carry the touched ball into a pocket, then end the run.
+    /// Kept separate from the arm so the view can show the cue rising before the ball drops.
+    /// </summary>
+    private void CarryBalloonTarget()
+    {
+        var target = Cards.BalloonTarget;
+        if (target < 0 || target >= Balls.Length) return;
+        var ball = Balls[target];
+        if (ball.Pocketed)
+        {
+            LoseRun("气球带走的球在途中已被其他方式打进球袋");
+            return;
+        }
+
+        // Aim at the nearest pocket and hand the ball enough speed to reach it. This is a REAL
+        // capture (it goes through Capture, so it triggers the draw and the win check) rather than a
+        // flag being flipped, so a balloon delivery can still win the level -- which is the entire
+        // reason a player would ever take this card.
+        var pocket = NearestPocketTo(ball.Position);
+        if (pocket == null)
+        {
+            LoseRun("气球找不到可用的球袋");
+            return;
+        }
+
+        var toPocket = pocket.Center - ball.Position;
+        var dist = toPocket.Length;
+        if (dist > 1e-9)
+        {
+            var dir = toPocket / dist;
+            var speed = Math.Min(CardPool.Get(CardId.Balloon).BalloonCarrySpeed, Config.SpeedCap);
+            ball.Velocity = dir * speed;
+        }
+
+        Cards.BalloonFlying = false;
+        Cards.BalloonTarget = -1;
+
+        // Deliver immediately instead of waiting for the ball to travel: the run is about to end, and
+        // leaving the capture to the next step would make the outcome depend on how many steps the
+        // caller happens to run after the loss.
+        Capture(ball);
+        if (!Won) LoseRun("气球把白球留在了台上");
+    }
+
+    private int NearestBallTo(Ball from)
+    {
+        var best = -1;
+        var bestDist = double.PositiveInfinity;
+        for (var i = 0; i < Balls.Length; i++)
+        {
+            var b = Balls[i];
+            if (b.Pocketed || b.IsCue) continue;
+            var d = (b.Position - from.Position).LengthSquared;
+            if (d < bestDist)
+            {
+                bestDist = d;
+                best = i;
+            }
+        }
+
+        return best;
+    }
+
+    private PocketDef NearestPocketTo(Vec2 position)
+    {
+        PocketDef best = null;
+        var bestDist = double.PositiveInfinity;
+        foreach (var p in Level.Pockets)
+        {
+            var d = (p.Center - position).LengthSquared;
+            if (d < bestDist)
+            {
+                bestDist = d;
+                best = p;
+            }
+        }
+
+        return best;
+    }
+
+    private void LoseRun(string reason)
+    {
+        if (Cards.Lost) return;
+        Cards.Lost = true;
+        Cards.LostReason = reason;
+        Cards.BalloonFlying = false;
+        Cards.BalloonTarget = -1;
+        Frozen = true;
+        EndRewindInternal(zeroVelocity: true);
+    }
+
+    /// <summary>True once the level can no longer be won (the balloon card ended it).</summary>
+    public bool Lost => Cards.Lost;
 
     // ------------------------------------------------------------------- misc
 

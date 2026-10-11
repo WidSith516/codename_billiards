@@ -178,8 +178,18 @@ public sealed class PhysicsConfig
 
     /// <summary>
     /// Hard speed cap for every ball, px/s. NOT LOCKED any more -- see the raised value below.
+    ///
+    /// Raised 2000 -> 5600 when the rail engine landed, then 5600 -> 8000 for the rapid-tap
+    /// "death-throe" kick and the event cards (Titan grows the cue, Antimatter removes collision
+    /// losses, several cards hand out momentum). The rail engine alone needs 1258 + 3*1258 = 5032;
+    /// 8000 leaves headroom above that so a card-driven chain is never silently truncated by
+    /// ClampSpeeds -- a clamp that fires is indistinguishable from "the mechanic did nothing".
+    ///
+    /// The cost of a higher cap is integrator work, not correctness: intervals are solved
+    /// analytically by time of impact and sub-divided by travel, so a faster ball simply takes
+    /// more substeps while every step still asserts the chord budget.
     /// </summary>
-    public double SpeedCap = 5600.0;
+    public double SpeedCap = 8000.0;
 
     /// <summary>LOCKED. Arc-length history sampling interval, px.</summary>
     public double HistoryStepPx = 2.0;
@@ -231,6 +241,32 @@ public sealed class PhysicsConfig
     /// Only reachable in a degenerate case; a real release always has a path.
     /// </summary>
     public Vec2 LastResortReleaseDir = new Vec2(0.0, -1.0);
+
+    /// <summary>
+    /// DEATH-THROE KICK. The user's rule: "within 10 distance, repeatedly tapping R counts as only
+    /// two" -- i.e. several panicked taps delivered at essentially the same place on the table are
+    /// one deliberate act of two taps, and the SECOND of those two taps is a last-ditch burst of
+    /// speed rather than another crawl.
+    ///
+    /// Distance, not time, is the gate. A tap is "in the same cluster" when the cue has moved less
+    /// than this many px since the previous tap, which is what makes the rule about what the PLAYER
+    /// did (hammering R while nothing happens) rather than about a frame rate. Time-based debouncing
+    /// would fire differently on a 144 Hz machine than on a 60 Hz one.
+    /// </summary>
+    public double RapidTapClusterPx = 10.0;
+
+    /// <summary>Taps allowed inside one cluster before further taps are ignored. The user's number: 2.</summary>
+    public int RapidTapMaxPerCluster = 2;
+
+    /// <summary>
+    /// Fraction of the LAUNCH SPEED granted as EXTRA release speed by the second tap of a cluster --
+    /// the "death throe". The first tap of a cluster is an ordinary rewind; only the second gets this,
+    /// so the mechanic costs a rewind segment and cannot be spammed for free energy.
+    /// </summary>
+    public double RapidTapBonusFrac = 0.5;
+
+    /// <summary>Rewind segments a death-throe kick consumes (it is a real rewind, just a desperate one).</summary>
+    public double RapidTapMinReleaseFrac = 0.5;
 
     /// <summary>LOCKED. Pocket capture radius, px.</summary>
     public double PocketRadius = 24.0;

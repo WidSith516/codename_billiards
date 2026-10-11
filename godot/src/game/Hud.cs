@@ -69,6 +69,24 @@ public static class Hud
         /// <summary>Remaining rail speed boosts for the cue ball; a negative value means unlimited.</summary>
         public int WallBoostsRemaining = -1;
 
+        /// <summary>Names of the event cards this run has taken, in acquisition order.</summary>
+        public System.Collections.Generic.List<string> Cards;
+
+        /// <summary>Rapid taps used in the current cluster (0..2). Shown so the player can see that
+        /// mashing R has stopped paying.</summary>
+        public int RapidTapCount;
+
+        /// <summary>True while the next tap would be the death-throe kick.</summary>
+        public bool NextTapIsDeathThroe;
+
+        /// <summary>True while the balloon card is armed (the next dead stop loses the run).</summary>
+        public bool BalloonArmed;
+
+        /// <summary>True once the run has been lost.</summary>
+        public bool Lost;
+
+        public string LostReason;
+
         public World World;
         public TimelineTrail Trail;
         public RewindVisualizer RewindVis;
@@ -232,6 +250,58 @@ public static class Hud
         else
         {
             Text(ci, font, x, 228, "F1  显示调试面板", 11, Palette.TextDim);
+        }
+
+        // --- event cards + the two run-ending risks ------------------------ y 296 .. 336
+        // Shown OUTSIDE the debug switch on purpose: which cards a run holds is not debug
+        // information, it is the run's state, and the player must be able to read it at any time.
+        var cy2 = 300.0f;
+        if (m.Cards != null && m.Cards.Count > 0)
+        {
+            Text(ci, font, x, cy2, "事件卡", 12, Palette.TextDim);
+            var cx = x + 62;
+            foreach (var name in m.Cards)
+            {
+                var w = font.GetStringSize(name, HorizontalAlignment.Left, -1, 12).X + 12.0f;
+                if (cx + w > x + 226.0f)
+                {
+                    cx = x + 62;
+                    cy2 += 19.0f;
+                }
+
+                ci.DrawRect(new Rect2(cx, cy2 - 11, w, 16), Palette.PanelRaised);
+                Text(ci, font, cx + 6, cy2, name, 12, Palette.Accent);
+                cx += w + 5.0f;
+            }
+
+            cy2 += 21.0f;
+        }
+
+        // The rapid-tap rule must be visible: without a readout, "my third tap did nothing" and
+        // "the game is broken" are the same experience.
+        if (m.ShotUsed && !m.Won && !m.Lost)
+        {
+            var taps = m.RapidTapCount;
+            var label = taps == 0 ? "R 连击 0/2"
+                : taps == 1 ? "R 连击 1/2 · 下一击 = 垂死挣扎"
+                : "R 连击已满 · 需移动 10px 以上才能再回溯";
+            Text(ci, font, x, cy2, label, 11, taps >= 2 ? Palette.Bad : Palette.TextDim);
+            cy2 += 18.0f;
+        }
+
+        if (m.BalloonArmed)
+        {
+            Text(ci, font, x, cy2, "⚠ 气球已充气：速度归零即失败", 12, Palette.Bad);
+            cy2 += 18.0f;
+        }
+
+        if (m.Lost)
+        {
+            Text(ci, font, x, cy2, "本关失败", 14, Palette.Bad);
+            if (!string.IsNullOrEmpty(m.LostReason))
+            {
+                Text(ci, font, x, cy2 + 17, m.LostReason, 11, Palette.TextDim);
+            }
         }
 
         // --- transport hint ------------------------------------------------ y 306 .. 322

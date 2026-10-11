@@ -52,6 +52,24 @@ public partial class Play : Node2D
     private TimelineTrail _trail;
     private readonly RewindVisualizer _rewindVis = new RewindVisualizer();
 
+    /// <summary>Transient cosmetic effects (rail ripples, contact streaks, pot bursts). Never read by
+    /// the simulation, so they cannot affect it.</summary>
+    private readonly Effects _effects = new Effects();
+
+    /// <summary>Index the player has highlighted in the card hand, or -1.</summary>
+    private int _cardHover = -1;
+
+    /// <summary>
+    /// Set by <c>--state=rail</c>: hold transient effects at their birth so a capture taken several
+    /// frames later still shows them. Capture plumbing only; live play never sets this.
+    /// </summary>
+    private bool _captureHoldEffects;
+
+    /// <summary>The hand currently on screen, mirrored from the world so the draw is not rebuilt every
+    /// frame (and so a paused draw cannot shift under the cursor).</summary>
+    private readonly System.Collections.Generic.List<CardId> _cardHand =
+        new System.Collections.Generic.List<CardId>();
+
     // The decorative sine bands. Two of them, mirrored at the top and bottom of the page; see
     // godot/src/game/ReplayBand.cs. Decoration with no game state, driven by the rewind distance the
     // HUD already measures.
@@ -598,6 +616,73 @@ public partial class Play : Node2D
                 _debugOverlay = true;
                 break;
 
+            case "rail":
+                // Freeze the world at the instant a rail is hit so the ripple and the contact streak are
+                // both on screen. The effect is spawned through the SAME production path the frame loop
+                // uses (SpawnRailEffects), so the capture proves the shipped code, not a parallel one.
+                SetAim(7.0, 170.0);
+                FireShot();
+                for (var i = 0; i < 6000; i++)
+                {
+                    var before = _world.Stats.RailTransforms;
+                    _world.Step();
+                    if (_world.Stats.RailTransforms > before)
+                    {
+                        SpawnRailEffects(_world.Stats.RailTransforms - before);
+                        break;
+                    }
+                }
+
+                _freezeWorld = true;
+                _captureHoldEffects = _outPath != null;
+
+                // Age the effect to mid-life before holding it. At birth the wavefront radius is only the
+                // cushion's half-width, so the captured ring is a ~15 px arc at the contact point -- the
+                // mechanic works but the screenshot proves nothing about the "spreading" the user asked
+                // for. One Update() call advances it to the point where the wave has travelled.
+                _effects.Update(0.35);
+
+                GD.Print($"[play] rail state: railTransforms={_world.Stats.RailTransforms} " +
+                         $"effects={_effects.Count} cue=({_world.Cue.Position.X:F0},{_world.Cue.Position.Y:F0}) " +
+                         $"r={_world.Cue.Radius:F1} v=({_world.Cue.Velocity.X:F0},{_world.Cue.Velocity.Y:F0}) " +
+                         $"wall={ContactWallOf(_world.Cue)}");
+                break;
+
+            case "cards":
+                // Drive a real pot and stop with the hand on screen.
+                //
+                // The aim is SEARCHED, not guessed: this level's own witness (-90 deg / power 96) is the
+                // only shot on record that pots a ball here, and a hard 7-degree break does not pot at
+                // all -- which is how the first version of this capture produced an empty hand.
+                SetAim(-90.0, 96.0);
+                FireShot();
+                Settle();
+                if (!_world.AwaitingCardChoice)
+                {
+                    // Still nothing: try the rewind the level is actually built around, since the
+                    // corridor's second ball is potted by the reverse pass, not by the strike.
+                    BeginRewind();
+                    AdvanceRewindToArc(102.0);
+                    ReleaseRewind();
+                    Settle();
+                }
+
+                if (!_world.AwaitingCardChoice)
+                {
+                    for (var i = 0; i < 20000 && !_world.AwaitingCardChoice && !_world.Frozen; i++) _world.Step();
+                }
+
+                _cardHover = 1;
+
+                // Let the reveal flourish finish before freezing: the cards slide up from below, so a
+                // capture taken on the frame the hand appears shows them mid-slide and half off-screen.
+                _effects.Update(1.0);
+
+                _freezeWorld = true;
+                GD.Print($"[play] cards state: awaiting={_world.AwaitingCardChoice} " +
+                         $"hand={_cardHand.Count} potted={_world.PocketedObjectCount}/{_world.ObjectBallCount}");
+                break;
+
             default:
                 GD.Print($"[play] unknown state '{state}', falling back to aim");
                 SetAim(7.0, 170.0);
@@ -1096,7 +1181,10 @@ public partial class Play : Node2D
         {
             // A scripted capture freezes the world at the prepared state: the crawl would otherwise
             // keep running during the frames that precede the screenshot and capture another moment.
-            if (!_rewindVis.Paused && !_freezeWorld) _world.Step();
+            //
+            // A pending card draw also stops stepping: the user asked for the draw to PAUSE the game
+            // and require a choice, so no physics may advance while the hand is on screen.
+            if (!_rewindVis.Paused && !_freezeWorld && !CardChoiceOpen) _world.Step();
         }
 
         UpdateTutorial();
@@ -1147,6 +1235,11 @@ public partial class Play : Node2D
         // The band must be advanced AFTER the steps above, so the phase delta it reads is this
         // frame's real rewind and not the previous frame's remainder.
         UpdateBand(delta);
+        // A scripted capture freezes the world and then waits N frames before saving. Effects age by real
+        // time, so a 0.85 s ripple would be gone by then and the screenshot would show an empty table.
+        // Holding them is capture plumbing only; live play ages them normally.
+        if (!_captureHoldEffects) _effects.Update(delta);
+        UpdateCards();
         var now = Time.GetTicksUsec() / 1000.0;
         if (_lastFrameAt > 0.0)
         {
@@ -1221,6 +1314,18 @@ public partial class Play : Node2D
                 break;
 
             case InputEventMouseMotion motion:
+                if (CardChoiceOpen)
+                {
+                    var hover = CardIndexAt(motion.Position);
+                    if (hover != _cardHover)
+                    {
+                        _cardHover = hover;
+                        if (hover >= 0) _audio?.Play(SoundBank.Cue.UiHover, 0.7f, 1.0f);
+                    }
+
+                    break;
+                }
+
                 if (_dragging) _dragPoint = motion.Position;
                 if (_rewindVis.Scrubbing && motion.ButtonMask.HasFlag(MouseButtonMask.Left))
                 {
@@ -1233,6 +1338,23 @@ public partial class Play : Node2D
 
     private void HandleKey(InputEventKey key)
     {
+        // A pending draw OWNS the keyboard: the user asked for the choice to be mandatory, so while a
+        // hand is on screen only the three pick keys are accepted. Without this guard R / Space /
+        // Escape would let the player act on a frozen world and desynchronise the hand from the state
+        // it was drawn for.
+        if (CardChoiceOpen)
+        {
+            if (!key.Pressed) return;
+            switch (key.Keycode)
+            {
+                case Key.Key1: ChooseCard(0); break;
+                case Key.Key2: ChooseCard(1); break;
+                case Key.Key3: ChooseCard(2); break;
+            }
+
+            return;
+        }
+
         switch (key.Keycode)
         {
             case Key.R:
@@ -1359,6 +1481,15 @@ public partial class Play : Node2D
     private void HandleMouse(InputEventMouseButton button)
     {
         if (button.ButtonIndex != MouseButton.Left) return;
+
+        // A pending draw owns the mouse too: the only legal click is on a card.
+        if (CardChoiceOpen)
+        {
+            if (!button.Pressed) return;
+            var hit = CardIndexAt(button.Position);
+            if (hit >= 0) ChooseCard(hit);
+            return;
+        }
 
         if (button.Pressed)
         {
@@ -1568,10 +1699,15 @@ public partial class Play : Node2D
             var used = _world.Cue != null ? _world.Cue.WallBoostsUsed : 0;
             var pitch = 0.95f + Math.Min(used, 6) * 0.06f;
             _audio?.Play(SoundBank.Cue.RailBounce, 0.75f, pitch);
+            SpawnRailEffects(rails);
         }
 
         var pockets = s.PocketCaptures - _prevStats.PocketCaptures;
-        if (pockets > 0) _audio?.Play(SoundBank.Cue.Pocket, 0.95f, 0.96f + (float)GD.Randf() * 0.12f);
+        if (pockets > 0)
+        {
+            _audio?.Play(SoundBank.Cue.Pocket, 0.95f, 0.96f + (float)GD.Randf() * 0.12f);
+            SpawnPotEffects(pockets);
+        }
 
         var holes = s.WhiteHoleActivations - _prevStats.WhiteHoleActivations;
         if (holes > 0) _audio?.Play(SoundBank.Cue.WhiteHole, 0.95f);
@@ -1597,6 +1733,206 @@ public partial class Play : Node2D
 
     private bool _wasRewinding;
     private bool _playedWinSound;
+
+    // ------------------------------------------------------------------ effects
+
+    /// <summary>
+    /// Turn a rail hit into the ripple + streak the user asked for.
+    ///
+    /// THE WALL IS FOUND BY PROJECTION, NOT BY PROXIMITY, and that distinction is a real bug fix.
+    ///
+    /// The kernel reports only a COUNT, so which wall was hit has to be recovered from the ball's state.
+    /// The obvious version tests "is the ball's edge within slop of a wall" -- which works only if the
+    /// effect is spawned on the very step the ball touches the cushion. But sounds and effects are driven
+    /// from per-FRAME stat deltas, and a frame runs several physics steps: by the time the view notices
+    /// the counter moved, the ball has already left the cushion, matches no wall, and the effect silently
+    /// never appears. Measured on the first capture attempt: effects=0 with railTransforms=1.
+    ///
+    /// So instead the ball is projected back onto whichever wall its REFLECTED velocity says it just came
+    /// off: after a bounce off the right wall the cue is heading left, and so on. That is exact regardless
+    /// of how many steps have passed since the contact, because the reflection direction is what the
+    /// reflection wrote.
+    /// </summary>
+    private void SpawnRailEffects(int count)
+    {
+        var ball = _world.Cue;
+        if (ball == null || _level == null) return;
+
+        var pos = new Vector2((float)ball.Position.X, (float)ball.Position.Y);
+        var r = (float)ball.Radius;
+        var heading = new Vector2((float)ball.Velocity.X, (float)ball.Velocity.Y);
+
+        var wall = ContactWallOf(ball);
+        if (wall < 0) return;
+
+        var along = ContactAlongOf(ball);
+        var contact = ContactPointOf(ball);
+
+        // Whether the rail actually PAID OUT. The player must be able to SEE the allowance run out,
+        // because otherwise "the rail stopped giving" looks identical to "the rail did nothing".
+        var boosted = ball.CanTakeWallBoost;
+
+        _effects.RailHit(wall, along, contact, heading, Palette.RailBoost, boosted);
+        if (count > 1 && boosted)
+        {
+            // Extra bounces this frame: offset duplicates along the wall so they read as a wavefront.
+            for (var i = 1; i < Math.Min(count, 3); i++)
+            {
+                var offset = (i % 2 == 1 ? 1.0f : -1.0f) * i * 46.0f;
+                _effects.RailHit(wall, along + offset, contact, heading, Palette.RailBoost, false);
+            }
+        }
+
+        _ = r;
+        _ = pos;
+    }
+
+    /// <summary>
+    /// Which wall the ball most recently bounced off, or -1. Delegates to
+    /// <see cref="Effects.WallFromHeading"/> so the mapping has exactly one implementation and is unit
+    /// testable without a Play node.
+    /// </summary>
+    private int ContactWallOf(Ball ball) => Effects.WallFromHeading(ball.Velocity);
+
+    /// <summary>Position along the contacted wall, in table coordinates.</summary>
+    private float ContactAlongOf(Ball ball)
+    {
+        var wall = ContactWallOf(ball);
+        return wall <= 1 ? (float)ball.Position.Y : (float)ball.Position.X;
+    }
+
+    /// <summary>The contact point itself: the ball projected onto the wall it came off.</summary>
+    private Vector2 ContactPointOf(Ball ball)
+    {
+        var wall = ContactWallOf(ball);
+        var r = (float)ball.Radius;
+        var pos = new Vector2((float)ball.Position.X, (float)ball.Position.Y);
+        switch (wall)
+        {
+            case 0: return new Vector2((float)_level.TableLeft + r, pos.Y);
+            case 1: return new Vector2((float)_level.TableRight - r, pos.Y);
+            case 2: return new Vector2(pos.X, (float)_level.TableTop + r);
+            case 3: return new Vector2(pos.X, (float)_level.TableBottom - r);
+            default: return pos;
+        }
+    }
+
+    /// <summary>Pot bursts, driven from the same stat delta the pot sound uses.</summary>
+    private void SpawnPotEffects(int pockets)
+    {
+        if (pockets <= 0 || _level == null) return;
+        foreach (var b in _world.Balls)
+        {
+            if (!b.Pocketed) continue;
+            var at = new Vector2((float)b.Position.X, (float)b.Position.Y);
+
+            // Snap the burst to the pocket the ball actually fell into, not to where the ball sat.
+            var best = at;
+            var bestDist = float.MaxValue;
+            foreach (var p in _level.Pockets)
+            {
+                var c = new Vector2((float)p.Center.X, (float)p.Center.Y);
+                var d = (c - at).LengthSquared();
+                if (d < bestDist)
+                {
+                    bestDist = d;
+                    best = c;
+                }
+            }
+
+            _effects.Pot(best, Palette.Accent);
+        }
+    }
+
+    // ------------------------------------------------------------------ cards
+
+    /// <summary>
+    /// Mirror the world's pending hand into the view. The world OWNS the hand but pauses nothing
+    /// itself -- the kernel is stepped by whoever calls Step -- so the view stops stepping while a
+    /// draw is pending, which is what "pause and require a choice" means in practice.
+    /// </summary>
+    private void UpdateCards()
+    {
+        if (_world == null) return;
+
+        if (!_world.AwaitingCardChoice)
+        {
+            if (_cardHand.Count > 0)
+            {
+                _cardHand.Clear();
+                _cardHover = -1;
+            }
+
+            return;
+        }
+
+        var pending = _world.PendingDraw;
+        var changed = _cardHand.Count != pending.Count;
+        if (!changed)
+        {
+            for (var i = 0; i < pending.Count; i++)
+            {
+                if (_cardHand[i] != pending[i]) changed = true;
+            }
+        }
+
+        if (!changed) return;
+
+        _cardHand.Clear();
+        _cardHand.AddRange(pending);
+        _cardHover = -1;
+        _effects.CardReveal();
+        _audio?.Play(SoundBank.Cue.UiHover, 1.0f, 0.85f);
+    }
+
+    /// <summary>Take card <paramref name="index"/> from the hand and resume play.</summary>
+    private void ChooseCard(int index)
+    {
+        if (!_world.AwaitingCardChoice) return;
+        if (index < 0 || index >= _cardHand.Count) return;
+
+        var id = _cardHand[index];
+        if (!_world.ChooseCard(index)) return;
+
+        var def = CardPool.Get(id);
+        _cardHand.Clear();
+        _cardHover = -1;
+        _rewindVis.Reset();
+        _trail.Reset();
+        _aimCache.Invalidate();
+        _audio?.Play(SoundBank.Cue.UiClick, 1.0f, 1.05f);
+        Notify($"获得事件卡 · {def?.Name ?? id.ToString()}：{def?.Short}", Palette.Accent);
+        QueueRedraw();
+    }
+
+    /// <summary>True while the draw is open: the simulation must not advance.</summary>
+    private bool CardChoiceOpen => _world != null && _world.AwaitingCardChoice;
+
+    /// <summary>The physical table box, in table space.</summary>
+    private Rect2 TableBox() => new Rect2(
+        (float)_level.TableLeft, (float)_level.TableTop,
+        (float)_level.TableWidth, (float)_level.TableHeight);
+
+    /// <summary>Draw the hand. UI space, so this must run inside the inverse-scale transform.</summary>
+    private void DrawCardPanel()
+    {
+        if (!CardChoiceOpen) return;
+
+        // Sync HERE as well as in _Process. A scripted capture can reach _Draw without another _Process
+        // tick, and the first version of the cards capture therefore drew nothing while the world
+        // correctly reported a pending hand -- an inconsistency between the two halves of the feature.
+        // UpdateCards is idempotent, so calling it from both places is free.
+        UpdateCards();
+        if (_cardHand.Count == 0) return;
+        CardPanel.Draw(this, _font, _cardHand, _cardHover, _effects.CardRevealT);
+    }
+
+    /// <summary>Which card is under a point, or -1. Uses the SAME rect source as the drawing.</summary>
+    private int CardIndexAt(Vector2 point)
+    {
+        if (!CardChoiceOpen) return -1;
+        return CardPanel.IndexAt(point, _cardHand.Count, _cardHover);
+    }
 
     /// <summary>The autoloaded audio front end, or null when it is unavailable (headless runs).</summary>
     private Audio _audio;
@@ -1756,6 +2092,19 @@ public partial class Play : Node2D
         DrawRoom();
         DrawTable();
 
+        // ---- rail effects, in TABLE space ----------------------------------------------------
+        // Drawn after the table but before the balls, so a ball is never hidden by the wave it caused.
+        // The ripple lives in the cushion band; the streak starts at the contact point.
+        if (HasArg("--trace-fx") && _frames % 30 == 0)
+        {
+            GD.Print($"[fx] frame={_frames} effects={_effects.Count} hold={_captureHoldEffects} " +
+                     $"tableBox={TableBox()}");
+        }
+
+        _effects.DrawRailRipples(this, TableBox());
+        _effects.DrawStreaks(this);
+        _effects.DrawPotBursts(this);
+
         if (_trail.ShowTrail) _trail.Draw();
         if (HasArg("--trace-draw")) GD.Print($"[draw] frame={_frames} {_trail.Stats()} show={_trail.ShowTrail} " +
             $"ranges={_trail.DebugChunkCount()} firstPt={_trail.DebugPoint(0)} lastPt={_trail.DebugPoint(_trail.CachedVertexCount - 1)}");
@@ -1784,6 +2133,7 @@ public partial class Play : Node2D
         Hud.Draw(this, _font, BuildHudModel());
         if (_debugOverlay) Hud.DrawDebug(this, _font, BuildHudModel());
         DrawTutorial();
+        DrawCardPanel();
         DrawSetTransform(Vector2.Zero, 0.0f, Vector2.One);
 
         // The decorative bands are drawn last, in UI space and OUTSIDE the inverse-view-scale block,
@@ -2299,8 +2649,27 @@ public partial class Play : Node2D
             SimMs = _simMs,
             TrailVertices = _trail.CachedVertexCount,
             Bands = _bands,
+            Cards = BuildCardLabels(),
+            RapidTapCount = _world.RapidTapCount,
+            NextTapIsDeathThroe = _world.RapidTapCount == 1,
+            BalloonArmed = _world.Cards.BalloonArmed && !_world.Cards.Lost,
+            Lost = _world.Cards.Lost,
+            LostReason = _world.Cards.LostReason,
         };
         return m;
+    }
+
+    /// <summary>Card names for the HUD, or null when none have been taken.</summary>
+    private System.Collections.Generic.List<string> BuildCardLabels()
+    {
+        if (_world.Cards.Taken.Count == 0) return null;
+        var list = new System.Collections.Generic.List<string>(_world.Cards.Taken.Count);
+        foreach (var id in _world.Cards.Taken)
+        {
+            list.Add(CardPool.Get(id)?.Name ?? id.ToString());
+        }
+
+        return list;
     }
 
     /// <summary>

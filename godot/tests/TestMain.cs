@@ -182,6 +182,34 @@ public partial class TestMain : Node
         }
 
 
+        if (suite == "all" || suite == "cards")
+        {
+            Run(runner, "C01", CardTests.C01_PotDrawsThreeCards);
+            Run(runner, "C02", CardTests.C02_CuePotDoesNotDraw);
+            Run(runner, "C03", CardTests.C03_ChoosingAppliesTheCard);
+            Run(runner, "C04", CardTests.C04_DrawIsDeterministic);
+            Run(runner, "C05", CardTests.C05_PoolExcludesTakenCards);
+            Run(runner, "C06", CardTests.C06_IceReducesFriction);
+            Run(runner, "C07", CardTests.C07_TitanGrowsTheCue);
+            Run(runner, "C08", CardTests.C08_TimeCocoonResetsTheCue);
+            Run(runner, "C09", CardTests.C09_AntimatterAddsMomentumBack);
+            Run(runner, "C10", CardTests.C10_BalloonFailsOnDeadStop);
+            Run(runner, "C11", CardTests.C11_BalloonDoesNotBreakWinning);
+            Run(runner, "C12", CardTests.C12_PoolIsWellFormed);
+            Run(runner, "C13", CardTests.C13_RapidTapRule);
+            Run(runner, "C14", CardTests.C14_DeathThroeKickIsFaster);
+            Run(runner, "C15", CardTests.C15_SpeedCapIsRaisedAndHeld);
+        }
+
+        if (suite == "all" || suite == "fx")
+        {
+            Run(runner, "E01", RailEffectTests.E01_BoostedHitCreatesRippleAndStreak);
+            Run(runner, "E02", RailEffectTests.E02_UnboostedHitShowsNoPayout);
+            Run(runner, "E03", RailEffectTests.E03_EffectsExpire);
+            Run(runner, "E04", RailEffectTests.E04_RevealCompletes);
+            Run(runner, "E05", RailEffectTests.E05_ContactWallIsRecoveredFromReflection);
+        }
+
         if (negative)
         {
             // An acceptance gate that cannot fail is worse than no gate.

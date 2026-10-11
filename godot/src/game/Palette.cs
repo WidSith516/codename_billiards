@@ -236,6 +236,21 @@ public static class Palette
     // ---------------------------------------------------------------- hud
     public static readonly Color PanelBg = new Color(0.04f, 0.06f, 0.07f, 0.86f);
     public static readonly Color PanelEdge = new Color("#3a4a44");
+
+    /// <summary>Opaque card body. Distinct from <see cref="PanelBg"/>, which is translucent: a card
+    /// sits on top of the table and must not let the felt read through its text.</summary>
+    public static readonly Color Panel = new Color("#111a1c");
+
+    /// <summary>Card body while hovered: lighter, so the pointer's target is unambiguous.</summary>
+    public static readonly Color PanelRaised = new Color("#1c2a2d");
+
+    /// <summary>
+    /// The rail engine's colour: the ripple that spreads along a cushion and the streak that leaves
+    /// the contact point. Deliberately NOT themed -- it is a mechanic readout, and the player has to
+    /// be able to tell "the rail paid out" from "the rail merely bounced" in every theme.
+    /// </summary>
+    public static readonly Color RailBoost = new Color("#7fe7ff");
+
     public static readonly Color TextMain = new Color("#eef3ef");
     public static readonly Color TextDim = new Color("#9fb2a9");
     public static readonly Color Accent = new Color("#ffd166");
