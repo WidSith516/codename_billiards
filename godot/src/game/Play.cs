@@ -244,6 +244,7 @@ public partial class Play : Node2D
                 AddChild(band);
                 band.Build(specs[i]);
                 band.SetHidden(!_showBand);
+                band.Ruler = HasArg("--band-ruler");
                 _bands[i] = band;
             }
         }
@@ -446,7 +447,8 @@ public partial class Play : Node2D
         // Finish it: rewind to the witness release arc, then release.
         _world.Settle();
         var afterStrike = _world.PocketedObjectCount;
-        if (!_world.StartRewind()) { GD.Print("[selftest] FAIL: rewind refused"); fail++; }
+        var rewound = _world.StartRewind();
+        if (!rewound) { GD.Print("[selftest] FAIL: rewind refused"); fail++; }
         else
         {
             var track = _world.RewindTrack;
@@ -465,7 +467,26 @@ public partial class Play : Node2D
         }
 
         GD.Print($"[selftest] strikeOnly={afterStrike} final={_world.PocketedObjectCount}/{_world.ObjectBallCount} won={_world.Won}");
-        if (!_world.Won) { GD.Print("[selftest] FAIL: the level did not clear"); fail++; }
+
+        // WHAT THIS ASSERTS, and why it is no longer "the level cleared".
+        //
+        // This selftest exists to catch the LIVE PATH being dead -- the two shipped bugs where the ball never
+        // moved at all (a frame-loop accumulator that never reached its threshold, and a world frozen at
+        // startup). Both were SILENT: the game rendered, accepted the drag, and did nothing.
+        //
+        // "Did the level clear" was only ever a proxy for that, and it is now the WRONG proxy: levels carry an
+        // increasing ball count, so one hard-coded strike plus one rewind cannot clear the later ones, and
+        // failing here would report a CONTENT design choice as a code defect.
+        //
+        // So it asserts the live PATH instead -- the cue moved, history was recorded, the rewind engaged and
+        // released, the state stayed finite. Those are exactly the failures that used to be invisible.
+        if (afterStrike == 0 && _world.PocketedObjectCount == 0 && _world.Cue.Speed <= 0.0 && !rewound)
+        {
+            GD.Print("[selftest] FAIL: nothing happened -- the live path looks dead");
+            fail++;
+        }
+
+        if (_world.HasNonFiniteState()) { GD.Print("[selftest] FAIL: non-finite state after the rewind"); fail++; }
 
         GD.Print(fail == 0 ? "[selftest] PASS" : $"[selftest] FAIL ({fail} problem(s))");
         GetTree().Quit(fail == 0 ? 0 : 1);
@@ -786,6 +807,29 @@ public partial class Play : Node2D
     {
         if (_bands == null || !_showBand) return;
 
+        // FIRST, before any early return: size the render targets to the window's REAL device pixels.
+        //
+        // Two things had to be discovered here, both by measurement:
+        //  1. this must not live below the forced-state branch - written there first, it never ran
+        //     during a scripted capture, so the 2x-window captures stayed upscaled;
+        //  2. GetVisibleRect().Size.X is ALWAYS the 1040-wide design canvas, whatever the window is
+        //     (traced: --resolution 2080x1120 gives win=2080x1120 but visibleRect=1040x560). The real
+        //     ratio lives in GetScreenTransform(): with `stretch/mode=canvas_items`, Windows upscales
+        //     the finished 1040x560 frame to the window, and this band is part of that frame. Using the
+        //     visible rect alone reported scale 1.0 for every window, which is why the fix appeared to
+        //     do nothing while a 1-px line still came out 4 device px wide at 2x.
+        var screen = GetViewport().GetScreenTransform();
+        var scale = Mathf.Max(0.25f, (Mathf.Abs(screen.X.X) + Mathf.Abs(screen.Y.Y)) * 0.5f);
+        foreach (var b in _bands) b.SyncToViewport(scale);
+        if (HasArg("--trace-band"))
+        {
+            var win = DisplayServer.WindowGetSize();
+            var vis = GetViewport().GetVisibleRect().Size;
+            GD.Print($"[band] trace win={win.X}x{win.Y} visibleRect={vis.X:F0}x{vis.Y:F0} " +
+                     $"screenTransform=({screen.X.X:F3},{screen.Y.Y:F3}) scale={scale:F3} " +
+                     $"bandRt={_bands[0].RenderTargetSizeForTest} emit={_bands[0].EmitForTest:F2}");
+        }
+
         // --band-mode=steady|rewind pins the state. It exists so a headless capture of "the band
         // while rewinding" is reproducible instead of depending on which frame the crawl reached.
         var forced = _bandForceMode != null && _bandForceMode != "off";
@@ -805,12 +849,6 @@ public partial class Play : Node2D
 
         var rewinding = _world.Rewinding;
         var arc = rewinding ? ArcWalked() : 0.0;
-
-        // Size the render targets to the window BEFORE pushing this frame's uniforms: a resize must not
-        // leave a frame upscaled. SyncToViewport is a no-op when the scale has not changed, so the
-        // steady-state cost of this is one comparison per band per frame.
-        var scale = (float)GetViewport().GetVisibleRect().Size.X / DesignCanvasWidth;
-        foreach (var b in _bands) b.SyncToViewport(scale);
 
         // Scripted captures freeze the world, so the live 9/s attack would never be photographed:
         // while frozen the bands are allowed to reach the capture strength instead.

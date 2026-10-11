@@ -244,6 +244,15 @@ public sealed class World
 
     public double RewindFraction => _u;
 
+    /// <summary>
+    /// Scoring balls on the table: everything that is NOT the cue.
+    ///
+    /// Counted by EXCLUSION, not by <c>Type == BallType.Object</c>. The type test was a real bug once levels
+    /// started using the space bodies: a heavy / bomb / anchor ball was not counted, so it was also not
+    /// required, and a level containing one could never be completed -- the win fires only when
+    /// <see cref="PocketedObjectCount"/> reaches this, and the target was silently short. The live selftest
+    /// showed it plainly: a level with three placed balls reported "0/1".
+    /// </summary>
     public int ObjectBallCount
     {
         get
@@ -251,13 +260,15 @@ public sealed class World
             var n = 0;
             foreach (var b in Balls)
             {
-                if (b.Type == BallType.Object) n++;
+                if (!b.IsCue) n++;
             }
 
             return n;
         }
     }
 
+    /// <summary>Scoring balls already pocketed. Same exclusion rule as <see cref="ObjectBallCount"/>, so the
+    /// two can never disagree about what counts.</summary>
     public int PocketedObjectCount
     {
         get
@@ -265,7 +276,7 @@ public sealed class World
             var n = 0;
             foreach (var b in Balls)
             {
-                if (b.Type == BallType.Object && b.Pocketed) n++;
+                if (!b.IsCue && b.Pocketed) n++;
             }
 
             return n;
@@ -1541,7 +1552,11 @@ public sealed class World
         b.Pocketed = true;
         b.Velocity = Vec2.Zero;
         Stats.PocketCaptures++;
-        if (b.Type != BallType.Object) return;
+
+        // The CUE going down is not progress and must not trigger a win check; every OTHER ball counts,
+        // whatever its type. This used to test `Type != BallType.Object`, which meant potting a heavy or
+        // bomb ball was not counted at all.
+        if (b.IsCue) return;
         if (PocketedObjectCount < ObjectBallCount) return;
         Won = true;
         Frozen = true;
