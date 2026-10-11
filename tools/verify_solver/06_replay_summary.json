@@ -1,0 +1,626 @@
+[
+ {
+  "level": "L1",
+  "setting": "mine:2px+ptr",
+  "cleared": true,
+  "potted": 2,
+  "total": 2,
+  "strikeAlone": 0,
+  "trace": [
+   {
+    "stage": "strike",
+    "potted": 0,
+    "cue": {
+     "x": 329.18,
+     "y": 280.02
+    },
+    "hist": 652
+   },
+   {
+    "stage": "rewind(650)",
+    "potted": 2,
+    "cursor": 1,
+    "trackLen": 652,
+    "releaseSpeed": 1256.22
+   }
+  ]
+ },
+ {
+  "level": "L1",
+  "setting": "mine:1px+ptr",
+  "cleared": true,
+  "potted": 2,
+  "total": 2,
+  "strikeAlone": 0,
+  "trace": [
+   {
+    "stage": "strike",
+    "potted": 0,
+    "cue": {
+     "x": 326.75,
+     "y": 280.03
+    },
+    "hist": 653
+   },
+   {
+    "stage": "rewind(650)",
+    "potted": 2,
+    "cursor": 2,
+    "trackLen": 653,
+    "releaseSpeed": 1256.55
+   }
+  ]
+ },
+ {
+  "level": "L1",
+  "setting": "mine:4px+ptr",
+  "cleared": true,
+  "potted": 2,
+  "total": 2,
+  "strikeAlone": 0,
+  "trace": [
+   {
+    "stage": "strike",
+    "potted": 0,
+    "cue": {
+     "x": 330.04,
+     "y": 280
+    },
+    "hist": 651
+   },
+   {
+    "stage": "rewind(650)",
+    "potted": 2,
+    "cursor": 0,
+    "trackLen": 651,
+    "releaseSpeed": 0
+   }
+  ]
+ },
+ {
+  "level": "L1",
+  "setting": "mine:2px-noptr",
+  "cleared": true,
+  "potted": 2,
+  "total": 2,
+  "strikeAlone": 0,
+  "trace": [
+   {
+    "stage": "strike",
+    "potted": 0,
+    "cue": {
+     "x": 329.18,
+     "y": 280.02
+    },
+    "hist": 652
+   },
+   {
+    "stage": "rewind(650)",
+    "potted": 2,
+    "cursor": 1,
+    "trackLen": 652,
+    "releaseSpeed": 1256.22
+   }
+  ]
+ },
+ {
+  "level": "L2",
+  "setting": "mine:2px+ptr",
+  "cleared": true,
+  "potted": 3,
+  "total": 3,
+  "strikeAlone": 1,
+  "trace": [
+   {
+    "stage": "strike",
+    "potted": 1,
+    "cue": {
+     "x": 340.39,
+     "y": 173.84
+    },
+    "hist": 61
+   },
+   {
+    "stage": "rewind(60)",
+    "potted": 3,
+    "cursor": 0,
+    "trackLen": 61,
+    "releaseSpeed": 0
+   }
+  ]
+ },
+ {
+  "level": "L2",
+  "setting": "mine:1px+ptr",
+  "cleared": true,
+  "potted": 3,
+  "total": 3,
+  "strikeAlone": 1,
+  "trace": [
+   {
+    "stage": "strike",
+    "potted": 1,
+    "cue": {
+     "x": 341.21,
+     "y": 173.88
+    },
+    "hist": 61
+   },
+   {
+    "stage": "rewind(60)",
+    "potted": 3,
+    "cursor": 0,
+    "trackLen": 61,
+    "releaseSpeed": 0
+   }
+  ]
+ },
+ {
+  "level": "L2",
+  "setting": "mine:4px+ptr",
+  "cleared": true,
+  "potted": 3,
+  "total": 3,
+  "strikeAlone": 1,
+  "trace": [
+   {
+    "stage": "strike",
+    "potted": 1,
+    "cue": {
+     "x": 341.48,
+     "y": 173.71
+    },
+    "hist": 61
+   },
+   {
+    "stage": "rewind(60)",
+    "potted": 3,
+    "cursor": 0,
+    "trackLen": 61,
+    "releaseSpeed": 0
+   }
+  ]
+ },
+ {
+  "level": "L2",
+  "setting": "mine:2px-noptr",
+  "cleared": true,
+  "potted": 3,
+  "total": 3,
+  "strikeAlone": 1,
+  "trace": [
+   {
+    "stage": "strike",
+    "potted": 1,
+    "cue": {
+     "x": 340.39,
+     "y": 173.84
+    },
+    "hist": 61
+   },
+   {
+    "stage": "rewind(60)",
+    "potted": 3,
+    "cursor": 0,
+    "trackLen": 61,
+    "releaseSpeed": 0
+   }
+  ]
+ },
+ {
+  "level": "L3",
+  "setting": "mine:2px+ptr",
+  "cleared": false,
+  "potted": 1,
+  "total": 3,
+  "strikeAlone": 0,
+  "trace": [
+   {
+    "stage": "strike",
+    "potted": 0,
+    "cue": {
+     "x": 737.5,
+     "y": 368.83
+    },
+    "hist": 497
+   },
+   {
+    "stage": "rewind(493)",
+    "potted": 1,
+    "cursor": 3,
+    "trackLen": 497,
+    "releaseSpeed": 1255.33
+   }
+  ]
+ },
+ {
+  "level": "L3",
+  "setting": "mine:1px+ptr",
+  "cleared": false,
+  "potted": 1,
+  "total": 3,
+  "strikeAlone": 0,
+  "trace": [
+   {
+    "stage": "strike",
+    "potted": 0,
+    "cue": {
+     "x": 739.98,
+     "y": 371.98
+    },
+    "hist": 496
+   },
+   {
+    "stage": "rewind(493)",
+    "potted": 1,
+    "cursor": 2,
+    "trackLen": 496,
+    "releaseSpeed": 1256.55
+   }
+  ]
+ },
+ {
+  "level": "L3",
+  "setting": "mine:4px+ptr",
+  "cleared": true,
+  "potted": 3,
+  "total": 3,
+  "strikeAlone": 1,
+  "trace": [
+   {
+    "stage": "strike",
+    "potted": 1,
+    "cue": {
+     "x": 740.76,
+     "y": 375.61
+    },
+    "hist": 494
+   },
+   {
+    "stage": "rewind(493)",
+    "potted": 3,
+    "cursor": 0,
+    "trackLen": 494,
+    "releaseSpeed": 0
+   }
+  ]
+ },
+ {
+  "level": "L3",
+  "setting": "mine:2px-noptr",
+  "cleared": false,
+  "potted": 1,
+  "total": 3,
+  "strikeAlone": 0,
+  "trace": [
+   {
+    "stage": "strike",
+    "potted": 0,
+    "cue": {
+     "x": 737.5,
+     "y": 368.83
+    },
+    "hist": 497
+   },
+   {
+    "stage": "rewind(493)",
+    "potted": 1,
+    "cursor": 3,
+    "trackLen": 497,
+    "releaseSpeed": 1255.33
+   }
+  ]
+ },
+ {
+  "level": "L4",
+  "setting": "mine:2px+ptr",
+  "cleared": true,
+  "potted": 4,
+  "total": 4,
+  "strikeAlone": 2,
+  "trace": [
+   {
+    "stage": "strike",
+    "potted": 2,
+    "cue": {
+     "x": 425.03,
+     "y": 174.12
+    },
+    "hist": 89
+   },
+   {
+    "stage": "rewind(88)",
+    "potted": 4,
+    "cursor": 0,
+    "trackLen": 89,
+    "releaseSpeed": 0
+   }
+  ]
+ },
+ {
+  "level": "L4",
+  "setting": "mine:1px+ptr",
+  "cleared": true,
+  "potted": 4,
+  "total": 4,
+  "strikeAlone": 2,
+  "trace": [
+   {
+    "stage": "strike",
+    "potted": 2,
+    "cue": {
+     "x": 422.94,
+     "y": 173.65
+    },
+    "hist": 87
+   },
+   {
+    "stage": "rewind(88)",
+    "potted": 4,
+    "cursor": 0,
+    "trackLen": 87,
+    "releaseSpeed": 0
+   }
+  ]
+ },
+ {
+  "level": "L4",
+  "setting": "mine:4px+ptr",
+  "cleared": true,
+  "potted": 4,
+  "total": 4,
+  "strikeAlone": 2,
+  "trace": [
+   {
+    "stage": "strike",
+    "potted": 2,
+    "cue": {
+     "x": 426.13,
+     "y": 174.06
+    },
+    "hist": 89
+   },
+   {
+    "stage": "rewind(88)",
+    "potted": 4,
+    "cursor": 0,
+    "trackLen": 89,
+    "releaseSpeed": 0
+   }
+  ]
+ },
+ {
+  "level": "L4",
+  "setting": "mine:2px-noptr",
+  "cleared": true,
+  "potted": 4,
+  "total": 4,
+  "strikeAlone": 2,
+  "trace": [
+   {
+    "stage": "strike",
+    "potted": 2,
+    "cue": {
+     "x": 425.03,
+     "y": 174.12
+    },
+    "hist": 89
+   },
+   {
+    "stage": "rewind(88)",
+    "potted": 4,
+    "cursor": 0,
+    "trackLen": 89,
+    "releaseSpeed": 0
+   }
+  ]
+ },
+ {
+  "level": "L5",
+  "setting": "mine:2px+ptr",
+  "cleared": false,
+  "potted": 3,
+  "total": 4,
+  "strikeAlone": 1,
+  "trace": [
+   {
+    "stage": "strike",
+    "potted": 1,
+    "cue": {
+     "x": 301.47,
+     "y": 278.35
+    },
+    "hist": 5
+   },
+   {
+    "stage": "rewind(5)",
+    "potted": 3,
+    "cursor": 0,
+    "trackLen": 5,
+    "releaseSpeed": 0
+   }
+  ]
+ },
+ {
+  "level": "L5",
+  "setting": "mine:1px+ptr",
+  "cleared": false,
+  "potted": 3,
+  "total": 4,
+  "strikeAlone": 1,
+  "trace": [
+   {
+    "stage": "strike",
+    "potted": 1,
+    "cue": {
+     "x": 301.15,
+     "y": 278.9
+    },
+    "hist": 5
+   },
+   {
+    "stage": "rewind(5)",
+    "potted": 3,
+    "cursor": 0,
+    "trackLen": 5,
+    "releaseSpeed": 0
+   }
+  ]
+ },
+ {
+  "level": "L5",
+  "setting": "mine:4px+ptr",
+  "cleared": true,
+  "potted": 4,
+  "total": 4,
+  "strikeAlone": 2,
+  "trace": [
+   {
+    "stage": "strike",
+    "potted": 2,
+    "cue": {
+     "x": 302.41,
+     "y": 278.12
+    },
+    "hist": 6
+   },
+   {
+    "stage": "rewind(5)",
+    "potted": 4,
+    "cursor": 0,
+    "trackLen": 6,
+    "releaseSpeed": 0
+   }
+  ]
+ },
+ {
+  "level": "L5",
+  "setting": "mine:2px-noptr",
+  "cleared": false,
+  "potted": 3,
+  "total": 4,
+  "strikeAlone": 1,
+  "trace": [
+   {
+    "stage": "strike",
+    "potted": 1,
+    "cue": {
+     "x": 301.47,
+     "y": 278.35
+    },
+    "hist": 5
+   },
+   {
+    "stage": "rewind(5)",
+    "potted": 3,
+    "cursor": 0,
+    "trackLen": 5,
+    "releaseSpeed": 0
+   }
+  ]
+ },
+ {
+  "level": "L6",
+  "setting": "mine:2px+ptr",
+  "cleared": false,
+  "potted": 3,
+  "total": 4,
+  "strikeAlone": 1,
+  "trace": [
+   {
+    "stage": "strike",
+    "potted": 1,
+    "cue": {
+     "x": 301.47,
+     "y": 281.65
+    },
+    "hist": 5
+   },
+   {
+    "stage": "rewind(4)",
+    "potted": 3,
+    "cursor": 0,
+    "trackLen": 5,
+    "releaseSpeed": 0
+   }
+  ]
+ },
+ {
+  "level": "L6",
+  "setting": "mine:1px+ptr",
+  "cleared": false,
+  "potted": 3,
+  "total": 4,
+  "strikeAlone": 1,
+  "trace": [
+   {
+    "stage": "strike",
+    "potted": 1,
+    "cue": {
+     "x": 301.15,
+     "y": 281.1
+    },
+    "hist": 5
+   },
+   {
+    "stage": "rewind(4)",
+    "potted": 3,
+    "cursor": 0,
+    "trackLen": 5,
+    "releaseSpeed": 0
+   }
+  ]
+ },
+ {
+  "level": "L6",
+  "setting": "mine:4px+ptr",
+  "cleared": true,
+  "potted": 4,
+  "total": 4,
+  "strikeAlone": 2,
+  "trace": [
+   {
+    "stage": "strike",
+    "potted": 2,
+    "cue": {
+     "x": 302.41,
+     "y": 281.88
+    },
+    "hist": 6
+   },
+   {
+    "stage": "rewind(4)",
+    "potted": 4,
+    "cursor": 1,
+    "trackLen": 6,
+    "releaseSpeed": 1256.22
+   }
+  ]
+ },
+ {
+  "level": "L6",
+  "setting": "mine:2px-noptr",
+  "cleared": false,
+  "potted": 3,
+  "total": 4,
+  "strikeAlone": 1,
+  "trace": [
+   {
+    "stage": "strike",
+    "potted": 1,
+    "cue": {
+     "x": 301.47,
+     "y": 281.65
+    },
+    "hist": 5
+   },
+   {
+    "stage": "rewind(4)",
+    "potted": 3,
+    "cursor": 0,
+    "trackLen": 5,
+    "releaseSpeed": 0
+   }
+  ]
+ }
+]

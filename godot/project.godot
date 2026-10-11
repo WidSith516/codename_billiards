@@ -1,0 +1,46 @@
+; REWIND — one-shot time-rewind billiards.
+; Milestone M1: deterministic physics kernel (no menus, no level select, no audio).
+;
+; HAND-AUTHORED. In this environment Godot does NOT generate project.godot/.csproj/.sln
+; headlessly: --build-solutions implies --editor and hangs on an interactive prompt.
+; See tools/godotprobe/REPORT.md sections 1.2 and 3.2.
+
+config_version=5
+
+[application]
+
+config/name="REWIND"
+config/description="One-shot time-rewind billiards — M1 physics kernel."
+; The main scene is the playable kernel view. A headless run must also exit 0
+; (`--headless --path godot --quit`), which any Node-based main scene satisfies.
+run/main_scene="res://scenes/kernel.tscn"
+config/features=PackedStringArray("4.7", "C#", "GL Compatibility")
+; Harmless safety net for captured-to-file stdout (measured as not required in 4.7.2 here).
+run/flush_stdout_on_print=true
+
+[dotnet]
+
+project/assembly_name="RewindKernel"
+
+[display]
+
+; Design resolution of the original prototype canvas, kept verbatim (params v1 §1).
+window/size/viewport_width=1040
+window/size/viewport_height=560
+window/stretch/mode="canvas_items"
+window/stretch/aspect="keep"
+
+[physics]
+
+; The kernel runs its own fixed step of 1/120 s (SimulationStep, locked).
+; physics_jitter_fix MUST be 0: the default 0.5 time-smooths the delta and destroys
+; determinism, which is the foundation of the headless tests and the solvability solver.
+common/physics_jitter_fix=0.0
+common/physics_ticks_per_second=120
+2d/default_gravity=0.0
+
+[rendering]
+
+; Crisp 2D lines / pixel-exact UI (engine default is 1 = Linear).
+textures/canvas_textures/default_texture_filter=0
+renderer/rendering_method="gl_compatibility"

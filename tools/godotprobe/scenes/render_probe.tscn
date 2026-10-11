@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://cprobe0render01"]
+
+[ext_resource type="Script" path="res://scripts/RenderProbe.cs" id="1_render"]
+
+[node name="RenderProbe" type="Node2D"]
+script = ExtResource("1_render")

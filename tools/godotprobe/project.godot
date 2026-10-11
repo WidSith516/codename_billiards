@@ -1,0 +1,34 @@
+; Godot 4.7 probe project - scratch toolchain verification only.
+; NOT the real game project. Everything probe-related lives under tools/godotprobe/.
+
+config_version=5
+
+[application]
+
+config/name="GodotProbe"
+config/description="Toolchain probe: headless smoke + offscreen screenshot + export capability."
+; Boot dispatcher, NOT the game scene: an exported build cannot take a scene path on the
+; command line, so the main scene must be the thing that reads `-- --selftest` / `-- --shot=`.
+run/main_scene="res://scenes/boot.tscn"
+config/features=PackedStringArray("4.7", "C#", "Forward Plus")
+; Harmless safety net: makes print output reach stdout promptly. Measured as NOT required
+; for captured-to-file runs in 4.7.2 here (output survived even a hard OS.Kill with it off).
+run/flush_stdout_on_print=true
+
+[dotnet]
+
+project/assembly_name="GodotProbe"
+
+[display]
+
+; Target layout of the real game: 1040x560 fixed.
+window/size/viewport_width=1040
+window/size/viewport_height=560
+window/stretch/mode="canvas_items"
+window/stretch/aspect="keep"
+
+[rendering]
+
+; Forward+ on D3D12 works here. Vulkan is BROKEN on this box (VkResult -3) and Godot
+; silently falls back to D3D12, so scripts should pass --rendering-driver d3d12 explicitly.
+renderer/rendering_method="forward_plus"

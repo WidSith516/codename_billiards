@@ -1,0 +1,119 @@
+{
+  "id": "L0_factory",
+  "name": "h5/index.html factory rack (control)",
+  "note": "The layout shipped inside h5/index.html init(), byte-identical. Control: this is the level the h5harness balance report measured (median 0 balls potted per break over 279 breaks, 0 clears).",
+  "cue": {
+    "x": 292,
+    "y": 280
+  },
+  "balls": [
+    {
+      "id": 1,
+      "x": 675,
+      "y": 280,
+      "note": "factory rack position"
+    },
+    {
+      "id": 2,
+      "x": 697.2,
+      "y": 267.07,
+      "note": "factory rack position"
+    },
+    {
+      "id": 3,
+      "x": 697.2,
+      "y": 292.93,
+      "note": "factory rack position"
+    },
+    {
+      "id": 4,
+      "x": 719.41,
+      "y": 254.14,
+      "note": "factory rack position"
+    },
+    {
+      "id": 5,
+      "x": 719.41,
+      "y": 280,
+      "note": "factory rack position"
+    },
+    {
+      "id": 6,
+      "x": 719.41,
+      "y": 305.86,
+      "note": "factory rack position"
+    },
+    {
+      "id": 7,
+      "x": 741.61,
+      "y": 241.2,
+      "note": "factory rack position"
+    },
+    {
+      "id": 8,
+      "x": 741.61,
+      "y": 267.07,
+      "note": "factory rack position"
+    },
+    {
+      "id": 9,
+      "x": 741.61,
+      "y": 292.93,
+      "note": "factory rack position"
+    },
+    {
+      "id": 10,
+      "x": 741.61,
+      "y": 318.8,
+      "note": "factory rack position"
+    }
+  ],
+  "pockets": [
+    [
+      65,
+      63
+    ],
+    [
+      520,
+      63
+    ],
+    [
+      975,
+      63
+    ],
+    [
+      65,
+      497
+    ],
+    [
+      520,
+      497
+    ],
+    [
+      975,
+      497
+    ]
+  ],
+  "table": {
+    "left": 65,
+    "right": 975,
+    "top": 63,
+    "bottom": 497
+  },
+  "budget": {
+    "angleStep": 1,
+    "powers": [
+      120,
+      170
+    ],
+    "releaseFractions": [
+      0.3,
+      0.6,
+      1
+    ],
+    "maxRewinds": 3,
+    "beam": 4,
+    "topStrikes": 6,
+    "refineStep": 0.25
+  }
+}

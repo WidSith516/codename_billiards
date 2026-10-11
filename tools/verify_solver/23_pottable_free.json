@@ -1,0 +1,1820 @@
+{
+ "arm": "free-sampler",
+ "seed": 777001,
+ "n": 328,
+ "corridorOK": 164,
+ "corridorRate": 0.5,
+ "fullyPottable": 0,
+ "fullyPottableRate": 0,
+ "strikeOnly": 0,
+ "details": [
+  {
+   "i": 0,
+   "candAngles": [
+    222
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 6,
+   "candAngles": [
+    340
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 7,
+   "candAngles": [
+    106,
+    123,
+    124,
+    125,
+    256,
+    261,
+    262,
+    263,
+    265
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 8,
+   "candAngles": [
+    118,
+    119,
+    122,
+    123,
+    166,
+    167,
+    168
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 9,
+   "candAngles": [
+    321,
+    322
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 11,
+   "candAngles": [
+    322
+   ],
+   "best": 1,
+   "bestAngle": 322,
+   "bestKind": null
+  },
+  {
+   "i": 13,
+   "candAngles": [
+    27,
+    28
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 15,
+   "candAngles": [
+    212
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 16,
+   "candAngles": [
+    112,
+    113,
+    236,
+    237
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 17,
+   "candAngles": [
+    188,
+    189,
+    190,
+    191
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 21,
+   "candAngles": [
+    32,
+    33,
+    329
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 28,
+   "candAngles": [
+    152,
+    153,
+    154
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 29,
+   "candAngles": [
+    99,
+    104,
+    105,
+    255,
+    256,
+    259,
+    260
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 31,
+   "candAngles": [
+    327,
+    328
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 33,
+   "candAngles": [
+    121,
+    122,
+    247
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 35,
+   "candAngles": [
+    52,
+    76
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 38,
+   "candAngles": [
+    148,
+    149
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 39,
+   "candAngles": [
+    293
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 40,
+   "candAngles": [
+    286,
+    287
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 43,
+   "candAngles": [
+    285,
+    286
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 45,
+   "candAngles": [
+    202
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 47,
+   "candAngles": [
+    61,
+    62
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 48,
+   "candAngles": [
+    124,
+    125
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 51,
+   "candAngles": [
+    35
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 52,
+   "candAngles": [
+    190,
+    191,
+    192,
+    193
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 55,
+   "candAngles": [
+    50,
+    51,
+    52,
+    166
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 58,
+   "candAngles": [
+    247
+   ],
+   "best": 1,
+   "bestAngle": 247,
+   "bestKind": null
+  },
+  {
+   "i": 63,
+   "candAngles": [
+    2
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 66,
+   "candAngles": [
+    142,
+    143
+   ],
+   "best": 1,
+   "bestAngle": 143,
+   "bestKind": null
+  },
+  {
+   "i": 68,
+   "candAngles": [
+    48,
+    50,
+    306
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 69,
+   "candAngles": [
+    119,
+    215
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 70,
+   "candAngles": [
+    12,
+    13,
+    80,
+    81,
+    82,
+    276,
+    277
+   ],
+   "best": 1,
+   "bestAngle": 81,
+   "bestKind": null
+  },
+  {
+   "i": 71,
+   "candAngles": [
+    195,
+    196
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 73,
+   "candAngles": [
+    146
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 78,
+   "candAngles": [
+    54,
+    55
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 79,
+   "candAngles": [
+    37,
+    38,
+    39,
+    40,
+    52,
+    53,
+    54,
+    119
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 80,
+   "candAngles": [
+    309,
+    310
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 81,
+   "candAngles": [
+    322
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 83,
+   "candAngles": [
+    49,
+    50,
+    298,
+    299
+   ],
+   "best": 1,
+   "bestAngle": 298,
+   "bestKind": null
+  },
+  {
+   "i": 86,
+   "candAngles": [
+    253
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 88,
+   "candAngles": [
+    159,
+    160
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 90,
+   "candAngles": [
+    239
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 92,
+   "candAngles": [
+    295
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 93,
+   "candAngles": [
+    146,
+    147,
+    156
+   ],
+   "best": 1,
+   "bestAngle": 147,
+   "bestKind": null
+  },
+  {
+   "i": 94,
+   "candAngles": [
+    244,
+    245
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 100,
+   "candAngles": [
+    63,
+    64,
+    65,
+    312
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 104,
+   "candAngles": [
+    35,
+    36,
+    37,
+    38,
+    39,
+    47,
+    48,
+    299
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 106,
+   "candAngles": [
+    164,
+    177,
+    178,
+    179
+   ],
+   "best": 1,
+   "bestAngle": 177,
+   "bestKind": null
+  },
+  {
+   "i": 108,
+   "candAngles": [
+    5,
+    6
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 110,
+   "candAngles": [
+    313,
+    314
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 111,
+   "candAngles": [
+    162,
+    163,
+    164,
+    165
+   ],
+   "best": 1,
+   "bestAngle": 162,
+   "bestKind": null
+  },
+  {
+   "i": 114,
+   "candAngles": [
+    72
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 117,
+   "candAngles": [
+    38
+   ],
+   "best": 1,
+   "bestAngle": 38,
+   "bestKind": null
+  },
+  {
+   "i": 121,
+   "candAngles": [
+    333
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 124,
+   "candAngles": [
+    119
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 126,
+   "candAngles": [
+    118,
+    234,
+    235
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 127,
+   "candAngles": [
+    310,
+    311
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 129,
+   "candAngles": [
+    125
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 132,
+   "candAngles": [
+    226,
+    227
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 133,
+   "candAngles": [
+    55,
+    305
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 135,
+   "candAngles": [
+    65,
+    66
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 136,
+   "candAngles": [
+    211,
+    212
+   ],
+   "best": 1,
+   "bestAngle": 211,
+   "bestKind": null
+  },
+  {
+   "i": 141,
+   "candAngles": [
+    54,
+    55,
+    56
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 143,
+   "candAngles": [
+    142,
+    143
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 147,
+   "candAngles": [
+    164,
+    310
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 149,
+   "candAngles": [
+    65,
+    216,
+    217,
+    327
+   ],
+   "best": 1,
+   "bestAngle": 65,
+   "bestKind": null
+  },
+  {
+   "i": 150,
+   "candAngles": [
+    192,
+    193
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 152,
+   "candAngles": [
+    240
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 153,
+   "candAngles": [
+    193,
+    194,
+    195
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 154,
+   "candAngles": [
+    12,
+    13,
+    166,
+    167
+   ],
+   "best": 1,
+   "bestAngle": 167,
+   "bestKind": null
+  },
+  {
+   "i": 155,
+   "candAngles": [
+    292,
+    347,
+    348,
+    354
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 156,
+   "candAngles": [
+    39,
+    47
+   ],
+   "best": 1,
+   "bestAngle": 47,
+   "bestKind": null
+  },
+  {
+   "i": 157,
+   "candAngles": [
+    113,
+    114,
+    247
+   ],
+   "best": 1,
+   "bestAngle": 247,
+   "bestKind": null
+  },
+  {
+   "i": 161,
+   "candAngles": [
+    59,
+    60,
+    326
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 162,
+   "candAngles": [
+    182,
+    183,
+    240,
+    339,
+    340,
+    341,
+    351,
+    352,
+    353,
+    358,
+    359
+   ],
+   "best": 1,
+   "bestAngle": 351,
+   "bestKind": null
+  },
+  {
+   "i": 163,
+   "candAngles": [
+    116
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 166,
+   "candAngles": [
+    34,
+    310,
+    311,
+    312
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 167,
+   "candAngles": [
+    128
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 170,
+   "candAngles": [
+    21,
+    22,
+    326,
+    327
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 171,
+   "candAngles": [
+    244,
+    245,
+    246,
+    262,
+    263,
+    264
+   ],
+   "best": 2,
+   "bestAngle": 264,
+   "bestKind": null
+  },
+  {
+   "i": 175,
+   "candAngles": [
+    226
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 177,
+   "candAngles": [
+    0,
+    1,
+    180,
+    181,
+    214,
+    215,
+    294,
+    325,
+    357,
+    358,
+    359
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 178,
+   "candAngles": [
+    114,
+    227,
+    228
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 180,
+   "candAngles": [
+    19,
+    20,
+    21,
+    25,
+    26,
+    27,
+    28,
+    174,
+    175
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 181,
+   "candAngles": [
+    171,
+    172,
+    173
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 183,
+   "candAngles": [
+    81,
+    82,
+    83,
+    84,
+    275
+   ],
+   "best": 1,
+   "bestAngle": 275,
+   "bestKind": null
+  },
+  {
+   "i": 189,
+   "candAngles": [
+    145,
+    146
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 191,
+   "candAngles": [
+    121,
+    247
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 193,
+   "candAngles": [
+    110,
+    215,
+    242,
+    243,
+    244
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 194,
+   "candAngles": [
+    307,
+    308,
+    311,
+    312
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 195,
+   "candAngles": [
+    52,
+    63,
+    64,
+    65
+   ],
+   "best": 1,
+   "bestAngle": 65,
+   "bestKind": null
+  },
+  {
+   "i": 198,
+   "candAngles": [
+    128
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 202,
+   "candAngles": [
+    173,
+    174,
+    175,
+    176
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 206,
+   "candAngles": [
+    297,
+    298,
+    302
+   ],
+   "best": 1,
+   "bestAngle": 297,
+   "bestKind": null
+  },
+  {
+   "i": 207,
+   "candAngles": [
+    35,
+    36,
+    208
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 210,
+   "candAngles": [
+    196
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 212,
+   "candAngles": [
+    2,
+    3
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 215,
+   "candAngles": [
+    124,
+    125
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 217,
+   "candAngles": [
+    347,
+    351,
+    352
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 218,
+   "candAngles": [
+    149,
+    184,
+    185,
+    351,
+    352,
+    353
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 219,
+   "candAngles": [
+    7,
+    8,
+    50,
+    56,
+    58,
+    164,
+    176,
+    308,
+    327
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 223,
+   "candAngles": [
+    244,
+    245
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 224,
+   "candAngles": [
+    25,
+    26,
+    51,
+    52,
+    54
+   ],
+   "best": 1,
+   "bestAngle": 52,
+   "bestKind": null
+  },
+  {
+   "i": 225,
+   "candAngles": [
+    65,
+    66
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 227,
+   "candAngles": [
+    202,
+    203
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 229,
+   "candAngles": [
+    74,
+    75,
+    79,
+    80,
+    128,
+    129,
+    130,
+    297,
+    298,
+    323,
+    324,
+    354,
+    355
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 230,
+   "candAngles": [
+    46,
+    47,
+    302
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 231,
+   "candAngles": [
+    218,
+    219,
+    220,
+    221
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 232,
+   "candAngles": [
+    21,
+    22,
+    23,
+    175
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 233,
+   "candAngles": [
+    153
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 234,
+   "candAngles": [
+    1,
+    2,
+    3,
+    4,
+    179
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 237,
+   "candAngles": [
+    214,
+    215
+   ],
+   "best": 1,
+   "bestAngle": 214,
+   "bestKind": null
+  },
+  {
+   "i": 239,
+   "candAngles": [
+    116,
+    117
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 240,
+   "candAngles": [
+    205
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 241,
+   "candAngles": [
+    51,
+    52,
+    53,
+    153,
+    228,
+    229,
+    337
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 242,
+   "candAngles": [
+    45,
+    68,
+    159,
+    199,
+    200,
+    300
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 243,
+   "candAngles": [
+    227,
+    228
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 244,
+   "candAngles": [
+    22,
+    338
+   ],
+   "best": 1,
+   "bestAngle": 22,
+   "bestKind": null
+  },
+  {
+   "i": 245,
+   "candAngles": [
+    45,
+    158,
+    302,
+    333
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 246,
+   "candAngles": [
+    65,
+    66,
+    171
+   ],
+   "best": 1,
+   "bestAngle": 65,
+   "bestKind": null
+  },
+  {
+   "i": 247,
+   "candAngles": [
+    31
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 249,
+   "candAngles": [
+    287
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 250,
+   "candAngles": [
+    184,
+    185,
+    206
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 253,
+   "candAngles": [
+    214,
+    215
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 258,
+   "candAngles": [
+    35,
+    36
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 260,
+   "candAngles": [
+    247,
+    248
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 262,
+   "candAngles": [
+    81
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 263,
+   "candAngles": [
+    213,
+    214
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 266,
+   "candAngles": [
+    113,
+    114
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 267,
+   "candAngles": [
+    59,
+    61,
+    62
+   ],
+   "best": 1,
+   "bestAngle": 61,
+   "bestKind": null
+  },
+  {
+   "i": 268,
+   "candAngles": [
+    53
+   ],
+   "best": 1,
+   "bestAngle": 53,
+   "bestKind": null
+  },
+  {
+   "i": 269,
+   "candAngles": [
+    26
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 270,
+   "candAngles": [
+    38,
+    39
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 271,
+   "candAngles": [
+    54,
+    55
+   ],
+   "best": 1,
+   "bestAngle": 54,
+   "bestKind": null
+  },
+  {
+   "i": 272,
+   "candAngles": [
+    114,
+    146,
+    147,
+    148
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 273,
+   "candAngles": [
+    232,
+    233
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 274,
+   "candAngles": [
+    45,
+    49,
+    50,
+    305
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 275,
+   "candAngles": [
+    206
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 277,
+   "candAngles": [
+    124,
+    125,
+    243,
+    244
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 278,
+   "candAngles": [
+    123,
+    124,
+    237
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 281,
+   "candAngles": [
+    341,
+    342,
+    344,
+    345,
+    346
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 284,
+   "candAngles": [
+    138,
+    139
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 288,
+   "candAngles": [
+    34,
+    331,
+    332,
+    333,
+    334
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 289,
+   "candAngles": [
+    7,
+    8
+   ],
+   "best": 1,
+   "bestAngle": 8,
+   "bestKind": null
+  },
+  {
+   "i": 292,
+   "candAngles": [
+    50,
+    51,
+    62,
+    63,
+    217,
+    299,
+    300,
+    308,
+    309
+   ],
+   "best": 1,
+   "bestAngle": 51,
+   "bestKind": null
+  },
+  {
+   "i": 294,
+   "candAngles": [
+    25,
+    73
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 295,
+   "candAngles": [
+    79,
+    286
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 298,
+   "candAngles": [
+    199,
+    301,
+    302,
+    303
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 299,
+   "candAngles": [
+    53,
+    54,
+    73,
+    340,
+    341
+   ],
+   "best": 1,
+   "bestAngle": 53,
+   "bestKind": null
+  },
+  {
+   "i": 300,
+   "candAngles": [
+    120
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 301,
+   "candAngles": [
+    125
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 304,
+   "candAngles": [
+    138
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 305,
+   "candAngles": [
+    112,
+    113,
+    114,
+    149,
+    150,
+    151,
+    152,
+    153,
+    154,
+    157,
+    231,
+    232,
+    233,
+    234
+   ],
+   "best": 1,
+   "bestAngle": 233,
+   "bestKind": null
+  },
+  {
+   "i": 307,
+   "candAngles": [
+    61,
+    62
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 308,
+   "candAngles": [
+    39,
+    151,
+    152
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 309,
+   "candAngles": [
+    30,
+    327
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 310,
+   "candAngles": [
+    347,
+    348
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 312,
+   "candAngles": [
+    126
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 315,
+   "candAngles": [
+    171,
+    172
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 316,
+   "candAngles": [
+    121,
+    122,
+    123
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 319,
+   "candAngles": [
+    93,
+    94,
+    95,
+    96,
+    252
+   ],
+   "best": 1,
+   "bestAngle": 94,
+   "bestKind": null
+  },
+  {
+   "i": 320,
+   "candAngles": [
+    142,
+    143
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 322,
+   "candAngles": [
+    215
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  },
+  {
+   "i": 324,
+   "candAngles": [
+    132,
+    133,
+    161
+   ],
+   "best": 0,
+   "bestAngle": null,
+   "bestKind": null
+  }
+ ]
+}

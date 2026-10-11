@@ -12,5 +12,32 @@ export_credentials.cfg
 
 # Mono-specific ignores
 .mono/
-data_*/
 mono_crash.*.json
+
+# ── 会话级工具产物 ──────────────────────────────────────────────────────────
+# DSH 视觉工具把截图/裁切产物写到这里；属于过程产物，不是交付物。
+.dsh-tool-vision/
+
+# ── 本地工具链副本：绝不入库（约 270 MB）──────────────────────────────────────
+# 为什么需要这份副本：D:\saint_ruin\tools\godot\ 下的 godot.exe 在本会话中运行于
+# Low Mandatory Integrity Level（Windows 强制完整性控制），它对 Medium-IL 路径的
+# 每一次写入都会被**静默拒绝** —— make_dir_recursive_absolute() 返回 err=0 (OK)
+# 却什么都没创建。本项目把工具链复制到本目录后 IL 恢复正常，功能可用。
+# 复现证据与判定方法见 策划案/REWIND_port_plan_v1.md 附录 B 与 tools/godotprobe/REPORT.md。
+tools/godot/
+
+# 探针/临时目录（脚本运行时生成，不入库）
+# ⚠ evidence/ 与 REPORT.md 是**交付物，必须入库**（原始输出就是证据），故不在此列。
+tools/godotprobe/.sdkpeek/
+tools/godotprobe/.tmp/
+tools/godotprobe/build/
+tools/godotprobe/*.log
+tools/analysis/iltest/
+
+# ── 引擎工程内的临时目录 ────────────────────────────────────────────────────
+# godot/.tmp/ 会存放 nuget 缓存、VBCSCompiler 分析器、dotnet CLI home 等构建产物
+# （实测可达数百 MB）。它们全部可再生，绝不入库。
+godot/.tmp/
+godot/**/obj/
+godot/**/bin/
+tools/solver/.tmp/

@@ -1,0 +1,23 @@
+<Project Sdk="Godot.NET.Sdk/4.7.2">
+  <!--
+    HAND-AUTHORED, matching what Godot 4.7.2 would write.
+    Headless generation is blocked here: the build-solutions flag implies editor mode and then
+    hangs on the interactive "create C# solution?" prompt (proven in
+    tools/godotprobe/REPORT.md section 1.2). Values are not guesses:
+      * Sdk 4.7.2      = the GodotSharp/Tools nupkgs shipped with this engine build
+      * TargetFramework net8.0 = the ONLY framework GodotSharp.4.7.2.nupkg ships
+        (lib/net8.0/GodotSharp.dll, nuspec dependency group targetFramework="net8.0")
+  -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <RootNamespace>Rewind</RootNamespace>
+    <AssemblyName>RewindKernel</AssemblyName>
+    <!-- Godot rewrites intermediate output into .godot/mono/temp; keep it out of the
+         default cs glob so duplicate AssemblyInfo (CS0579) cannot happen. -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);.godot/**;.tmp/**;build/**</DefaultItemExcludes>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+</Project>

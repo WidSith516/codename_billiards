@@ -1,0 +1,6 @@
+=== rewind impulse coefficient on the L1 backstop geometry (design j = K * rel) ===
+  locked   : kick at crawl step 648 (snapshot idx 1 of 651); contact distance 24.460 px; snapshot |v|=1256.22; cue rewind |v|=1256.22
+        derived j = max(0,(v_cue-v_target).n) = 911.9026   delivered |v_target| = 911.9026   ratio = 1.000000
+  prototype: no kick observed
+  mine     : kick at crawl step 649 (snapshot idx 1 of 652); contact distance 24.460 px; snapshot |v|=1256.22; cue rewind |v|=1256.22
+        derived j = max(0,(v_cue-v_target).n) = 906.1955   delivered |v_target| = 906.1955   ratio = 1.000000

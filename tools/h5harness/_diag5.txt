@@ -1,0 +1,175 @@
+﻿{
+ "rows": [
+  {
+   "angle": 115,
+   "power": 170,
+   "tight": false,
+   "missedContactSteps": 17,
+   "minInStepSegmentDistance": 0,
+   "worstStep": 237,
+   "worstPair": [
+    0,
+    8
+   ],
+   "worstSpeed": 124417.43676110829,
+   "maxBallStepPx": 517.2,
+   "sampledTwoR": 24.4
+  },
+  {
+   "angle": 110,
+   "power": 170,
+   "tight": false,
+   "missedContactSteps": 7,
+   "minInStepSegmentDistance": 0,
+   "worstStep": 208,
+   "worstPair": [
+    0,
+    9
+   ],
+   "worstSpeed": 20957.16738643791,
+   "maxBallStepPx": 176.21,
+   "sampledTwoR": 24.4
+  },
+  {
+   "angle": 250,
+   "power": 170,
+   "tight": false,
+   "missedContactSteps": 8,
+   "minInStepSegmentDistance": 0,
+   "worstStep": 196,
+   "worstPair": [
+    0,
+    8
+   ],
+   "worstSpeed": 1527.949753104544,
+   "maxBallStepPx": 900.17,
+   "sampledTwoR": 24.4
+  },
+  {
+   "angle": 245,
+   "power": 170,
+   "tight": false,
+   "missedContactSteps": 21,
+   "minInStepSegmentDistance": 3.87,
+   "worstStep": 252,
+   "worstPair": [
+    8,
+    10
+   ],
+   "worstSpeed": 6130.988387899324,
+   "maxBallStepPx": 145.48,
+   "sampledTwoR": 24.4
+  },
+  {
+   "angle": 280,
+   "power": 170,
+   "tight": true,
+   "missedContactSteps": 37,
+   "minInStepSegmentDistance": 0,
+   "worstStep": 280,
+   "worstPair": [
+    0,
+    8
+   ],
+   "worstSpeed": 83347.58882067776,
+   "maxBallStepPx": 930.84,
+   "sampledTwoR": 24.4
+  },
+  {
+   "angle": 110,
+   "power": 170,
+   "tight": true,
+   "missedContactSteps": 15,
+   "minInStepSegmentDistance": 0,
+   "worstStep": 161,
+   "worstPair": [
+    1,
+    2
+   ],
+   "worstSpeed": 20972.023288500804,
+   "maxBallStepPx": 505.85,
+   "sampledTwoR": 24.4
+  },
+  {
+   "angle": 0,
+   "power": 170,
+   "tight": false,
+   "missedContactSteps": 2,
+   "minInStepSegmentDistance": 20.922,
+   "worstStep": 42,
+   "worstPair": [
+    0,
+    1
+   ],
+   "worstSpeed": 171.0123993880141,
+   "maxBallStepPx": 10.39,
+   "sampledTwoR": 24.4
+  },
+  {
+   "angle": 45,
+   "power": 170,
+   "tight": false,
+   "missedContactSteps": 3,
+   "minInStepSegmentDistance": 20.678,
+   "worstStep": 57,
+   "worstPair": [
+    3,
+    5
+   ],
+   "worstSpeed": 339.56171304477465,
+   "maxBallStepPx": 11.72,
+   "sampledTwoR": 24.4
+  },
+  {
+   "angle": 90,
+   "power": 100,
+   "tight": false,
+   "missedContactSteps": 0,
+   "minInStepSegmentDistance": 25.695,
+   "worstStep": 1,
+   "worstPair": [
+    6,
+    9
+   ],
+   "worstSpeed": 0,
+   "maxBallStepPx": 6.42,
+   "sampledTwoR": 24.4
+  }
+ ],
+ "firstExample": {
+  "angle": 115,
+  "power": 170,
+  "tight": false,
+  "step": 150,
+  "pair": [
+   0,
+   1
+  ],
+  "inStepSegDistance": 5.581,
+  "sampledDistance": 103.846,
+  "speeds": [
+   2083,
+   11884
+  ],
+  "positionsBefore": [
+   [
+    680.4,
+    295.5
+   ],
+   [
+    671.5,
+    276.1
+   ]
+  ],
+  "positionsAfter": [
+   [
+    676.9,
+    277.7
+   ],
+   [
+    605.6,
+    202.2
+   ]
+  ]
+ }
+}

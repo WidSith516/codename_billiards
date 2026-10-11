@@ -1,0 +1,587 @@
+# Godot 4.7 toolchain probe — verified report
+
+> **RULE (read this first): all scripted Godot invocations in this workspace MUST use
+> `tools/godot/godot_console.exe`. Bare `godot` from PATH is a trap.**
+> The binaries under `D:\saint_ruin\tools\godot\` run at **Low Mandatory Integrity Level**,
+> so every write they attempt is *silently dropped*; and `godot.exe` is a GUI-subsystem
+> binary, so PowerShell neither waits for it nor sets `$LASTEXITCODE`.
+> Verified single-command entry point: `pwsh tools/godotprobe/run_probe.ps1 -Export -Negative`
+
+Everything below was actually executed in `D:\codename\codename_billiards`. Where a path is
+not proven, it is listed under **UNVERIFIED / BLOCKED** rather than presented as working.
+
+---
+
+## 0. Environment findings that invalidate the "obvious" invocation
+
+### 0.1 Two binaries, two integrity levels — writes silently vanish
+
+Claim: a Godot process launched from `D:\saint_ruin\tools\godot\` runs at Low integrity and
+cannot write to Medium-IL paths, while a copy inside this workspace runs at High integrity
+and writes normally. `DirAccess.make_dir_recursive_absolute()` returns **`err=0` (OK) while
+creating nothing**, which is what makes this so deceptive.
+
+Command (GDScript probes, `diag/probe_token.gd` and `diag/probe_matrix.gd`):
+
+```
+D:\saint_ruin\tools\godot\godot_console.exe --headless --path tools/godotprobe --script res://diag/probe_token.gd
+tools\godot\godot_console.exe              --headless --path tools/godotprobe --script res://diag/probe_token.gd
+```
+
+Raw output — `saint_ruin`-hosted binary (evidence/tok.log):
+
+```
+Mandatory Label\Low Mandatory Level 标签   S-1-16-4096
+[tok] child-cmd write test exit=0
+拒绝访问。
+NOWRITE
+```
+
+Raw output — workspace copy (evidence/tok2.log):
+
+```
+Mandatory Label\High Mandatory Level 标签   S-1-16-12288
+[tok] child-cmd write test exit=0
+WROTE
+```
+
+Write matrix, same script, both binaries (evidence/mx.log vs evidence/mx2.log):
+
+```
+saint_ruin copy : mkdir ... err=0 exists_before=false exists_after=false   <-- silently dropped
+                  FileAccess.open(...WRITE) FAILED err=7
+workspace copy  : mkdir ... err=0 exists_before=false exists_after=true    <-- real
+                  FileAccess.open(...WRITE) OK exists=true
+```
+
+Correlation is exact: writes succeed **iff** the target carries a grant for the sandbox
+principal `S-1-4-952802729-546874403`, which is present on `D:\saint_ruin` and absent on the
+workspace (checked with `Get-Acl`; the sanctioned `diagnose-windows-sandbox-acl` script
+returned `VERDICT=NOT_THIS_CLASS` / `FIXED=0` because `WRITE_DAC`/`WRITE_OWNER` are present
+and there are no `S-1-15-2-*` package ACEs — so the ACL repair does not cover this case).
+
+**Verdict: CONFIRMED.** The Lead independently reproduced the same pair of results on the
+same project with the same script.
+
+**Fix applied:** the toolchain is copied into the workspace, gitignored:
+
+```
+D:\codename\codename_billiards\tools\godot\{godot.exe, godot_console.exe, GodotSharp\}
+```
+
+`GodotSharp/` is required — it is the C# API assembly set loaded at engine start.
+
+### 0.2 `godot.exe` is GUI-subsystem; only `godot_console.exe` is scriptable
+
+```
+PE Subsystem godot.exe         = 2   (GUI)      -> PowerShell does not wait, no $LASTEXITCODE
+PE Subsystem godot_console.exe = 3   (CONSOLE)  -> waits, real exit codes
+```
+
+**Verdict: CONFIRMED.** Every command in this report uses `godot_console.exe`.
+
+### 0.3 Two independent .NET CLI environment traps
+
+`dotnet build` fails before compiling anything, with a *misleading* error:
+
+```
+MSBUILD : error MSB1025: 运行 MSBuild 时发生内部错误。
+System.UnauthorizedAccessException: Access to the path 'C:\Users\admin\AppData\Local\Temp\1\MSBuildTemp' is denied.
+```
+
+Pointing `TMP`/`TEMP`/`TMPDIR` and `DOTNET_CLI_HOME` into the workspace fixes it. Note that
+`D:\saint_ruin\tools\dotnet\dotnet.exe` is also Low-IL and fails the same way when its temp is
+redirected into the workspace; **`C:\Program Files\dotnet\dotnet.exe` (8.0.425, High IL) is
+the working SDK here** and is what `run_probe.ps1` uses.
+
+---
+
+## 1. Does a C# Godot 4.7 project build and run headlessly? — **YES**
+
+### 1.1 Version
+
+```
+tools\godot\godot_console.exe --headless --version
+```
+```
+4.7.2.stable.mono.official.ed1daf0bf
+rc=0
+```
+
+### 1.2 Required `TargetFramework` = **`net8.0`** (not net9.0)
+
+Determined from the shipped SDK rather than guessed — `GodotSharp.4.7.2.nupkg` contains
+exactly one framework folder, and the nuspec declares one dependency group:
+
+```
+lib\net8.0\GodotSharp.dll   (5,928,960 bytes)
+<group targetFramework="net8.0" />
+```
+
+`Godot.NET.Sdk`'s own `Sdk.props` sets **no** default `TargetFramework`, so the value must
+come from the project file. Cross-checked by MSBuild evaluation of the built project:
+
+```
+dotnet msbuild GodotProbe.csproj -getProperty:TargetFramework
+```
+```
+net8.0
+```
+
+**The `.csproj` was NOT generated by Godot.** `--build-solutions` *implies `--editor`* and
+**hangs indefinitely** on the interactive "create C# solution?" prompt, in a session with no
+human. `--import` does not create it either. So the project file is hand-authored to match
+what Godot writes (`Sdk="Godot.NET.Sdk/4.7.2"`, `net8.0`, `EnableDynamicLoading`,
+`RootNamespace`, `DefaultItemExcludes ...;.godot/**`).
+
+A **`GodotProbe.sln` is also required** (see §3.2) and is likewise not generated headlessly;
+it was produced with `dotnet new sln` + `dotnet sln add`.
+
+### 1.3 Headless import — exit code 0, zero warnings
+
+```
+tools\godot\godot_console.exe --headless --path tools/godotprobe --import
+rc=0
+```
+Filtered for diagnostics: **`ERROR|WARNING` → 0 matches** (evidence/01_import.log).
+
+### 1.4 C# build — clean
+
+```
+"C:\Program Files\dotnet\dotnet.exe" build tools/godotprobe/GodotProbe.csproj -c Debug --nologo
+rc=0
+0 个警告 / 0 个错误
+-> .godot\mono\temp\bin\Debug\GodotProbe.dll
+```
+
+### 1.5 A C# `Node._Ready()` reaches stdout headlessly — **YES**
+
+```
+tools\godot\godot_console.exe --headless --path tools/godotprobe --quit-after 10
+```
+```
+[probe] READY_PROBE_OK pid=2112
+[probe] engine=4.7.2-stable (official)
+[probe] assembly=GodotProbe
+[probe] display_driver=headless
+[probe] rendering_driver=
+[probe] physics_ticks_per_second=60
+[probe] max_physics_steps_per_frame=8
+rc=0
+```
+
+**`run/flush_stdout_on_print=true` is NOT required.** Tested by toggling it and re-running,
+including a hard `OS.Kill(OS.GetProcessId())` immediately after three `GD.Print` calls:
+
+| setting | normal exit | after hard `OS.Kill` |
+|---|---|---|
+| `true`  | 3/3 lines captured | 3/3 lines captured |
+| `false` | 3/3 lines captured | 3/3 lines captured |
+
+**Verdict: not required for captured-to-file runs in 4.7.2 here.** Kept `true` as a harmless
+safety net (it can only help on an interactive console or a live pipe). `rendering_driver` is
+empty under `--headless` — there is **no rendering device**, which is why screenshots must be
+taken non-headless (§2.2).
+
+---
+
+## 2. The no-human verification loop — **WORKS**
+
+Single command, real exit codes, no human:
+
+```
+pwsh tools/godotprobe/run_probe.ps1 -Export -Negative
+```
+```
+[1/5] headless import ................ PASS (rc=0, 0 ERROR/WARNING)
+[2/5] dotnet build ................... PASS (rc=0, warning-free)
+[3/5] headless C# smoke gate ......... PASS (rc=0, 10/10)
+[3b]  negative control ............... PASS (forced failure rc=1)
+[4/5] render + screenshot ............ PASS (rc=0)
+      PNG non-blank .................. PASS (1036 distinct colors, 8.70% non-bg)
+[5/5] export Windows release ......... PASS (rc=0, dotnet publish ran)
+      exported build has C# assembly . PASS
+      exported binary smoke gate ..... PASS (rc=0)
+PROBE PASS
+HARNESS_EXIT=0
+```
+
+### 2.1 (a) Running a C# headless entry point — three mechanisms, all work
+
+| mechanism | command | result |
+|---|---|---|
+| `--script` **with C#** | `--headless --path . --script res://scripts/HeadlessEntry.cs` | **rc=0, works** |
+| `--main-loop` | `--headless --path . --main-loop HeadlessEntry` | rc=0, works |
+| self-quitting scene | `--headless --path . res://tests/probe_smoke.tscn` | rc=0, **recommended** |
+
+The brief expected `--script` to reject C#. **It does not.** A `SceneTree` subclass in C# is
+accepted directly (evidence/20_script_cs.log):
+
+```
+[headless] MECHANISM=CSharpSceneTree
+[headless] scene_tree_name=GodotProbe.HeadlessEntry
+[headless] fixed_step_pos=18.897914518483322
+[headless] HEADLESS_ENTRY_OK
+rc=0
+```
+
+`--main-loop HeadlessEntry` requires `[GlobalClass]` on the C# `SceneTree` subclass; it also
+runs the configured main scene afterwards (observed `[probe] READY_PROBE_OK` in the same run),
+which `--script` does not.
+
+**Recommended idiom** (what `run_probe.ps1` uses and what the real game should copy): a
+`Node` in a `.tscn` that runs assertions in `_Ready()` and calls `GetTree().Quit(0|1)`. The
+exit code is a real process exit code. The gate ships a **negative control** (`-- --selftest-fail`)
+because an acceptance gate that cannot fail is worse than none:
+
+```
+SMOKE FAIL: negative control (forced failure)
+rc=1
+```
+
+### 2.2 (b) A real screenshot — **YES, non-headless rendering works**
+
+Exact command (1040×560, the game's target layout):
+
+```
+tools\godot\godot_console.exe --path tools/godotprobe --resolution 1040x560 \
+    --rendering-driver d3d12 res://scenes/render_probe.tscn -- --out=<abs path>.png
+```
+```
+D3D12 12_0 - Forward+ - Using Device #0: NVIDIA - NVIDIA RTX 5880 Ada-8Q
+[render] display_driver=Windows
+[render] video_adapter=NVIDIA RTX 5880 Ada-8Q
+[render] window_size=(1040, 560)
+[render] image=1040x560 format=Rgb8
+[render] save_png err=Ok
+rc=0
+```
+
+**Driver matrix** (same command, different `--rendering-driver`):
+
+| driver | device | PNG | rc |
+|---|---|---|---|
+| `d3d12` | D3D12 12_0, RTX 5880 Ada-8Q | 1040×560, 39,498 B | 0 |
+| `opengl3` | OpenGL 3.3.0 NVIDIA 572.83 (Compatibility) | 1040×560, 42,546 B (`Rgba8`) | 0 |
+| *(default)* | Vulkan fails → falls back to D3D12 | 1040×560, 39,646 B | 0 |
+| `vulkan` | **fails** | — | 0 (after fallback) |
+
+```
+ERROR: Couldn't create Vulkan device (VkResult error -3).
+WARNING: Your video card drivers seem not to support Vulkan, switching to Direct3D 12.
+```
+
+**Verdict: Vulkan is non-functional on this box.** Godot transparently falls back to D3D12, so
+the default works — but pass `--rendering-driver d3d12` explicitly so the log is unambiguous.
+
+**A saved PNG is not proof.** A capture taken against the dummy device is a perfectly valid,
+perfectly blank PNG. So the loop *verifies blankness* (`diag/verify_png.gd`, itself run
+headlessly):
+
+```
+[verify] size=1040x560 format=4
+[verify] distinct_rgb=1046      <- 1036 on a later identical run; the exact hue-wheel
+[verify] non_background_px=50666 (8.70%)   antialiasing sample count varies slightly
+[verify] top_colors:
+    #121724  531571 px (91.27%)   <- drawn background
+    #59e5ff  3007 px (0.52%)      <- the AA polyline (0.35,0.9,1.0)
+    #ffffff  2960 px (0.51%)      <- drawn text
+    #f22424 / #f28324 / #f2e224   <- hue-wheel circles
+[verify] VERDICT=NONBLANK
+rc=0
+```
+
+**Self-quitting scene idiom:** capture in `_Process` after N frames, then quit with a code:
+
+```csharp
+public override void _Process(double delta)
+{
+    if (++_frames < _minFrames) return;                       // let the frame actually present
+    var img = GetViewport().GetTexture().GetImage();           // non-headless only
+    if (img == null) { GetTree().Quit(2); return; }
+    var err = img.SavePng(_outPath);                           // absolute OS path
+    GetTree().Quit(err == Error.Ok ? 0 : 3);                   // real process exit code
+}
+```
+
+`--write-movie` also works and is a viable alternative (`--write-movie out.png
+--quit-after 8` produced `movie00000000.png` … `movie00000007.png` + `movie.wav`, 1040×560
+@60 FPS, rc=0).
+
+**Gotcha:** an exported build **cannot** take `--path` or a scene path — the release template
+is compiled with `disable_path_overrides`:
+
+```
+ERROR: `--path` was specified on the command line, but this Godot binary was compiled
+without support for path overrides. Aborting.
+```
+
+So the main scene must itself read args after `--`. `scripts/Boot.cs` does exactly that
+(`-- --selftest`, `-- --shot=...`), and the exported binary's own smoke gate returned rc=0.
+
+### 2.3 (c) Reusing `addons/swallowtail` — **feasible to copy, NOT recommended**
+
+Read `D:\saint_ruin\addons\swallowtail\` (read-only). It is MIT-licensed and self-contained
+under that one directory, so it is copyable. But it is an **`EditorPlugin`**: it hosts a
+WebSocket server (ports 9080–9095) and an MCP HTTP endpoint (9100–9115) **inside a running,
+open editor GUI**, and it ships ~40 command modules plus two autoloads. It is a large
+integration that needs an interactive editor process — the opposite of this session's
+headless constraint — and it would have to be excluded from release exports.
+
+**Verdict: do not integrate.** Not cheap, not clean, and it does not solve the no-human
+problem (CLI flags + a self-test scene already do). The copy-pasted `--sr-shot=<seconds>`
+probe in the prior project is *also* not a clean reusable tool: it is re-implemented per
+scene (`NetSync.cs`, `BossA.cs`, `FormStudyView.cs`, …). The probe here replaces it with one
+generic `RenderProbe` + one `verify_png` gate.
+
+---
+
+## 3. Export capability — **templates PRESENT; Windows export WORKS**
+
+### 3.1 Templates
+
+```
+%APPDATA%\Godot\export_templates\
+    4.7.2.stable\          35 entries
+    4.7.2.stable.mono\     version.txt = 4.7.2.stable
+        windows_release_x86_64.exe (109,513,728 B)
+        windows_debug_x86_64.exe, *_console.exe wrappers
+        android_release.apk / android_debug.apk / android_source.zip
+        linux_*, macos.zip, ios.zip, icudt_godot.dat
+```
+
+**Verdict: templates are installed for both the standard and mono (C#) templates, including
+Windows Desktop x86_64 and Android.** An actual export is possible right now — and was run.
+
+### 3.2 Windows Desktop export — **rc=0, and the exported binary runs**
+
+```
+tools\godot\godot_console.exe --headless --path tools/godotprobe \
+    --export-release "Windows Desktop" tools/godotprobe/build/GodotProbe.exe
+rc=0
+dotnet_publish_project | Running dotnet publish | DONE
+no ERROR / no WARNING
+```
+
+Output:
+
+```
+build\GodotProbe.exe                        109,372,928 B
+build\GodotProbe.pck                              5,900 B
+build\data_GodotProbe_windows_x86_64\        full self-contained .NET 8 runtime
+    GodotProbe.dll 20,992 B   GodotSharp.dll 5,928,960 B   coreclr.dll, hostfxr.dll, ...
+```
+
+The exported release binary was then executed and ran its own C# smoke gate:
+
+```
+start build\GodotProbe.exe --headless -- --selftest
+ExitCode=0
+[boot] GodotProbe boot; args=--selftest
+=== godotprobe smoke ===
+  PASS  C# assembly loaded  [GodotProbe]
+  ...
+=== smoke summary: 10/10 passed ===
+SMOKE PASS
+```
+
+**CRITICAL GOTCHA — a `.sln` is mandatory for C# export, and Godot does not create it
+headlessly.** Without it the export still returns **rc=0 and writes a 103 MB exe**, but the
+C# assembly is silently omitted; the log is full of:
+
+```
+ERROR: Export .NET Project: This project contains C# files but no solution file was found
+at the following path: ...\GodotProbe.sln
+ERROR: System.InvalidOperationException: res://tests/ProbeSmoke.cs is a C# file but no
+solution file exists.
+```
+
+This is exactly the "looks like it worked" failure class to guard against. **The `.sln` must
+be committed to the repo.**
+
+Android export was **not** attempted (see UNVERIFIED).
+
+---
+
+## 4. 2D physics suitability — `RigidBody2D` is **not** the authority
+
+Values read from the running engine (`scenes/settings_probe.tscn`, evidence/50_settings_dump.log):
+
+| setting | default | meaning for this port |
+|---|---|---|
+| `physics/common/physics_ticks_per_second` | **60** | the fixed tick; drive the sim off `_PhysicsProcess` |
+| `physics/common/max_physics_steps_per_frame` | **8** | **the max-ticks-per-frame clamp.** Caps catch-up; beyond it the sim slows down instead of spiralling |
+| `physics/common/physics_jitter_fix` | **0.5** | **set to `0.0`** — it time-smooths the physics delta, which breaks a deterministic integrator |
+| `physics/2d/default_gravity` | 980.0 | irrelevant to a top-down table |
+| `physics/2d/default_linear_damp` | 0.1 | irrelevant — friction must be ours |
+| `physics/2d/solver/solver_iterations` | 16 | only matters if the engine solver is used |
+
+**Verdict on `RigidBody2D` + Godot Physics as the authority: NOT appropriate.** The reasons
+are structural, not stylistic:
+
+1. **No custom friction/timestep model.** Billiards needs cloth rolling deceleration plus
+   spin-dependent behaviour. `RigidBody2D` damping/`PhysicsMaterial` cannot express it, and
+   you cannot inject your own integrator.
+2. **Tunnelling.** A fast cue ball moves many ball-diameters per tick; Godot Physics has no
+   swept continuous collision for arbitrary ball-vs-ball contact, so passes-through happen.
+3. **Non-deterministic ordering.** Broadphase ordering and the iterative solver's contact
+   iteration order are not a stable, specifiable order — replay/ghost/undo/network
+   determinism dies there. `physics_jitter_fix` additionally varies the effective delta.
+4. **No control over the rotation/rolling model.** Real ball rolling + spin decay has to be
+   authored anyway, at which point the engine body is dead weight fighting you.
+
+**Recommended pattern** (what the probe exercises and what I recommend for the port):
+
+- **Own the simulation.** Fixed `dt = 1/60` (from `physics_ticks_per_second`), integrate
+  ball positions/velocities *yourself* in `_PhysicsProcess`. Do not read `delta` from the
+  process callback — use the constant, else `physics_jitter_fix` leaks in.
+- **Manual collision resolution.** Ball-vs-ball and ball-vs-cushion as analytic
+  circle/circle and circle/line tests; resolve the *time of impact* within the tick
+  (sub-stepping) rather than relying on discrete overlap correction. The probe asserts the
+  core invariant is exact in double precision: equal-mass elastic exchange conserves momentum
+  and energy to `< 1e-12`.
+- **Determinism hygiene:** `double` math, a fixed iteration order (stable sort / index order),
+  no `RandomNumberGenerator` seeded from wall time, and no reliance on `_Process` ordering.
+- **Rendering:** draw with `_Draw` / `Node2D` sprites, **not** the physics/body transform.
+  View interpolation between the last two sim states if you want smoothness at a different
+  render rate.
+- **What the engine *is* useful for:** `PhysicsServer2D` direct-state API and shape queries
+  (`PhysicsDirectSpaceState2D.IntersectShape` / `IntersectRay` / `CastMotion`) are fine for
+  *queries* — e.g. "is this point inside a pocket", "what is the furthest reachable point
+  along this aim ray" — and `move_and_collide` is convenient for a single kinematic probe
+  (cue-stick reach, aim preview). Use them for **queries and previews only**; never as the
+  authority for the simulation step.
+
+---
+
+## 5. Godot 4.7 gotchas for a 1040×560 fixed-layout 2D game
+
+### 5.1 Stretch mode
+
+`display/window/stretch/mode`: **`canvas_items`** (verified set and read back) vs `viewport`.
+
+- `canvas_items` (recommended here): the 1040×560 coordinate space is preserved and canvas
+  items are re-rendered at native resolution → text and vector lines stay crisp at any window
+  size. Control node coordinates are pixel-identical to the design.
+- `viewport`: renders into a fixed-size internal buffer and then scales the *image*, so
+  everything is resampled/blurry when the window is not exactly 1040×560. Correct only for
+  deliberate low-res pixel art.
+
+Pair with `display/window/stretch/aspect = "keep"` (verified) so non-16:9-ish windows letterbox
+instead of changing the layout. The prior project makes the same choice for the same reason.
+
+### 5.2 Pixel-crisp lines: `default_texture_filter`
+
+`rendering/textures/canvas_textures/default_texture_filter` — **engine default is `1`
+(Linear)**, read from the running engine. Enum order: `0 = Nearest`, `1 = Linear`,
+`2 = Nearest Mipmap`, `3 = Linear Mipmap`, … For crisp lines and pixel-exact UI, set it to
+**`0`**. (Note: the prior project sets `2`; that is *Nearest Mipmap*, not plain Nearest — worth
+re-checking there if its lines have ever looked soft.)
+
+Also verified `false` by default and worth enabling deliberately for pixel alignment:
+
+- `rendering/2d/snap/snap_2d_transforms_to_pixel`
+- `rendering/2d/snap/snap_2d_vertices_to_pixel`
+
+`rendering/anti_aliasing/quality/msaa_2d` defaults to **`0` (off)**; `2` = 2× MSAA, which is a
+cheap global win for smooth circle outlines and cushion edges on a 2D game.
+
+### 5.3 Anti-aliased circles — **`draw_circle` DOES have an AA parameter in 4.7**
+
+The brief states `draw_circle` has no AA parameter in 4.x. **That is no longer true in 4.7.**
+Reflection over the real shipped assembly (evidence/50_settings_dump.log):
+
+```
+DrawCircle(Vector2 position, Single radius, Color color,
+           Boolean filled = True, Single width = -1, Boolean antialiased = False)
+DrawCircle(Vector2 position, Single radius, Color color)          <- legacy 3-arg overload
+DrawPolyline(Vector2[] points, Color color, Single width = -1, Boolean antialiased = False)
+DrawArc(Vector2 center, Single radius, Single startAngle, Single endAngle,
+        Int32 pointCount, Color color, Single width = -1, Boolean antialiased = False)
+DrawLine(Vector2 from, Vector2 to, Color color, Single width = -1, Boolean antialiased = False)
+```
+
+The 3-arg overload is why the "no AA" belief persists. **Working idiom — just pass it:**
+
+```csharp
+// filled AA ball
+DrawCircle(pos, radius, color, filled: true, width: -1f, antialiased: true);
+// outlined AA ring (AA only applies to positive width)
+DrawCircle(pos, radius, color, filled: false, width: 2f, antialiased: true);
+```
+
+This compiled and rendered correctly in the probe; the captured PNG contains the AA circle
+colors. **Fallback** if you ever need it on an older 4.x: `DrawArc(center, radius, 0, TAU,
+pointCount: 64, color, width, antialiased: true)`.
+
+### 5.4 Long polyline trail: `_Draw` beats re-assigning `Line2D.Points`
+
+Measured at 1040×560 on D3D12, vsync off, 120 measured frames per configuration after 30
+warm-up frames (evidence/51_bench.log). The **average is dominated by an ~8.3 ms present
+floor**, so the informative column is **`min`** (uncontended frame):
+
+| n points | `_Draw` + `DrawPolyline` min | `Line2D.Points` re-assign min |
+|---|---|---|
+| 0 (baseline) | 0.442 ms | — |
+| 200 | 0.632 ms | 0.590 ms |
+| 1,000 | 0.871 ms | 0.890 ms |
+| 5,000 | **1.767 ms** | 2.422 ms |
+| 20,000 | **5.144 ms** | 8.872 ms |
+
+**Verdict:** up to ~1,000 points the two are equivalent. Beyond that `_Draw` + `DrawPolyline`
+scales clearly better (~1.7× at 20k), because assigning `Line2D.Points` rebuilds and
+re-uploads its geometry every time. Recommendation: keep the physical trail in a ring buffer,
+**decimate/simplify before drawing**, and use a single `DrawPolyline` call per frame rather
+than many `DrawLine` calls (the engine docs explicitly note `DrawMultiline`/`DrawPolyline` are
+faster than repeated `DrawLine`). For a billiards aim trail a few thousand points is plenty —
+20k is only interesting as a bound.
+
+---
+
+## UNVERIFIED / BLOCKED
+
+Nothing in sections 1–5 is inferred; all of it was executed here. The following were **not**
+verified and must not be treated as working:
+
+1. **Android export** — not attempted. Templates are present (`android_release.apk`,
+   `android_source.zip`), but that was not proven end-to-end. Android additionally needs a
+   JDK + Android SDK and (per the prior project's notes) a **`net9.0`** TFM at export time
+   because the Android templates only accept net9.0 — a real conflict with the `net8.0`
+   requirement for desktop/editor, which the prior project solves by swapping the TFM only
+   around the Android export. **Unverified here.**
+2. **Opening the Godot editor GUI** — never done; this session is headless/no-interactive.
+   Consequently `.csproj` / `.sln` **generation by Godot is blocked** (hangs on an
+   interactive prompt), and project configuration was validated via `--import` and runtime
+   `ProjectSettings` reads instead.
+3. **`--build-solutions`** — verified to **hang indefinitely** in this environment; reported
+   as a failure, not a working path.
+4. **Vulkan rendering** — verified **broken** (`VkResult error -3`). Only D3D12 and
+   `opengl3` were proven to render.
+5. **Visual confirmation of the screenshot** — the vision model backend is unavailable in
+   this session (`VISION_BACKEND_UNAVAILABLE`). The PNG was therefore verified
+   *programmatically* (dimensions, 1046 distinct RGB values, 8.70 % non-background pixels,
+   exact expected colors `#121722` background / `#59e5ff` polyline / `#ffffff` text). It is
+   proven non-blank; it has not been inspected by a human or a vision model.
+6. **`addons/swallowtail`** — read and assessed only; deliberately **not integrated**.
+7. **Long-run stability / frame pacing** — the benchmark shows an ~8.3 ms average present
+   floor at 1040×560 with vsync disabled; why that floor exists was not investigated. Budget
+   against it rather than assuming a 16.6 ms frame is mostly free.
+8. **`rendering/textures/canvas_textures/default_texture_filter = 0`** — the default value
+   `1` was read from the engine, but the visual effect of switching to `0` was not
+   screenshotted.
+
+---
+
+## Artifacts
+
+| path | what |
+|---|---|
+| `tools/godotprobe/run_probe.ps1` | the one-command verification loop |
+| `tools/godotprobe/evidence/*.log` | raw output for every claim above |
+| `tools/godotprobe/evidence/render_probe.png` | the verified non-blank 1040×560 capture |
+| `tools/godotprobe/tests/ProbeSmoke.cs` + `probe_smoke.tscn` | headless C# gate with exit code + negative control |
+| `tools/godotprobe/scripts/RenderProbe.cs` | screenshot probe (self-quitting, real exit code) |
+| `tools/godotprobe/scripts/Boot.cs` | main-scene dispatcher (`-- --selftest`, `-- --shot=`) |
+| `tools/godotprobe/diag/verify_png.gd` | blank-frame detector (exit 4 on blank) |
+| `tools/godotprobe/diag/probe_{token,matrix,write,user}.gd` | integrity-level / write-path diagnostics |
+| `tools/godot/godot_console.exe` | **the** Godot binary to use (gitignored, 270 MB) |

@@ -1,0 +1,3038 @@
+{
+ "mode": "all",
+ "seed": 1,
+ "balls": 3,
+ "n": 32,
+ "config": "locked",
+ "results": [
+  {
+   "mode": "random",
+   "i": 0,
+   "balls": [
+    {
+     "x": 631.01,
+     "y": 82.29
+    },
+    {
+     "x": 929.17,
+     "y": 192.97
+    },
+    {
+     "x": 618.58,
+     "y": 367.77
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 1269,
+   "sims": 550,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "random",
+   "i": 1,
+   "balls": [
+    {
+     "x": 455.18,
+     "y": 476.74
+    },
+    {
+     "x": 480.92,
+     "y": 275.54
+    },
+    {
+     "x": 204.57,
+     "y": 241.73
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 1361,
+   "sims": 631,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "random",
+   "i": 2,
+   "balls": [
+    {
+     "x": 299.44,
+     "y": 142.63
+    },
+    {
+     "x": 510.52,
+     "y": 107.99
+    },
+    {
+     "x": 427.94,
+     "y": 386.2
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 1394,
+   "sims": 577,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "random",
+   "i": 3,
+   "balls": [
+    {
+     "x": 332.93,
+     "y": 157.09
+    },
+    {
+     "x": 120.53,
+     "y": 251.13
+    },
+    {
+     "x": 598.96,
+     "y": 398.76
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 1439,
+   "sims": 604,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "random",
+   "i": 4,
+   "balls": [
+    {
+     "x": 340.8,
+     "y": 162.89
+    },
+    {
+     "x": 658.14,
+     "y": 298.32
+    },
+    {
+     "x": 745.78,
+     "y": 157.86
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 1483,
+   "sims": 604,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "random",
+   "i": 5,
+   "balls": [
+    {
+     "x": 713.02,
+     "y": 261.76
+    },
+    {
+     "x": 756.23,
+     "y": 476.63
+    },
+    {
+     "x": 292.28,
+     "y": 382.18
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 1648,
+   "sims": 631,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "random",
+   "i": 6,
+   "balls": [
+    {
+     "x": 217.1,
+     "y": 209.76
+    },
+    {
+     "x": 444.17,
+     "y": 180.29
+    },
+    {
+     "x": 216.06,
+     "y": 369.9
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 1590,
+   "sims": 631,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "random",
+   "i": 7,
+   "balls": [
+    {
+     "x": 586.69,
+     "y": 131.78
+    },
+    {
+     "x": 314.4,
+     "y": 100.57
+    },
+    {
+     "x": 626.77,
+     "y": 425.43
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 1455,
+   "sims": 550,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "random",
+   "i": 8,
+   "balls": [
+    {
+     "x": 291.55,
+     "y": 474.58
+    },
+    {
+     "x": 710.71,
+     "y": 241.15
+    },
+    {
+     "x": 347.35,
+     "y": 350.46
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2949,
+   "sims": 631,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "random",
+   "i": 9,
+   "balls": [
+    {
+     "x": 915.42,
+     "y": 448.32
+    },
+    {
+     "x": 688.38,
+     "y": 446.55
+    },
+    {
+     "x": 812.15,
+     "y": 452.49
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 3031,
+   "sims": 604,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "random",
+   "i": 10,
+   "balls": [
+    {
+     "x": 183.49,
+     "y": 96.88
+    },
+    {
+     "x": 842.08,
+     "y": 198.28
+    },
+    {
+     "x": 853.04,
+     "y": 284
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2633,
+   "sims": 550,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "random",
+   "i": 11,
+   "balls": [
+    {
+     "x": 900.8,
+     "y": 361.27
+    },
+    {
+     "x": 228.44,
+     "y": 350.3
+    },
+    {
+     "x": 912.14,
+     "y": 133.65
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2562,
+   "sims": 577,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "random",
+   "i": 12,
+   "balls": [
+    {
+     "x": 937.48,
+     "y": 146.01
+    },
+    {
+     "x": 422.47,
+     "y": 127.96
+    },
+    {
+     "x": 433.73,
+     "y": 210.15
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 3495,
+   "sims": 631,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "random",
+   "i": 13,
+   "balls": [
+    {
+     "x": 657.64,
+     "y": 283.6
+    },
+    {
+     "x": 547.56,
+     "y": 111.46
+    },
+    {
+     "x": 789.06,
+     "y": 420.85
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2883,
+   "sims": 550,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "random",
+   "i": 14,
+   "balls": [
+    {
+     "x": 321.51,
+     "y": 146.51
+    },
+    {
+     "x": 348.12,
+     "y": 436.64
+    },
+    {
+     "x": 655.04,
+     "y": 299.51
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2511,
+   "sims": 604,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "random",
+   "i": 15,
+   "balls": [
+    {
+     "x": 366.79,
+     "y": 128.98
+    },
+    {
+     "x": 206.68,
+     "y": 108.01
+    },
+    {
+     "x": 346,
+     "y": 349.82
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2545,
+   "sims": 631,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "random",
+   "i": 16,
+   "balls": [
+    {
+     "x": 652.3,
+     "y": 127.66
+    },
+    {
+     "x": 527.14,
+     "y": 289.24
+    },
+    {
+     "x": 268.26,
+     "y": 396.18
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2823,
+   "sims": 577,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "random",
+   "i": 17,
+   "balls": [
+    {
+     "x": 303.65,
+     "y": 475.48
+    },
+    {
+     "x": 916.62,
+     "y": 427.12
+    },
+    {
+     "x": 86.44,
+     "y": 153.95
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2824,
+   "sims": 631,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "random",
+   "i": 18,
+   "balls": [
+    {
+     "x": 107.97,
+     "y": 472.54
+    },
+    {
+     "x": 371.24,
+     "y": 367.74
+    },
+    {
+     "x": 839.22,
+     "y": 118.52
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2881,
+   "sims": 604,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "random",
+   "i": 19,
+   "balls": [
+    {
+     "x": 302.13,
+     "y": 427.02
+    },
+    {
+     "x": 777.9,
+     "y": 396.03
+    },
+    {
+     "x": 276.1,
+     "y": 119.47
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 3050,
+   "sims": 577,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "random",
+   "i": 20,
+   "balls": [
+    {
+     "x": 213.49,
+     "y": 243.68
+    },
+    {
+     "x": 557.18,
+     "y": 195.43
+    },
+    {
+     "x": 855.93,
+     "y": 205.33
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2641,
+   "sims": 550,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "random",
+   "i": 21,
+   "balls": [
+    {
+     "x": 877.39,
+     "y": 423.83
+    },
+    {
+     "x": 636.16,
+     "y": 347.22
+    },
+    {
+     "x": 288.11,
+     "y": 233.74
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2705,
+   "sims": 550,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "random",
+   "i": 22,
+   "balls": [
+    {
+     "x": 351.85,
+     "y": 162.55
+    },
+    {
+     "x": 314.65,
+     "y": 451.35
+    },
+    {
+     "x": 927.31,
+     "y": 144.76
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2365,
+   "sims": 577,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "random",
+   "i": 23,
+   "balls": [
+    {
+     "x": 371.19,
+     "y": 111.68
+    },
+    {
+     "x": 115.17,
+     "y": 392.77
+    },
+    {
+     "x": 421.41,
+     "y": 178.11
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2416,
+   "sims": 577,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "random",
+   "i": 24,
+   "balls": [
+    {
+     "x": 212.86,
+     "y": 407.7
+    },
+    {
+     "x": 352.22,
+     "y": 436.03
+    },
+    {
+     "x": 542.61,
+     "y": 251.31
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 3119,
+   "sims": 658,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "random",
+   "i": 25,
+   "balls": [
+    {
+     "x": 682.82,
+     "y": 218.31
+    },
+    {
+     "x": 749.23,
+     "y": 397.03
+    },
+    {
+     "x": 127.38,
+     "y": 164.15
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2982,
+   "sims": 604,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "random",
+   "i": 26,
+   "balls": [
+    {
+     "x": 635.07,
+     "y": 338.03
+    },
+    {
+     "x": 109.33,
+     "y": 210.93
+    },
+    {
+     "x": 458.12,
+     "y": 427.76
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2678,
+   "sims": 577,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "random",
+   "i": 27,
+   "balls": [
+    {
+     "x": 650,
+     "y": 223.84
+    },
+    {
+     "x": 392.98,
+     "y": 320.27
+    },
+    {
+     "x": 95.08,
+     "y": 448.46
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2868,
+   "sims": 631,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "random",
+   "i": 28,
+   "balls": [
+    {
+     "x": 555.01,
+     "y": 307.05
+    },
+    {
+     "x": 644.53,
+     "y": 130.66
+    },
+    {
+     "x": 144.53,
+     "y": 404.94
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2513,
+   "sims": 523,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "random",
+   "i": 29,
+   "balls": [
+    {
+     "x": 206.79,
+     "y": 363.72
+    },
+    {
+     "x": 324.68,
+     "y": 336.25
+    },
+    {
+     "x": 339.72,
+     "y": 298.13
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2600,
+   "sims": 631,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "random",
+   "i": 30,
+   "balls": [
+    {
+     "x": 891.76,
+     "y": 109.88
+    },
+    {
+     "x": 179.43,
+     "y": 150.12
+    },
+    {
+     "x": 678.06,
+     "y": 99.27
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2343,
+   "sims": 523,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "random",
+   "i": 31,
+   "balls": [
+    {
+     "x": 544.63,
+     "y": 232.2
+    },
+    {
+     "x": 762.67,
+     "y": 185.77
+    },
+    {
+     "x": 156.19,
+     "y": 478.2
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2273,
+   "sims": 523,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "hybrid",
+   "i": 0,
+   "balls": [
+    {
+     "x": 276.93,
+     "y": 295.9,
+     "rule": "backstop"
+    },
+    {
+     "x": 96.03,
+     "y": 423.46
+    },
+    {
+     "x": 181.32,
+     "y": 236.85
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2265,
+   "sims": 604,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "hybrid",
+   "i": 1,
+   "balls": [
+    {
+     "x": 307.47,
+     "y": 294.94,
+     "rule": "backstop"
+    },
+    {
+     "x": 541.02,
+     "y": 234.09
+    },
+    {
+     "x": 705.71,
+     "y": 134.68
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2841,
+   "sims": 712,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "hybrid",
+   "i": 2,
+   "balls": [
+    {
+     "x": 308.54,
+     "y": 265.69,
+     "rule": "backstop"
+    },
+    {
+     "x": 927.01,
+     "y": 327.22
+    },
+    {
+     "x": 556.04,
+     "y": 98.07
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 2,
+   "bestAny": 2,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2992,
+   "sims": 631,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "hybrid",
+   "i": 3,
+   "balls": [
+    {
+     "x": 276.07,
+     "y": 265.45,
+     "rule": "backstop"
+    },
+    {
+     "x": 628.34,
+     "y": 175.55
+    },
+    {
+     "x": 219.06,
+     "y": 335.72
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 1848,
+   "sims": 577,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "hybrid",
+   "i": 4,
+   "balls": [
+    {
+     "x": 307.5,
+     "y": 294.9,
+     "rule": "backstop"
+    },
+    {
+     "x": 99.98,
+     "y": 107.98
+    },
+    {
+     "x": 110.48,
+     "y": 241.04
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 2,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2473,
+   "sims": 604,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "hybrid",
+   "i": 5,
+   "balls": [
+    {
+     "x": 308.1,
+     "y": 294.45,
+     "rule": "backstop"
+    },
+    {
+     "x": 653.73,
+     "y": 398.65
+    },
+    {
+     "x": 646.45,
+     "y": 349.24
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 3685,
+   "sims": 712,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "hybrid",
+   "i": 6,
+   "balls": [
+    {
+     "x": 276.9,
+     "y": 295.67,
+     "rule": "backstop"
+    },
+    {
+     "x": 102.85,
+     "y": 426.13
+    },
+    {
+     "x": 886.42,
+     "y": 91.71
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 2,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2479,
+   "sims": 604,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "hybrid",
+   "i": 7,
+   "balls": [
+    {
+     "x": 275.94,
+     "y": 294.49,
+     "rule": "backstop"
+    },
+    {
+     "x": 555.95,
+     "y": 305.69
+    },
+    {
+     "x": 410.61,
+     "y": 123.88
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 2,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2081,
+   "sims": 577,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "hybrid",
+   "i": 8,
+   "balls": [
+    {
+     "x": 276.72,
+     "y": 264.79,
+     "rule": "backstop"
+    },
+    {
+     "x": 681.11,
+     "y": 230.58
+    },
+    {
+     "x": 96.2,
+     "y": 282.52
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 3345,
+   "sims": 712,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "hybrid",
+   "i": 9,
+   "balls": [
+    {
+     "x": 312.5,
+     "y": 286.49,
+     "rule": "backstop"
+    },
+    {
+     "x": 682.65,
+     "y": 423.56
+    },
+    {
+     "x": 517.29,
+     "y": 386.19
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 4142,
+   "sims": 712,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "hybrid",
+   "i": 10,
+   "balls": [
+    {
+     "x": 276.81,
+     "y": 264.6,
+     "rule": "backstop"
+    },
+    {
+     "x": 431.85,
+     "y": 373.58
+    },
+    {
+     "x": 260.91,
+     "y": 429.08
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 2,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2236,
+   "sims": 577,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "hybrid",
+   "i": 11,
+   "balls": [
+    {
+     "x": 275.46,
+     "y": 294.34,
+     "rule": "backstop"
+    },
+    {
+     "x": 167.36,
+     "y": 154.28
+    },
+    {
+     "x": 696.86,
+     "y": 94.61
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2563,
+   "sims": 604,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "hybrid",
+   "i": 12,
+   "balls": [
+    {
+     "x": 275.7,
+     "y": 294.39,
+     "rule": "backstop"
+    },
+    {
+     "x": 919.52,
+     "y": 215
+    },
+    {
+     "x": 878.61,
+     "y": 419.2
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 1942,
+   "sims": 550,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "hybrid",
+   "i": 13,
+   "balls": [
+    {
+     "x": 307.63,
+     "y": 294.77,
+     "rule": "backstop"
+    },
+    {
+     "x": 492.29,
+     "y": 319.18
+    },
+    {
+     "x": 464.09,
+     "y": 162.74
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 2,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2959,
+   "sims": 631,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "hybrid",
+   "i": 14,
+   "balls": [
+    {
+     "x": 276.26,
+     "y": 265.32,
+     "rule": "backstop"
+    },
+    {
+     "x": 902.98,
+     "y": 338.15
+    },
+    {
+     "x": 123.72,
+     "y": 319.06
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2605,
+   "sims": 604,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "hybrid",
+   "i": 15,
+   "balls": [
+    {
+     "x": 307.36,
+     "y": 295.1,
+     "rule": "backstop"
+    },
+    {
+     "x": 220.04,
+     "y": 142.19
+    },
+    {
+     "x": 916.95,
+     "y": 189.72
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2299,
+   "sims": 631,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "hybrid",
+   "i": 16,
+   "balls": [
+    {
+     "x": 276.94,
+     "y": 263.99,
+     "rule": "backstop"
+    },
+    {
+     "x": 515.59,
+     "y": 211.58
+    },
+    {
+     "x": 936.23,
+     "y": 331.87
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2171,
+   "sims": 550,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "hybrid",
+   "i": 17,
+   "balls": [
+    {
+     "x": 312.42,
+     "y": 273.15,
+     "rule": "backstop"
+    },
+    {
+     "x": 85.6,
+     "y": 332.95
+    },
+    {
+     "x": 111.62,
+     "y": 393.57
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2444,
+   "sims": 604,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "hybrid",
+   "i": 18,
+   "balls": [
+    {
+     "x": 276.93,
+     "y": 295.84,
+     "rule": "backstop"
+    },
+    {
+     "x": 239.76,
+     "y": 338.67
+    },
+    {
+     "x": 857.03,
+     "y": 315.36
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 3513,
+   "sims": 631,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "hybrid",
+   "i": 19,
+   "balls": [
+    {
+     "x": 312.67,
+     "y": 286.11,
+     "rule": "backstop"
+    },
+    {
+     "x": 437.46,
+     "y": 325.71
+    },
+    {
+     "x": 579.57,
+     "y": 393.13
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 4014,
+   "sims": 685,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "hybrid",
+   "i": 20,
+   "balls": [
+    {
+     "x": 276.4,
+     "y": 294.8,
+     "rule": "backstop"
+    },
+    {
+     "x": 425.78,
+     "y": 383.09
+    },
+    {
+     "x": 708.22,
+     "y": 177.4
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2941,
+   "sims": 712,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "hybrid",
+   "i": 21,
+   "balls": [
+    {
+     "x": 276.12,
+     "y": 265.42,
+     "rule": "backstop"
+    },
+    {
+     "x": 862.99,
+     "y": 234.16
+    },
+    {
+     "x": 916.01,
+     "y": 282.89
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 2,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 3481,
+   "sims": 685,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "hybrid",
+   "i": 22,
+   "balls": [
+    {
+     "x": 307.76,
+     "y": 294.65,
+     "rule": "backstop"
+    },
+    {
+     "x": 458.7,
+     "y": 125.43
+    },
+    {
+     "x": 748.28,
+     "y": 330.72
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2206,
+   "sims": 577,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "hybrid",
+   "i": 23,
+   "balls": [
+    {
+     "x": 275.37,
+     "y": 294.33,
+     "rule": "backstop"
+    },
+    {
+     "x": 191.34,
+     "y": 84.07
+    },
+    {
+     "x": 770.24,
+     "y": 391.47
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2366,
+   "sims": 577,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "hybrid",
+   "i": 24,
+   "balls": [
+    {
+     "x": 275.43,
+     "y": 265.67,
+     "rule": "backstop"
+    },
+    {
+     "x": 361.88,
+     "y": 377.66
+    },
+    {
+     "x": 113.01,
+     "y": 174.44
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 2,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2468,
+   "sims": 658,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "hybrid",
+   "i": 25,
+   "balls": [
+    {
+     "x": 276.86,
+     "y": 264.47,
+     "rule": "backstop"
+    },
+    {
+     "x": 350.25,
+     "y": 453.76
+    },
+    {
+     "x": 359.35,
+     "y": 243.3
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 3319,
+   "sims": 712,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "hybrid",
+   "i": 26,
+   "balls": [
+    {
+     "x": 308.04,
+     "y": 294.47,
+     "rule": "backstop"
+    },
+    {
+     "x": 209.32,
+     "y": 337.29
+    },
+    {
+     "x": 777.35,
+     "y": 344.61
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2067,
+   "sims": 577,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "hybrid",
+   "i": 27,
+   "balls": [
+    {
+     "x": 312.43,
+     "y": 273.26,
+     "rule": "backstop"
+    },
+    {
+     "x": 171.96,
+     "y": 243.58
+    },
+    {
+     "x": 883.27,
+     "y": 265.67
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 3117,
+   "sims": 658,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "hybrid",
+   "i": 28,
+   "balls": [
+    {
+     "x": 276.68,
+     "y": 295.14,
+     "rule": "backstop"
+    },
+    {
+     "x": 953.91,
+     "y": 322.76
+    },
+    {
+     "x": 255.86,
+     "y": 335.14
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2464,
+   "sims": 550,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "hybrid",
+   "i": 29,
+   "balls": [
+    {
+     "x": 307.56,
+     "y": 294.83,
+     "rule": "backstop"
+    },
+    {
+     "x": 602.56,
+     "y": 442.21
+    },
+    {
+     "x": 404.26,
+     "y": 444.46
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2391,
+   "sims": 577,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "hybrid",
+   "i": 30,
+   "balls": [
+    {
+     "x": 276.88,
+     "y": 264.4,
+     "rule": "backstop"
+    },
+    {
+     "x": 476.04,
+     "y": 177.87
+    },
+    {
+     "x": 95.07,
+     "y": 281.39
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2793,
+   "sims": 631,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "hybrid",
+   "i": 31,
+   "balls": [
+    {
+     "x": 312.46,
+     "y": 273.38,
+     "rule": "backstop"
+    },
+    {
+     "x": 778.42,
+     "y": 203.59
+    },
+    {
+     "x": 789.86,
+     "y": 441.57
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2709,
+   "sims": 577,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "rule",
+   "i": 0,
+   "balls": [
+    {
+     "x": 312.62,
+     "y": 273.79,
+     "rule": "backstop"
+    },
+    {
+     "x": 263.89,
+     "y": 302.56,
+     "rule": "cut"
+    },
+    {
+     "x": 237.79,
+     "y": 316.88,
+     "rule": "cut"
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2333,
+   "sims": 712,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "rule",
+   "i": 1,
+   "balls": [
+    {
+     "x": 275.82,
+     "y": 265.57,
+     "rule": "backstop"
+    },
+    {
+     "x": 314.55,
+     "y": 307.62,
+     "rule": "cut"
+    },
+    {
+     "x": 326.77,
+     "y": 334.5,
+     "rule": "cut"
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 2,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2016,
+   "sims": 604,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "rule",
+   "i": 2,
+   "balls": [
+    {
+     "x": 312.51,
+     "y": 286.45,
+     "rule": "backstop"
+    },
+    {
+     "x": 263.33,
+     "y": 258.84,
+     "rule": "cut"
+    },
+    {
+     "x": 235.86,
+     "y": 248.03,
+     "rule": "cut"
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 2,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 1957,
+   "sims": 658,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "rule",
+   "i": 3,
+   "balls": [
+    {
+     "x": 312.46,
+     "y": 286.63,
+     "rule": "backstop"
+    },
+    {
+     "x": 263.05,
+     "y": 259.89,
+     "rule": "cut"
+    },
+    {
+     "x": 234.92,
+     "y": 251.69,
+     "rule": "cut"
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 2,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2237,
+   "sims": 631,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "rule",
+   "i": 4,
+   "balls": [
+    {
+     "x": 307.61,
+     "y": 265.22,
+     "rule": "backstop"
+    },
+    {
+     "x": 265.91,
+     "y": 305.37,
+     "rule": "cut"
+    },
+    {
+     "x": 244.76,
+     "y": 326.65,
+     "rule": "cut"
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 2,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 1320,
+   "sims": 631,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "rule",
+   "i": 5,
+   "balls": [
+    {
+     "x": 276.9,
+     "y": 295.7,
+     "rule": "backstop"
+    },
+    {
+     "x": 276.87,
+     "y": 263.37,
+     "rule": "backstop"
+    },
+    {
+     "x": 321,
+     "y": 259.98,
+     "rule": "cut"
+    }
+   ],
+   "status": "SOLVED",
+   "replayed": true,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 878,
+   "sims": 391,
+   "strike": {
+    "angleDeg": 348,
+    "power": 170
+   },
+   "rewinds": 1,
+   "topCandidates": []
+  },
+  {
+   "mode": "rule",
+   "i": 6,
+   "balls": [
+    {
+     "x": 307.84,
+     "y": 294.59,
+     "rule": "backstop"
+    },
+    {
+     "x": 267.26,
+     "y": 253.51,
+     "rule": "cut"
+    },
+    {
+     "x": 249.46,
+     "y": 229.49,
+     "rule": "cut"
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 2,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 1427,
+   "sims": 577,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "rule",
+   "i": 7,
+   "balls": [
+    {
+     "x": 312.41,
+     "y": 286.91,
+     "rule": "backstop"
+    },
+    {
+     "x": 262.83,
+     "y": 261.56,
+     "rule": "cut"
+    },
+    {
+     "x": 257.22,
+     "y": 295.91,
+     "rule": "cut"
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 2,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2306,
+   "sims": 712,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "rule",
+   "i": 8,
+   "balls": [
+    {
+     "x": 312.41,
+     "y": 273.09,
+     "rule": "backstop"
+    },
+    {
+     "x": 262.84,
+     "y": 298.46,
+     "rule": "cut"
+    },
+    {
+     "x": 257.23,
+     "y": 264.13,
+     "rule": "cut"
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 2,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2225,
+   "sims": 712,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "rule",
+   "i": 9,
+   "balls": [
+    {
+     "x": 276.9,
+     "y": 264.32,
+     "rule": "backstop"
+    },
+    {
+     "x": 276.86,
+     "y": 296.65,
+     "rule": "backstop"
+    },
+    {
+     "x": 326.81,
+     "y": 275.4,
+     "rule": "cut"
+    }
+   ],
+   "status": "SOLVED",
+   "replayed": true,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 919,
+   "sims": 391,
+   "strike": {
+    "angleDeg": 14,
+    "power": 170
+   },
+   "rewinds": 1,
+   "topCandidates": []
+  },
+  {
+   "mode": "rule",
+   "i": 10,
+   "balls": [
+    {
+     "x": 307.41,
+     "y": 264.97,
+     "rule": "backstop"
+    },
+    {
+     "x": 264.68,
+     "y": 303.92,
+     "rule": "cut"
+    },
+    {
+     "x": 240.51,
+     "y": 321.59,
+     "rule": "cut"
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 1905,
+   "sims": 631,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "rule",
+   "i": 11,
+   "balls": [
+    {
+     "x": 275.74,
+     "y": 265.59,
+     "rule": "backstop"
+    },
+    {
+     "x": 314.08,
+     "y": 307.78,
+     "rule": "cut"
+    },
+    {
+     "x": 325.14,
+     "y": 335.06,
+     "rule": "cut"
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 1792,
+   "sims": 604,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "rule",
+   "i": 12,
+   "balls": [
+    {
+     "x": 312.5,
+     "y": 286.49,
+     "rule": "backstop"
+    },
+    {
+     "x": 263.26,
+     "y": 259.07,
+     "rule": "cut"
+    },
+    {
+     "x": 235.63,
+     "y": 248.81,
+     "rule": "cut"
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 1955,
+   "sims": 658,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "rule",
+   "i": 13,
+   "balls": [
+    {
+     "x": 276.91,
+     "y": 264.28,
+     "rule": "backstop"
+    },
+    {
+     "x": 276.87,
+     "y": 296.61,
+     "rule": "backstop"
+    },
+    {
+     "x": 326.86,
+     "y": 275.18,
+     "rule": "cut"
+    }
+   ],
+   "status": "SOLVED",
+   "replayed": true,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 965,
+   "sims": 391,
+   "strike": {
+    "angleDeg": 12,
+    "power": 170
+   },
+   "rewinds": 1,
+   "topCandidates": []
+  },
+  {
+   "mode": "rule",
+   "i": 14,
+   "balls": [
+    {
+     "x": 312.52,
+     "y": 286.41,
+     "rule": "backstop"
+    },
+    {
+     "x": 263.4,
+     "y": 258.63,
+     "rule": "cut"
+    },
+    {
+     "x": 236.1,
+     "y": 247.29,
+     "rule": "cut"
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2571,
+   "sims": 631,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "rule",
+   "i": 15,
+   "balls": [
+    {
+     "x": 307.92,
+     "y": 265.46,
+     "rule": "backstop"
+    },
+    {
+     "x": 267.72,
+     "y": 306.79,
+     "rule": "cut"
+    },
+    {
+     "x": 251.07,
+     "y": 331.55,
+     "rule": "cut"
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 2,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 1573,
+   "sims": 577,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "rule",
+   "i": 16,
+   "balls": [
+    {
+     "x": 312.54,
+     "y": 286.37,
+     "rule": "backstop"
+    },
+    {
+     "x": 263.49,
+     "y": 258.36,
+     "rule": "cut"
+    },
+    {
+     "x": 236.43,
+     "y": 246.34,
+     "rule": "cut"
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2320,
+   "sims": 631,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "rule",
+   "i": 17,
+   "balls": [
+    {
+     "x": 275.37,
+     "y": 265.67,
+     "rule": "backstop"
+    },
+    {
+     "x": 309.23,
+     "y": 265.69,
+     "rule": "backstop"
+    },
+    {
+     "x": 311.81,
+     "y": 308.26,
+     "rule": "cut"
+    }
+   ],
+   "status": "SOLVED",
+   "replayed": true,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 849,
+   "sims": 391,
+   "strike": {
+    "angleDeg": 88,
+    "power": 170
+   },
+   "rewinds": 1,
+   "topCandidates": []
+  },
+  {
+   "mode": "rule",
+   "i": 18,
+   "balls": [
+    {
+     "x": 276.31,
+     "y": 265.28,
+     "rule": "backstop"
+    },
+    {
+     "x": 317.47,
+     "y": 305.93,
+     "rule": "cut"
+    },
+    {
+     "x": 336.96,
+     "y": 328.69,
+     "rule": "cut"
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 2,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2248,
+   "sims": 658,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "rule",
+   "i": 19,
+   "balls": [
+    {
+     "x": 308.65,
+     "y": 265.71,
+     "rule": "backstop"
+    },
+    {
+     "x": 274.79,
+     "y": 265.65,
+     "rule": "backstop"
+    },
+    {
+     "x": 272.13,
+     "y": 308.29,
+     "rule": "cut"
+    }
+   ],
+   "status": "SOLVED",
+   "replayed": true,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 721,
+   "sims": 391,
+   "strike": {
+    "angleDeg": 98,
+    "power": 170
+   },
+   "rewinds": 1,
+   "topCandidates": []
+  },
+  {
+   "mode": "rule",
+   "i": 20,
+   "balls": [
+    {
+     "x": 308.29,
+     "y": 265.63,
+     "rule": "backstop"
+    },
+    {
+     "x": 269.91,
+     "y": 307.81,
+     "rule": "cut"
+    },
+    {
+     "x": 258.75,
+     "y": 335.05,
+     "rule": "cut"
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 2,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 1629,
+   "sims": 631,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "rule",
+   "i": 21,
+   "balls": [
+    {
+     "x": 308.46,
+     "y": 265.68,
+     "rule": "backstop"
+    },
+    {
+     "x": 270.95,
+     "y": 308.09,
+     "rule": "cut"
+    },
+    {
+     "x": 262.39,
+     "y": 336.03,
+     "rule": "cut"
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2299,
+   "sims": 712,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "rule",
+   "i": 22,
+   "balls": [
+    {
+     "x": 307.64,
+     "y": 294.76,
+     "rule": "backstop"
+    },
+    {
+     "x": 266.07,
+     "y": 254.47,
+     "rule": "cut"
+    },
+    {
+     "x": 245.31,
+     "y": 232.82,
+     "rule": "cut"
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 2,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 1279,
+   "sims": 577,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "rule",
+   "i": 23,
+   "balls": [
+    {
+     "x": 307.33,
+     "y": 295.15,
+     "rule": "backstop"
+    },
+    {
+     "x": 264.22,
+     "y": 256.82,
+     "rule": "cut"
+    },
+    {
+     "x": 238.91,
+     "y": 240.97,
+     "rule": "cut"
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2330,
+   "sims": 658,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "rule",
+   "i": 24,
+   "balls": [
+    {
+     "x": 276.75,
+     "y": 264.74,
+     "rule": "backstop"
+    },
+    {
+     "x": 320.06,
+     "y": 302.7,
+     "rule": "cut"
+    },
+    {
+     "x": 345.96,
+     "y": 317.43,
+     "rule": "cut"
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 1838,
+   "sims": 631,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "rule",
+   "i": 25,
+   "balls": [
+    {
+     "x": 307.49,
+     "y": 265.09,
+     "rule": "backstop"
+    },
+    {
+     "x": 265.19,
+     "y": 304.59,
+     "rule": "cut"
+    },
+    {
+     "x": 242.26,
+     "y": 323.92,
+     "rule": "cut"
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 2,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2350,
+   "sims": 712,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "rule",
+   "i": 26,
+   "balls": [
+    {
+     "x": 276.01,
+     "y": 265.48,
+     "rule": "backstop"
+    },
+    {
+     "x": 315.66,
+     "y": 307.12,
+     "rule": "cut"
+    },
+    {
+     "x": 330.67,
+     "y": 332.79,
+     "rule": "cut"
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 1676,
+   "sims": 577,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "rule",
+   "i": 27,
+   "balls": [
+    {
+     "x": 275.47,
+     "y": 294.34,
+     "rule": "backstop"
+    },
+    {
+     "x": 309.33,
+     "y": 294.33,
+     "rule": "backstop"
+    },
+    {
+     "x": 312.38,
+     "y": 251.81,
+     "rule": "cut"
+    }
+   ],
+   "status": "SOLVED",
+   "replayed": true,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 823,
+   "sims": 391,
+   "strike": {
+    "angleDeg": 276,
+    "power": 170
+   },
+   "rewinds": 1,
+   "topCandidates": []
+  },
+  {
+   "mode": "rule",
+   "i": 28,
+   "balls": [
+    {
+     "x": 312.46,
+     "y": 286.62,
+     "rule": "backstop"
+    },
+    {
+     "x": 263.06,
+     "y": 259.87,
+     "rule": "cut"
+    },
+    {
+     "x": 234.94,
+     "y": 251.63,
+     "rule": "cut"
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 2,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2182,
+   "sims": 658,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "rule",
+   "i": 29,
+   "balls": [
+    {
+     "x": 275.62,
+     "y": 265.63,
+     "rule": "backstop"
+    },
+    {
+     "x": 313.36,
+     "y": 307.99,
+     "rule": "cut"
+    },
+    {
+     "x": 322.6,
+     "y": 335.77,
+     "rule": "cut"
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2246,
+   "sims": 658,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "rule",
+   "i": 30,
+   "balls": [
+    {
+     "x": 312.41,
+     "y": 273.09,
+     "rule": "backstop"
+    },
+    {
+     "x": 262.83,
+     "y": 298.45,
+     "rule": "cut"
+    },
+    {
+     "x": 257.23,
+     "y": 264.11,
+     "rule": "cut"
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 2,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 2192,
+   "sims": 712,
+   "strike": null,
+   "rewinds": 0,
+   "topCandidates": []
+  },
+  {
+   "mode": "rule",
+   "i": 31,
+   "balls": [
+    {
+     "x": 276.94,
+     "y": 263.89,
+     "rule": "backstop"
+    },
+    {
+     "x": 276.94,
+     "y": 296.22,
+     "rule": "backstop"
+    },
+    {
+     "x": 327.21,
+     "y": 272.84,
+     "rule": "cut"
+    }
+   ],
+   "status": "SOLVED",
+   "replayed": true,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "maxPotential": 0,
+   "maxCorridorBalls": 0,
+   "totalBalls": 3,
+   "ms": 860,
+   "sims": 391,
+   "strike": {
+    "angleDeg": 0,
+    "power": 170
+   },
+   "rewinds": 1,
+   "topCandidates": []
+  }
+ ]
+}

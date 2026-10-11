@@ -1,0 +1,2526 @@
+{
+ "arm": "R2_handBudget",
+ "budget": {
+  "angleStep": 1,
+  "powers": [
+   130,
+   170
+  ],
+  "releaseFractions": [
+   0.3,
+   0.6,
+   1
+  ],
+  "maxRewinds": 4,
+  "beam": 6,
+  "topStrikes": 6,
+  "refineStep": 0.25
+ },
+ "free": false,
+ "seed": 900003,
+ "balls": 3,
+ "n": 100,
+ "solved": 0,
+ "rows": [
+  {
+   "i": 0,
+   "balls": [
+    {
+     "x": 387.88,
+     "y": 212.29
+    },
+    {
+     "x": 865.46,
+     "y": 220.54
+    },
+    {
+     "x": 278.82,
+     "y": 164.25
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1228,
+   "ms": 7520,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 1,
+   "balls": [
+    {
+     "x": 353.28,
+     "y": 344.69
+    },
+    {
+     "x": 681.58,
+     "y": 275.02
+    },
+    {
+     "x": 810.74,
+     "y": 270.19
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1084,
+   "ms": 5192,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 2,
+   "balls": [
+    {
+     "x": 766,
+     "y": 116.6
+    },
+    {
+     "x": 724.31,
+     "y": 457.3
+    },
+    {
+     "x": 657.04,
+     "y": 347.81
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1180,
+   "ms": 7303,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 3,
+   "balls": [
+    {
+     "x": 709.44,
+     "y": 421.92
+    },
+    {
+     "x": 627.42,
+     "y": 114.1
+    },
+    {
+     "x": 929.53,
+     "y": 172.41
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1180,
+   "ms": 7601,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 4,
+   "balls": [
+    {
+     "x": 815.01,
+     "y": 231.23
+    },
+    {
+     "x": 800.34,
+     "y": 466.32
+    },
+    {
+     "x": 280.84,
+     "y": 412.45
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1180,
+   "ms": 6622,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 5,
+   "balls": [
+    {
+     "x": 361.59,
+     "y": 231.04
+    },
+    {
+     "x": 112,
+     "y": 409.62
+    },
+    {
+     "x": 730.18,
+     "y": 394.84
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1180,
+   "ms": 5940,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 6,
+   "balls": [
+    {
+     "x": 864.58,
+     "y": 128.24
+    },
+    {
+     "x": 617.19,
+     "y": 455
+    },
+    {
+     "x": 519.33,
+     "y": 280.64
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1180,
+   "ms": 7276,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 7,
+   "balls": [
+    {
+     "x": 167.29,
+     "y": 154.78
+    },
+    {
+     "x": 770.91,
+     "y": 329.89
+    },
+    {
+     "x": 153.72,
+     "y": 299.44
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1036,
+   "ms": 4988,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 8,
+   "balls": [
+    {
+     "x": 780.65,
+     "y": 301.08
+    },
+    {
+     "x": 501.76,
+     "y": 333.32
+    },
+    {
+     "x": 922.07,
+     "y": 93.05
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1180,
+   "ms": 7184,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 9,
+   "balls": [
+    {
+     "x": 447.1,
+     "y": 280.94
+    },
+    {
+     "x": 114.09,
+     "y": 267.41
+    },
+    {
+     "x": 207.31,
+     "y": 407.23
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1180,
+   "ms": 6969,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 10,
+   "balls": [
+    {
+     "x": 851.24,
+     "y": 82.05
+    },
+    {
+     "x": 293.91,
+     "y": 361.43
+    },
+    {
+     "x": 519.47,
+     "y": 237.15
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1228,
+   "ms": 7117,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 11,
+   "balls": [
+    {
+     "x": 602.37,
+     "y": 476.6
+    },
+    {
+     "x": 407.42,
+     "y": 347.49
+    },
+    {
+     "x": 597.58,
+     "y": 136.32
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1228,
+   "ms": 7989,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 12,
+   "balls": [
+    {
+     "x": 301.14,
+     "y": 476.45
+    },
+    {
+     "x": 115.25,
+     "y": 278.62
+    },
+    {
+     "x": 446.6,
+     "y": 382.93
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1228,
+   "ms": 7338,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 13,
+   "balls": [
+    {
+     "x": 423.36,
+     "y": 343.8
+    },
+    {
+     "x": 704.64,
+     "y": 91.26
+    },
+    {
+     "x": 773.19,
+     "y": 389.6
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1180,
+   "ms": 5548,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 14,
+   "balls": [
+    {
+     "x": 551.48,
+     "y": 389.5
+    },
+    {
+     "x": 399.76,
+     "y": 364.7
+    },
+    {
+     "x": 126.31,
+     "y": 428.41
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1132,
+   "ms": 5950,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 15,
+   "balls": [
+    {
+     "x": 103.64,
+     "y": 146.77
+    },
+    {
+     "x": 278.8,
+     "y": 336.12
+    },
+    {
+     "x": 807.96,
+     "y": 322.31
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1276,
+   "ms": 5978,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 16,
+   "balls": [
+    {
+     "x": 702.67,
+     "y": 365.94
+    },
+    {
+     "x": 459.76,
+     "y": 373.02
+    },
+    {
+     "x": 874.63,
+     "y": 100.51
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1228,
+   "ms": 7429,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 17,
+   "balls": [
+    {
+     "x": 474.46,
+     "y": 463.62
+    },
+    {
+     "x": 476.35,
+     "y": 164.57
+    },
+    {
+     "x": 443.16,
+     "y": 354.52
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1228,
+   "ms": 6824,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 18,
+   "balls": [
+    {
+     "x": 748.52,
+     "y": 224.13
+    },
+    {
+     "x": 848.74,
+     "y": 197.16
+    },
+    {
+     "x": 284.26,
+     "y": 364.15
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1084,
+   "ms": 5081,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 19,
+   "balls": [
+    {
+     "x": 233.06,
+     "y": 296.65
+    },
+    {
+     "x": 355.36,
+     "y": 293.16
+    },
+    {
+     "x": 310.49,
+     "y": 232.46
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1132,
+   "ms": 5264,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 20,
+   "balls": [
+    {
+     "x": 850.81,
+     "y": 390.94
+    },
+    {
+     "x": 224.46,
+     "y": 313.5
+    },
+    {
+     "x": 353.69,
+     "y": 218.76
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1132,
+   "ms": 6014,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 21,
+   "balls": [
+    {
+     "x": 738.47,
+     "y": 436.99
+    },
+    {
+     "x": 258.59,
+     "y": 322.1
+    },
+    {
+     "x": 219.62,
+     "y": 431.42
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1132,
+   "ms": 5269,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 22,
+   "balls": [
+    {
+     "x": 180.9,
+     "y": 176.85
+    },
+    {
+     "x": 489.23,
+     "y": 428.55
+    },
+    {
+     "x": 238.9,
+     "y": 248.42
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1084,
+   "ms": 5253,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 23,
+   "balls": [
+    {
+     "x": 581.04,
+     "y": 428.9
+    },
+    {
+     "x": 626.32,
+     "y": 408.82
+    },
+    {
+     "x": 894.12,
+     "y": 172.88
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1228,
+   "ms": 7912,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 24,
+   "balls": [
+    {
+     "x": 388.1,
+     "y": 328.95
+    },
+    {
+     "x": 574.9,
+     "y": 199.44
+    },
+    {
+     "x": 371.88,
+     "y": 172.45
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1132,
+   "ms": 5086,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 25,
+   "balls": [
+    {
+     "x": 568.13,
+     "y": 127.05
+    },
+    {
+     "x": 627.63,
+     "y": 221.06
+    },
+    {
+     "x": 150.16,
+     "y": 169.12
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1084,
+   "ms": 5732,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 26,
+   "balls": [
+    {
+     "x": 228.66,
+     "y": 120.6
+    },
+    {
+     "x": 463.75,
+     "y": 434.84
+    },
+    {
+     "x": 944.39,
+     "y": 373.69
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 2,
+   "sims": 1084,
+   "ms": 5373,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 27,
+   "balls": [
+    {
+     "x": 553.05,
+     "y": 257.37
+    },
+    {
+     "x": 654.74,
+     "y": 134.82
+    },
+    {
+     "x": 567.03,
+     "y": 348.42
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1132,
+   "ms": 6732,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 28,
+   "balls": [
+    {
+     "x": 919.14,
+     "y": 113.19
+    },
+    {
+     "x": 264.19,
+     "y": 442.9
+    },
+    {
+     "x": 858.6,
+     "y": 415.37
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1084,
+   "ms": 6046,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 29,
+   "balls": [
+    {
+     "x": 399.49,
+     "y": 225.32
+    },
+    {
+     "x": 463.93,
+     "y": 461.54
+    },
+    {
+     "x": 531.74,
+     "y": 159.36
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 2,
+   "sims": 1084,
+   "ms": 5143,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 30,
+   "balls": [
+    {
+     "x": 674.74,
+     "y": 341.05
+    },
+    {
+     "x": 767.77,
+     "y": 263.81
+    },
+    {
+     "x": 833.61,
+     "y": 276.65
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 988,
+   "ms": 4986,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 31,
+   "balls": [
+    {
+     "x": 949.41,
+     "y": 234.57
+    },
+    {
+     "x": 729.25,
+     "y": 328.3
+    },
+    {
+     "x": 801.53,
+     "y": 99.57
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1180,
+   "ms": 7141,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 32,
+   "balls": [
+    {
+     "x": 940.05,
+     "y": 452.52
+    },
+    {
+     "x": 359.77,
+     "y": 180.17
+    },
+    {
+     "x": 501.03,
+     "y": 372.14
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1180,
+   "ms": 7092,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 33,
+   "balls": [
+    {
+     "x": 669.13,
+     "y": 135.14
+    },
+    {
+     "x": 309.43,
+     "y": 476.31
+    },
+    {
+     "x": 553.26,
+     "y": 168.83
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1180,
+   "ms": 7206,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 34,
+   "balls": [
+    {
+     "x": 946.85,
+     "y": 336.15
+    },
+    {
+     "x": 85.61,
+     "y": 375.62
+    },
+    {
+     "x": 914.87,
+     "y": 362.04
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1180,
+   "ms": 7005,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 35,
+   "balls": [
+    {
+     "x": 611.67,
+     "y": 165.16
+    },
+    {
+     "x": 343.11,
+     "y": 212.78
+    },
+    {
+     "x": 590.49,
+     "y": 405.5
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1132,
+   "ms": 6276,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 36,
+   "balls": [
+    {
+     "x": 796.6,
+     "y": 416.32
+    },
+    {
+     "x": 172.09,
+     "y": 464.84
+    },
+    {
+     "x": 151.09,
+     "y": 226.88
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1132,
+   "ms": 6129,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 37,
+   "balls": [
+    {
+     "x": 479.48,
+     "y": 218.84
+    },
+    {
+     "x": 832.65,
+     "y": 246.69
+    },
+    {
+     "x": 113.96,
+     "y": 89.99
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1228,
+   "ms": 7791,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 38,
+   "balls": [
+    {
+     "x": 465.32,
+     "y": 267.81
+    },
+    {
+     "x": 648.84,
+     "y": 82.41
+    },
+    {
+     "x": 557.1,
+     "y": 253.31
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1228,
+   "ms": 7810,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 39,
+   "balls": [
+    {
+     "x": 732.57,
+     "y": 230.12
+    },
+    {
+     "x": 321.77,
+     "y": 451.27
+    },
+    {
+     "x": 863.3,
+     "y": 215.04
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1132,
+   "ms": 6257,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 40,
+   "balls": [
+    {
+     "x": 429.78,
+     "y": 138.44
+    },
+    {
+     "x": 836.28,
+     "y": 345.41
+    },
+    {
+     "x": 193.44,
+     "y": 205.32
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1180,
+   "ms": 7272,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 41,
+   "balls": [
+    {
+     "x": 714.19,
+     "y": 215.37
+    },
+    {
+     "x": 294.29,
+     "y": 386.06
+    },
+    {
+     "x": 140.32,
+     "y": 292.97
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1084,
+   "ms": 6093,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 42,
+   "balls": [
+    {
+     "x": 394,
+     "y": 284.31
+    },
+    {
+     "x": 847.85,
+     "y": 263.5
+    },
+    {
+     "x": 758.6,
+     "y": 313.83
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1180,
+   "ms": 6876,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 43,
+   "balls": [
+    {
+     "x": 151.93,
+     "y": 461.1
+    },
+    {
+     "x": 169.35,
+     "y": 118.37
+    },
+    {
+     "x": 343.39,
+     "y": 281.67
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1132,
+   "ms": 5975,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 44,
+   "balls": [
+    {
+     "x": 170.2,
+     "y": 361.34
+    },
+    {
+     "x": 504.96,
+     "y": 179.57
+    },
+    {
+     "x": 464.94,
+     "y": 287.66
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1228,
+   "ms": 7332,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 45,
+   "balls": [
+    {
+     "x": 517.11,
+     "y": 207.87
+    },
+    {
+     "x": 334.97,
+     "y": 83.74
+    },
+    {
+     "x": 191.62,
+     "y": 455.34
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1228,
+   "ms": 7565,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 46,
+   "balls": [
+    {
+     "x": 522.38,
+     "y": 145.28
+    },
+    {
+     "x": 823.94,
+     "y": 418.04
+    },
+    {
+     "x": 328.98,
+     "y": 149.02
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1180,
+   "ms": 6164,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 47,
+   "balls": [
+    {
+     "x": 477.72,
+     "y": 267.97
+    },
+    {
+     "x": 146.56,
+     "y": 246.59
+    },
+    {
+     "x": 85.42,
+     "y": 144.42
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1084,
+   "ms": 5253,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 48,
+   "balls": [
+    {
+     "x": 474.74,
+     "y": 453.29
+    },
+    {
+     "x": 292.48,
+     "y": 179.64
+    },
+    {
+     "x": 503.38,
+     "y": 255.64
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1228,
+   "ms": 7669,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 49,
+   "balls": [
+    {
+     "x": 822.37,
+     "y": 215.15
+    },
+    {
+     "x": 151.69,
+     "y": 194.97
+    },
+    {
+     "x": 879.44,
+     "y": 329.08
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1228,
+   "ms": 7386,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 50,
+   "balls": [
+    {
+     "x": 271.79,
+     "y": 427.45
+    },
+    {
+     "x": 812.71,
+     "y": 377
+    },
+    {
+     "x": 699.54,
+     "y": 181.02
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1180,
+   "ms": 6768,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 51,
+   "balls": [
+    {
+     "x": 866.73,
+     "y": 272.22
+    },
+    {
+     "x": 822.51,
+     "y": 320.66
+    },
+    {
+     "x": 342.97,
+     "y": 211.7
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1228,
+   "ms": 7238,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 52,
+   "balls": [
+    {
+     "x": 97.71,
+     "y": 404.48
+    },
+    {
+     "x": 817.8,
+     "y": 466.94
+    },
+    {
+     "x": 134.87,
+     "y": 157.63
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 2,
+   "sims": 1180,
+   "ms": 6756,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 53,
+   "balls": [
+    {
+     "x": 379.8,
+     "y": 210.22
+    },
+    {
+     "x": 504.6,
+     "y": 277.49
+    },
+    {
+     "x": 676.36,
+     "y": 415.56
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1132,
+   "ms": 6276,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 54,
+   "balls": [
+    {
+     "x": 354.74,
+     "y": 221.29
+    },
+    {
+     "x": 908.52,
+     "y": 324
+    },
+    {
+     "x": 642.16,
+     "y": 399.16
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1084,
+   "ms": 5624,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 55,
+   "balls": [
+    {
+     "x": 603.22,
+     "y": 326.41
+    },
+    {
+     "x": 633.97,
+     "y": 82.65
+    },
+    {
+     "x": 765.99,
+     "y": 124.01
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1180,
+   "ms": 7341,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 56,
+   "balls": [
+    {
+     "x": 711.83,
+     "y": 296.79
+    },
+    {
+     "x": 930.48,
+     "y": 425.49
+    },
+    {
+     "x": 533.25,
+     "y": 270.94
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1180,
+   "ms": 8069,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 57,
+   "balls": [
+    {
+     "x": 574.73,
+     "y": 124.33
+    },
+    {
+     "x": 695.4,
+     "y": 189
+    },
+    {
+     "x": 879.71,
+     "y": 136.92
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1084,
+   "ms": 6229,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 58,
+   "balls": [
+    {
+     "x": 305.08,
+     "y": 173.39
+    },
+    {
+     "x": 346.47,
+     "y": 243.94
+    },
+    {
+     "x": 116.09,
+     "y": 186.36
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1132,
+   "ms": 5793,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 59,
+   "balls": [
+    {
+     "x": 953.49,
+     "y": 381.93
+    },
+    {
+     "x": 205.72,
+     "y": 198.75
+    },
+    {
+     "x": 811.87,
+     "y": 368.43
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1132,
+   "ms": 6077,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 60,
+   "balls": [
+    {
+     "x": 444.44,
+     "y": 103.21
+    },
+    {
+     "x": 864.22,
+     "y": 137.56
+    },
+    {
+     "x": 571.65,
+     "y": 423.54
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 2,
+   "sims": 1228,
+   "ms": 7506,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 61,
+   "balls": [
+    {
+     "x": 726.11,
+     "y": 334.56
+    },
+    {
+     "x": 624.67,
+     "y": 112.35
+    },
+    {
+     "x": 123.96,
+     "y": 443.76
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1084,
+   "ms": 5792,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 62,
+   "balls": [
+    {
+     "x": 107.1,
+     "y": 132.16
+    },
+    {
+     "x": 735.84,
+     "y": 141.95
+    },
+    {
+     "x": 317.09,
+     "y": 415.73
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1132,
+   "ms": 5894,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 63,
+   "balls": [
+    {
+     "x": 305.27,
+     "y": 245.21
+    },
+    {
+     "x": 801.88,
+     "y": 128.32
+    },
+    {
+     "x": 756.81,
+     "y": 262.45
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1228,
+   "ms": 7274,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 64,
+   "balls": [
+    {
+     "x": 925.54,
+     "y": 276.14
+    },
+    {
+     "x": 838.92,
+     "y": 399.06
+    },
+    {
+     "x": 631.57,
+     "y": 449.19
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 0,
+   "bestAny": 1,
+   "sims": 988,
+   "ms": 5583,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 65,
+   "balls": [
+    {
+     "x": 877,
+     "y": 263.91
+    },
+    {
+     "x": 405.62,
+     "y": 138.41
+    },
+    {
+     "x": 239.22,
+     "y": 159.53
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1228,
+   "ms": 6396,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 66,
+   "balls": [
+    {
+     "x": 95.42,
+     "y": 408.33
+    },
+    {
+     "x": 223.12,
+     "y": 426.43
+    },
+    {
+     "x": 636.73,
+     "y": 153.69
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1132,
+   "ms": 5324,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 67,
+   "balls": [
+    {
+     "x": 126.45,
+     "y": 239.72
+    },
+    {
+     "x": 272.28,
+     "y": 328.73
+    },
+    {
+     "x": 425.34,
+     "y": 446.99
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1132,
+   "ms": 5751,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 68,
+   "balls": [
+    {
+     "x": 129.6,
+     "y": 218.95
+    },
+    {
+     "x": 851.8,
+     "y": 415.55
+    },
+    {
+     "x": 100.58,
+     "y": 402.07
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 2,
+   "sims": 1084,
+   "ms": 5578,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 69,
+   "balls": [
+    {
+     "x": 276.32,
+     "y": 111.05
+    },
+    {
+     "x": 514.31,
+     "y": 451.28
+    },
+    {
+     "x": 735.37,
+     "y": 448.44
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1132,
+   "ms": 6033,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 70,
+   "balls": [
+    {
+     "x": 324.6,
+     "y": 464.74
+    },
+    {
+     "x": 677.82,
+     "y": 276.2
+    },
+    {
+     "x": 424.58,
+     "y": 107.88
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1180,
+   "ms": 6317,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 71,
+   "balls": [
+    {
+     "x": 102.05,
+     "y": 387.19
+    },
+    {
+     "x": 342.23,
+     "y": 453.13
+    },
+    {
+     "x": 360.71,
+     "y": 225.43
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1132,
+   "ms": 5528,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 72,
+   "balls": [
+    {
+     "x": 529.54,
+     "y": 304.98
+    },
+    {
+     "x": 470.73,
+     "y": 161.45
+    },
+    {
+     "x": 616.07,
+     "y": 439.91
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1180,
+   "ms": 6983,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 73,
+   "balls": [
+    {
+     "x": 318.99,
+     "y": 320.19
+    },
+    {
+     "x": 110.46,
+     "y": 377.53
+    },
+    {
+     "x": 333.94,
+     "y": 129.06
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1084,
+   "ms": 5077,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 74,
+   "balls": [
+    {
+     "x": 604.21,
+     "y": 115.7
+    },
+    {
+     "x": 397.82,
+     "y": 413.65
+    },
+    {
+     "x": 230.96,
+     "y": 314.19
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1180,
+   "ms": 6745,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 75,
+   "balls": [
+    {
+     "x": 678.78,
+     "y": 410.74
+    },
+    {
+     "x": 636.21,
+     "y": 193.56
+    },
+    {
+     "x": 434.53,
+     "y": 129.66
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1180,
+   "ms": 7143,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 76,
+   "balls": [
+    {
+     "x": 843.89,
+     "y": 188.22
+    },
+    {
+     "x": 477.55,
+     "y": 282.6
+    },
+    {
+     "x": 733.86,
+     "y": 341.68
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1228,
+   "ms": 7637,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 77,
+   "balls": [
+    {
+     "x": 433.65,
+     "y": 267.05
+    },
+    {
+     "x": 611.42,
+     "y": 436.98
+    },
+    {
+     "x": 374.09,
+     "y": 380.07
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1084,
+   "ms": 5536,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 78,
+   "balls": [
+    {
+     "x": 897.67,
+     "y": 183.92
+    },
+    {
+     "x": 654.88,
+     "y": 97.33
+    },
+    {
+     "x": 176.95,
+     "y": 155.7
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1132,
+   "ms": 5441,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 79,
+   "balls": [
+    {
+     "x": 313.15,
+     "y": 383.35
+    },
+    {
+     "x": 200.25,
+     "y": 365.62
+    },
+    {
+     "x": 96.42,
+     "y": 461.48
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1084,
+   "ms": 5937,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 80,
+   "balls": [
+    {
+     "x": 361.88,
+     "y": 383.44
+    },
+    {
+     "x": 557.3,
+     "y": 337.12
+    },
+    {
+     "x": 753.13,
+     "y": 208.52
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1132,
+   "ms": 5798,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 81,
+   "balls": [
+    {
+     "x": 866.65,
+     "y": 364.47
+    },
+    {
+     "x": 591.09,
+     "y": 345.27
+    },
+    {
+     "x": 101.65,
+     "y": 118.97
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1180,
+   "ms": 7314,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 82,
+   "balls": [
+    {
+     "x": 637.01,
+     "y": 139.91
+    },
+    {
+     "x": 699.08,
+     "y": 184.56
+    },
+    {
+     "x": 261.77,
+     "y": 125.06
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1228,
+   "ms": 7228,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 83,
+   "balls": [
+    {
+     "x": 377.7,
+     "y": 388.35
+    },
+    {
+     "x": 847.89,
+     "y": 441.82
+    },
+    {
+     "x": 122.24,
+     "y": 274.78
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1132,
+   "ms": 6334,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 84,
+   "balls": [
+    {
+     "x": 748.82,
+     "y": 196.54
+    },
+    {
+     "x": 730.32,
+     "y": 394.43
+    },
+    {
+     "x": 356.85,
+     "y": 90.94
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1036,
+   "ms": 5148,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 85,
+   "balls": [
+    {
+     "x": 286.76,
+     "y": 327.12
+    },
+    {
+     "x": 107.42,
+     "y": 221.38
+    },
+    {
+     "x": 681.48,
+     "y": 398.19
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1132,
+   "ms": 5874,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 86,
+   "balls": [
+    {
+     "x": 315.53,
+     "y": 253.67
+    },
+    {
+     "x": 389.38,
+     "y": 83.02
+    },
+    {
+     "x": 815.91,
+     "y": 305.09
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1324,
+   "ms": 6653,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 87,
+   "balls": [
+    {
+     "x": 421.02,
+     "y": 373.75
+    },
+    {
+     "x": 457.53,
+     "y": 348.58
+    },
+    {
+     "x": 145.48,
+     "y": 101.48
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1132,
+   "ms": 6463,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 88,
+   "balls": [
+    {
+     "x": 369.38,
+     "y": 368.76
+    },
+    {
+     "x": 247.48,
+     "y": 323.23
+    },
+    {
+     "x": 125.83,
+     "y": 236.37
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1036,
+   "ms": 4699,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 89,
+   "balls": [
+    {
+     "x": 277.58,
+     "y": 244.05
+    },
+    {
+     "x": 174.15,
+     "y": 187.59
+    },
+    {
+     "x": 275.69,
+     "y": 444.64
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1180,
+   "ms": 5292,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 90,
+   "balls": [
+    {
+     "x": 304.27,
+     "y": 174.03
+    },
+    {
+     "x": 508.88,
+     "y": 198.85
+    },
+    {
+     "x": 776.85,
+     "y": 157.62
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1180,
+   "ms": 6693,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 91,
+   "balls": [
+    {
+     "x": 741.23,
+     "y": 176.68
+    },
+    {
+     "x": 255.22,
+     "y": 100.07
+    },
+    {
+     "x": 863.57,
+     "y": 404.85
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1132,
+   "ms": 6475,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 92,
+   "balls": [
+    {
+     "x": 676.08,
+     "y": 176.51
+    },
+    {
+     "x": 785.36,
+     "y": 87.32
+    },
+    {
+     "x": 834.6,
+     "y": 121.34
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1084,
+   "ms": 5964,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 93,
+   "balls": [
+    {
+     "x": 676.93,
+     "y": 163.6
+    },
+    {
+     "x": 90.23,
+     "y": 192.5
+    },
+    {
+     "x": 845.29,
+     "y": 169.8
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1132,
+   "ms": 6729,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 94,
+   "balls": [
+    {
+     "x": 558.33,
+     "y": 358.69
+    },
+    {
+     "x": 864.99,
+     "y": 279.19
+    },
+    {
+     "x": 140.69,
+     "y": 315.41
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1180,
+   "ms": 7833,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 95,
+   "balls": [
+    {
+     "x": 857.67,
+     "y": 124.66
+    },
+    {
+     "x": 87.71,
+     "y": 249.46
+    },
+    {
+     "x": 208.98,
+     "y": 436.17
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1228,
+   "ms": 7756,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 96,
+   "balls": [
+    {
+     "x": 690.5,
+     "y": 274.63
+    },
+    {
+     "x": 688.28,
+     "y": 468.09
+    },
+    {
+     "x": 84.35,
+     "y": 137.13
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1084,
+   "ms": 5739,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 97,
+   "balls": [
+    {
+     "x": 475.6,
+     "y": 166.35
+    },
+    {
+     "x": 924.36,
+     "y": 283.4
+    },
+    {
+     "x": 675.02,
+     "y": 160.05
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1228,
+   "ms": 6805,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 98,
+   "balls": [
+    {
+     "x": 92.09,
+     "y": 135.22
+    },
+    {
+     "x": 286.3,
+     "y": 476.81
+    },
+    {
+     "x": 944.88,
+     "y": 117.17
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1132,
+   "ms": 6265,
+   "strike": null,
+   "rewinds": 0
+  },
+  {
+   "i": 99,
+   "balls": [
+    {
+     "x": 348.2,
+     "y": 461.44
+    },
+    {
+     "x": 646.74,
+     "y": 383.95
+    },
+    {
+     "x": 304.55,
+     "y": 90.81
+    }
+   ],
+   "status": "UNSOLVED",
+   "replayed": false,
+   "bestNoRewind": 1,
+   "bestAny": 1,
+   "sims": 1180,
+   "ms": 6793,
+   "strike": null,
+   "rewinds": 0
+  }
+ ]
+}

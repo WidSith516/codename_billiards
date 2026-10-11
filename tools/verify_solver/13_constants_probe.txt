@@ -1,0 +1,31 @@
+=== 1. rail transform: cue straight into the left rail (line of travel through y=280) ===
+    power 120 -> v0=888 px/s, glide 616 px: the locked model reaches the rail (214.8 px away).
+  locked   : 1 cue rail events
+    vIn=714.6667 vOut=777.4933  locked(0.92vIn+120)=777.4933  proto(1.5vIn)=1072.0000
+  prototype: 2 cue rail events
+    vIn=655.7667 vOut=983.6500  locked(0.92vIn+120)=723.3054  proto(1.5vIn)=983.6500
+    vIn=31.7646 vOut=47.6470  locked(0.92vIn+120)=149.2235  proto(1.5vIn)=47.6470
+  mine    : 1 cue rail events
+    vIn=718.2222 vOut=779.1289  locked(0.92vIn+120)=780.7644
+
+=== 2. glide distance, no rail contact (v0^2/1280 = locked; prototype uses exp damping) ===
+  locked: 20:16.5(th 17.1)  40:67.2(th 68.5)  60:152.2(th 154.0)  80:271.6(th 273.8)
+  prototype: 20:129.3(th 17.1)  40:267.0(th 68.5)  60:404.7(th 154.0)  80:542.4(th 273.8)
+  mine  : 20:16.5(th 17.1)  40:67.3(th 68.5)  60:152.6(th 154.0)  80:272.1(th 273.8)
+
+=== 3. rewind crawl rate and release velocity (§6 / §6.1) ===
+  theirs: history=651 entries; 50 held steps moved the cue 101.9583 px (244.70 px/s; locked 240); landed 0.000000 px from snapshot[600]; release |v|=360.6667 vs stored |v|=360.6667; cos(release,-stored)=1.000000000
+  mine  : history=652 entries; 50 held steps moved the cue 100.8167 px (241.96 px/s; locked 240); landed 0.000000 px from snapshot[601]; release |v|=360.6667 vs stored |v|=360.6667; cos(release,-stored)=1.000000000
+
+=== 4. pocket rule: a ball INSIDE the 24 px circle but moving AWAY from the centre ===
+  locked: cue pocketed after 1 step = false  (locked §5 expects false, prototype expects true)
+  prototype: cue pocketed after 1 step = true  (locked §5 expects false, prototype expects true)
+  mine  : cue pocketed after 1 step = false
+
+=== 5. rewind impulse: j vs (v_cue - v_target).n  (locked K = 1.0, prototype 1.6x capped 1300) ===
+  locked  : ball1 after full rewind: |v|=0.000 at (592.00,280.00) pocketed=false; cue release 0.00
+  prototype: ball1 after full rewind: |v|=0.000 at (717.65,280.00) pocketed=false; cue release 440.06
+
+=== 6. same strike, same level: locked vs prototype outcome ===
+  locked: strike pots 0/2, cue path = 651 samples (1302 px), cue at (330.0,280.0)
+  prototype: strike pots 0/2, cue path = 350 samples (700 px), cue at (295.2,280.0)

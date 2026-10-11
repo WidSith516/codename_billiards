@@ -1,0 +1,77 @@
+=== level geometry + rewind necessity (solver model, config locked) ===
+
+level | balls | cue path samples | cue arc (px) | reported strike | strike pots | strike+1fullrewind | best strike-only over 384-angle scan | rewind hold
+---|---|---|---|---|---|---|---|---
+L1 | 2 | 651 | 1300.0 | 0deg/170 | 0/2 | 2/2 | 1/2 | 650 steps
+L2 | 3 | 61 | 120.0 | 0deg/170 | 1/3 | 3/3 | 1/3 | 60 steps
+L3 | 3 | 494 | 986.0 | 15deg/170 | 1/3 | 3/3 | 1/3 | 493 steps
+L4 | 4 | 89 | 176.0 | 12deg/170 | 2/4 | 4/4 | 2/4 | 88 steps
+L5 | 4 | 6 | 10.0 | 349deg/170 | 2/4 | 4/4 | 2/4 | 5 steps
+L6 | 4 | 6 | 10.0 | 11deg/170 | 2/4 | 4/4 | 2/4 | 4 steps
+
+=== ball placement vs the cue ball at t=0 (all six levels) ===
+level | ball | pos | dist to cue | note
+L1 | 1 | (276.942, 263.836) | 22.09 | backstop kick: ball 23.5 px from history sample #1 along sample#1->poc
+L1 | 2 | (276.942, 296.164) | 22.09 | backstop kick: ball 23.5 px from history sample #1 along sample#1->poc
+L2 | 1 | (276.942, 263.836) | 22.09 | backstop kick: ball 23.5 px from history sample #1 along sample#1->poc
+L2 | 2 | (276.942, 296.164) | 22.09 | backstop kick: ball 23.5 px from history sample #1 along sample#1->poc
+L2 | 3 | (321.236, 287.448) | 30.17 | cut at path[3] (298,280) v=1254 px/s, 18 deg cut -> pocket(975,497)
+L3 | 1 | (276.896, 264.331) | 21.76 | backstop kick: ball 23.5 px from history sample #1 along sample#1->poc
+L3 | 2 | (276.857, 296.664) | 22.52 | backstop kick: ball 23.5 px from history sample #1 along sample#1->poc
+L3 | 3 | (735.35, 459.982) | 478.49 | cut at path[452] (759,456) v=777 px/s, 25 deg cut -> pocket(520,497)
+L4 | 1 | (276.896, 264.331) | 21.76 | backstop kick: ball 23.5 px from history sample #1 along sample#1->poc
+L4 | 2 | (276.857, 296.664) | 22.52 | backstop kick: ball 23.5 px from history sample #1 along sample#1->poc
+L4 | 3 | (317.2, 299.074) | 31.60 | cut at path[4] (300,282) v=1253 px/s, 29 deg cut -> pocket(520,497)
+L4 | 4 | (436.204, 153.673) | 191.71 | cut at path[86] (420,172) v=411 px/s, 4 deg cut -> pocket(520,63)
+L5 | 1 | (276.896, 295.669) | 21.76 | backstop kick: ball 23.5 px from history sample #1 along sample#1->poc
+L5 | 2 | (276.857, 263.336) | 22.52 | backstop kick: ball 23.5 px from history sample #1 along sample#1->poc
+L5 | 3 | (317.2, 260.926) | 31.60 | cut at path[4] (300,278) v=1253 px/s, 29 deg cut -> pocket(520,63)
+L5 | 4 | (318.876, 294.755) | 30.66 | cut at path[5] (302,277) v=1253 px/s, 60 deg cut -> pocket(520,497)
+L6 | 1 | (276.896, 264.331) | 21.76 | backstop kick: ball 23.5 px from history sample #1 along sample#1->poc
+L6 | 2 | (276.857, 296.664) | 22.52 | backstop kick: ball 23.5 px from history sample #1 along sample#1->poc
+L6 | 3 | (317.2, 299.074) | 31.60 | cut at path[4] (300,282) v=1253 px/s, 29 deg cut -> pocket(520,497)
+L6 | 4 | (318.876, 265.245) | 30.66 | cut at path[5] (302,283) v=1253 px/s, 60 deg cut -> pocket(520,63)
+
+=== pairwise similarity: number of object balls that coincide within 3 px ===
+(also: same cue origin? and the same ball count)
+pair | coincident balls (<=3 px) | same cue | balls
+L1-L2 | 2 | true | 2 vs 3
+L1-L3 | 2 | true | 2 vs 3
+L1-L4 | 2 | true | 2 vs 4
+L1-L5 | 2 | true | 2 vs 4
+L1-L6 | 2 | true | 2 vs 4
+L2-L3 | 2 | true | 3 vs 3
+L2-L4 | 2 | true | 3 vs 4
+L2-L5 | 2 | true | 3 vs 4
+L2-L6 | 2 | true | 3 vs 4
+L3-L4 | 2 | true | 3 vs 4
+L3-L5 | 2 | true | 3 vs 4
+L3-L6 | 2 | true | 3 vs 4
+L4-L5 | 2 | true | 4 vs 4
+L4-L6 | 3 | true | 4 vs 4
+L5-L6 | 2 | true | 4 vs 4
+
+=== contact margin: min distance from each ball to the cue path, vs 2R = 24.4 ===
+level | ball | min dist to path | margin (24.4 - d) | in contact at t=0?
+L1 | 1 | 22.091 | 2.309 | YES (d=22.09)
+L1 | 2 | 22.091 | 2.309 | YES (d=22.09)
+L2 | 1 | 22.091 | 2.309 | YES (d=22.09)
+L2 | 2 | 22.091 | 2.309 | YES (d=22.09)
+L2 | 3 | 23.583 | 0.817 | no
+L3 | 1 | 21.763 | 2.637 | YES (d=21.76)
+L3 | 2 | 22.517 | 1.883 | YES (d=22.52)
+L3 | 3 | 23.824 | 0.576 | no
+L4 | 1 | 21.763 | 2.637 | YES (d=21.76)
+L4 | 2 | 22.517 | 1.883 | YES (d=22.52)
+L4 | 3 | 22.690 | 1.710 | no
+L4 | 4 | 22.685 | 1.715 | no
+L5 | 1 | 21.763 | 2.637 | YES (d=21.76)
+L5 | 2 | 22.517 | 1.883 | YES (d=22.52)
+L5 | 3 | 23.055 | 1.345 | no
+L5 | 4 | 23.841 | 0.559 | no
+L6 | 1 | 21.763 | 2.637 | YES (d=21.76)
+L6 | 2 | 22.517 | 1.883 | YES (d=22.52)
+L6 | 3 | 23.055 | 1.345 | no
+L6 | 4 | 23.841 | 0.559 | no
+
+wrote tools/verify_solver/18_level_audit.json

@@ -1,0 +1,29 @@
+{
+  "id": "h5_rack",
+  "name": "H5 prototype parity rack (cue 292,280 + 10 object balls, loose 4/3/2/1 triangle)",
+  "table": { "left": 65, "right": 975, "top": 63, "bottom": 497 },
+  "ballRadius": 12.2,
+  "pocketRadius": 24,
+  "pockets": [
+    { "x": 65,  "y": 63  },
+    { "x": 520, "y": 63  },
+    { "x": 975, "y": 63  },
+    { "x": 65,  "y": 497 },
+    { "x": 520, "y": 497 },
+    { "x": 975, "y": 497 }
+  ],
+  "balls": [
+    { "id": 0,  "type": "cue",    "x": 292,    "y": 280 },
+    { "id": 1,  "type": "object", "x": 675,    "y": 280 },
+    { "id": 2,  "type": "object", "x": 697.204, "y": 267.068 },
+    { "id": 3,  "type": "object", "x": 697.204, "y": 292.932 },
+    { "id": 4,  "type": "object", "x": 719.408, "y": 254.136 },
+    { "id": 5,  "type": "object", "x": 719.408, "y": 280 },
+    { "id": 6,  "type": "object", "x": 719.408, "y": 305.864 },
+    { "id": 7,  "type": "object", "x": 741.612, "y": 241.204 },
+    { "id": 8,  "type": "object", "x": 741.612, "y": 267.068 },
+    { "id": 9,  "type": "object", "x": 741.612, "y": 292.932 },
+    { "id": 10, "type": "object", "x": 741.612, "y": 318.796 }
+  ],
+  "budget": { "maxSegments": 0, "maxDistance": 0 }
+}

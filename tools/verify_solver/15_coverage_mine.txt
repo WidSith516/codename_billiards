@@ -1,0 +1,19 @@
+
+=== PART 1: per-angle coverage (rasterised, grid 147x67 = 9849 pts, 6 px) ===
+  MEAN over 360 angles:  in 2R corridor 16.1%   kick>250 14.0%   kick reaches NEAREST pocket 11.2%
+  the 24 angles dev/coverage.mjs uses (every 15 deg): in corridor 15.4%
+
+=== PART 2: UNION over all 360 strike angles (the player/designer picks the angle) ===
+  area inside SOME angle's 2R corridor          : 100.0%
+  area where SOME angle gives a kick > 250 px/s : 100.0%
+  area where SOME angle's kick reaches a pocket : 100.0%   (nearest-pocket test, direction ignored)
+
+=== PART 3: geometric reachability of random 3-ball layouts (328 layouts per arm, 360 angles) ===
+  their-sampler  : 163/328 layouts have SOME angle whose 2R corridor covers all 3 balls (49.7%), mean 1.41/360 angles work
+  free-sampler   : 164/328 layouts have SOME angle whose 2R corridor covers all 3 balls (50.0%), mean 1.51/360 angles work
+
+  compare: the report's fixed-angle prediction 0.153^3 = 0.36%
+  the corridor test is NECESSARY but not sufficient (the kick must also point at a pocket
+  with enough speed), so the true blind-placement geometric rate is below these numbers.
+
+wrote tools/verify_solver/15_coverage_mine.json

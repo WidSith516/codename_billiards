@@ -1,0 +1,92 @@
+{
+  "id": "L6",
+  "name": "L6 - four balls: the deepest placement the verified designer could build",
+  "note": "Four balls: 2 backstop balls plus 2 cuts at 29 deg and 60 deg on the first path segment. The generator targeted cuts after TWO rail bounces for this level and placed none: after the earlier cuts the cue has lost too much speed for the later samples to carry a ball to a pocket. The verified ball budget for one strike corridor stops at 4 - that is a finding, not a naming choice. See REPORT.md section 3.",
+  "cue": {
+    "x": 292,
+    "y": 280
+  },
+  "balls": [
+    {
+      "id": 1,
+      "x": 276.896,
+      "y": 264.331,
+      "note": "backstop kick: ball 23.5 px from history sample #1 along sample#1->pocket(65,63)"
+    },
+    {
+      "id": 2,
+      "x": 276.857,
+      "y": 296.664,
+      "note": "backstop kick: ball 23.5 px from history sample #1 along sample#1->pocket(65,497)"
+    },
+    {
+      "id": 3,
+      "x": 317.2,
+      "y": 299.074,
+      "note": "cut at path[4] (300,282) v=1253 px/s, 29 deg cut -> pocket(520,497)"
+    },
+    {
+      "id": 4,
+      "x": 318.876,
+      "y": 265.245,
+      "note": "cut at path[5] (302,283) v=1253 px/s, 60 deg cut -> pocket(520,63)"
+    }
+  ],
+  "pockets": [
+    [
+      65,
+      63
+    ],
+    [
+      520,
+      63
+    ],
+    [
+      975,
+      63
+    ],
+    [
+      65,
+      497
+    ],
+    [
+      520,
+      497
+    ],
+    [
+      975,
+      497
+    ]
+  ],
+  "table": {
+    "left": 65,
+    "right": 975,
+    "top": 63,
+    "bottom": 497
+  },
+  "budget": {
+    "angleStep": 1,
+    "powers": [
+      150,
+      170
+    ],
+    "releaseFractions": [
+      0.25,
+      0.5,
+      0.75,
+      1
+    ],
+    "maxRewinds": 5,
+    "beam": 6,
+    "topStrikes": 6,
+    "refineStep": 0.25
+  },
+  "design": {
+    "strike": {
+      "angleDeg": 15,
+      "power": 170
+    },
+    "plan": "ONE full rewind after the strike",
+    "verifiedBy": "tools/solver/dev/make_levels.mjs (every placement is simulation-verified while the level is built)"
+  }
+}

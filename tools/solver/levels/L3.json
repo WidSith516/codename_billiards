@@ -1,0 +1,85 @@
+{
+  "id": "L3",
+  "name": "L3 - rail-bounce-only cut, 3 balls (cut sits past the first bounce)",
+  "note": "Both cut balls are forced onto the path AFTER the first rail bounce, so the strike cannot reach them until the bounce has repositioned the corridor (REPORT.md prints segment-1 distance vs whole-path distance for every ball). The two backstop balls ride the rewind.",
+  "cue": {
+    "x": 292,
+    "y": 280
+  },
+  "balls": [
+    {
+      "id": 1,
+      "x": 276.896,
+      "y": 264.331,
+      "note": "backstop kick: ball 23.5 px from history sample #1 along sample#1->pocket(65,63)"
+    },
+    {
+      "id": 2,
+      "x": 276.857,
+      "y": 296.664,
+      "note": "backstop kick: ball 23.5 px from history sample #1 along sample#1->pocket(65,497)"
+    },
+    {
+      "id": 3,
+      "x": 735.35,
+      "y": 459.982,
+      "note": "cut at path[452] (759,456) v=777 px/s, 25 deg cut -> pocket(520,497)"
+    }
+  ],
+  "pockets": [
+    [
+      65,
+      63
+    ],
+    [
+      520,
+      63
+    ],
+    [
+      975,
+      63
+    ],
+    [
+      65,
+      497
+    ],
+    [
+      520,
+      497
+    ],
+    [
+      975,
+      497
+    ]
+  ],
+  "table": {
+    "left": 65,
+    "right": 975,
+    "top": 63,
+    "bottom": 497
+  },
+  "budget": {
+    "angleStep": 1,
+    "powers": [
+      130,
+      170
+    ],
+    "releaseFractions": [
+      0.3,
+      0.6,
+      1
+    ],
+    "maxRewinds": 4,
+    "beam": 5,
+    "topStrikes": 6,
+    "refineStep": 0.25
+  },
+  "design": {
+    "strike": {
+      "angleDeg": 15,
+      "power": 170
+    },
+    "plan": "ONE full rewind after the strike",
+    "verifiedBy": "tools/solver/dev/make_levels.mjs (every placement is simulation-verified while the level is built)"
+  }
+}

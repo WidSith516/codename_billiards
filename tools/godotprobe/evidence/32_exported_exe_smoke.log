@@ -1,0 +1,17 @@
+Godot Engine v4.7.2.stable.mono.official.ed1daf0bf - https://godotengine.org
+
+[boot] GodotProbe boot; args=--selftest
+=== godotprobe smoke ===
+engine: 4.7.2-stable (official)
+  PASS  C# assembly loaded  [GodotProbe]
+  PASS  physics_ticks_per_second == 60 (default)  [60]
+  PASS  max_physics_steps_per_frame == 8 (default)  [8]
+  PASS  physics/common/enable_object_picking exists
+  PASS  viewport 1040x560  [1040x560]
+  PASS  stretch mode is canvas_items  [canvas_items]
+  PASS  headless => DisplayServer is headless  [headless]
+  PASS  fixed-step integration is reproducible  [18.897914518483322]
+  PASS  elastic swap conserves momentum  [-3,5]
+  PASS  elastic swap conserves energy
+=== smoke summary: 10/10 passed ===
+SMOKE PASS

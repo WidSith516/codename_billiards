@@ -1,0 +1,21 @@
+{
+  "id": "straight_line",
+  "name": "Straight line: targets sit on the cue's natural corridor",
+  "table": { "left": 65, "right": 975, "top": 63, "bottom": 497 },
+  "ballRadius": 12.2,
+  "pocketRadius": 24,
+  "pockets": [
+    { "x": 65,  "y": 63  },
+    { "x": 520, "y": 63  },
+    { "x": 975, "y": 63  },
+    { "x": 65,  "y": 497 },
+    { "x": 520, "y": 497 },
+    { "x": 975, "y": 497 }
+  ],
+  "balls": [
+    { "id": 0, "type": "cue",    "x": 200, "y": 280 },
+    { "id": 1, "type": "object", "x": 520, "y": 280 },
+    { "id": 2, "type": "object", "x": 760, "y": 280 }
+  ],
+  "budget": { "maxSegments": 4, "maxDistance": 1200 }
+}

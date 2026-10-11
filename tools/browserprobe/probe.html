@@ -1,0 +1,460 @@
+<!doctype html><html><head><meta charset="utf-8"><title>REWIND probe: break</title><style>
+    :root { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #edf2ed; background: #0c1518; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 320px; min-height: 100vh; background: radial-gradient(ellipse at 52% -16%, #254344 0%, #111f22 42%, #0c1518 80%); }
+    button { font: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .shell { width: min(1280px, calc(100% - 44px)); margin: auto; padding: 32px 0 28px; }
+    header { display: flex; justify-content: space-between; gap: 18px; align-items: end; padding: 0 5px; }
+    .eyebrow { color: #b4d6bc; font-size: 11px; font-weight: 750; letter-spacing: .29em; text-transform: uppercase; margin-bottom: 7px; }
+    h1 { font-size: clamp(30px, 4.8vw, 56px); letter-spacing: -.065em; line-height: 1.02; margin: 0; font-weight: 800; }
+    h1 span { color: #c9e2ce; margin-left: 12px; font-size: .64em; font-weight: 600; letter-spacing: -.045em; }
+    .subtitle { color: #9baea9; font-size: 13px; margin-top: 11px; line-height: 1.5; }
+    .experiment { color: #9cb3ad; font-size: 12px; white-space: nowrap; padding-bottom: 4px; }
+    .experiment strong { color: #e7a765; }
+    .top-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 24px 3px 12px; flex-wrap: wrap; }
+    .legend { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; color: #a6b8b0; font-size: 12px; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 6px; vertical-align: 1px; background: #df9b61; }
+    .legend .dot.green { background: #97c7b2; }
+    .status { display: inline-flex; align-items: center; gap: 8px; background: #223333; border: 1px solid #42534d; border-radius: 100px; padding: 7px 12px; font-weight: 650; color: #d7e3d8; font-size: 12px; }
+    .status span { width: 7px; height: 7px; background: #95d9a5; border-radius: 50%; box-shadow: 0 0 8px #95d9a5; }
+    .status.reversing { color: #ffd4a8; background: #493323; border-color: #bc8453; }
+    .status.reversing span { background: #ffac62; box-shadow: 0 0 9px #ffa55f; }
+    .game-frame { position: relative; padding: 10px; background: linear-gradient(145deg, #343f3b, #132727 35%, #0f2120 70%, #30413b); border: 1px solid #50645c; border-radius: 21px; box-shadow: 0 32px 90px #0007, inset 0 1px 1px #ffffff23; }
+    canvas { display: block; width: 100%; aspect-ratio: 1040 / 560; height: auto; border-radius: 13px; cursor: crosshair; touch-action: none; }
+    .corner-label { position: absolute; bottom: 19px; right: 25px; background: #10211bbc; color: #bfd2c2; border-radius: 6px; padding: 6px 9px; font-size: 11px; pointer-events: none; letter-spacing: .1em; }
+    .control-panel { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 22px; margin-top: 19px; align-items: start; }
+    .left-controls { display: flex; flex-direction: column; gap: 12px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 9px; }
+    .btn { border: 1px solid #4f6760; background: #223431; color: #edf6eb; border-radius: 11px; height: 49px; padding: 0 18px; font-size: 13px; font-weight: 750; transition: .15s ease; user-select: none; }
+    .btn:hover { background: #324a42; transform: translateY(-1px); }
+    .btn:active { transform: translateY(1px); }
+    .btn.main { background: #db995a; border-color: #efae70; color: #251a11; min-width: 198px; box-shadow: 0 7px 25px #e1a16524; }
+    .btn.main:hover { background: #f1ad6d; }
+    .btn.main.active { background: #ffca86; box-shadow: 0 0 0 3px #f6b56b44, 0 8px 28px #f5ab6f44; }
+    .btn.secondary { color: #c9d6ce; background: #162726; }
+    .btn small { font-size: 11px; margin-left: 11px; opacity: .7; }
+    .helper { font-size: 12px; color: #9cb0a8; line-height: 1.7; }
+    .helper strong { color: #e6f0e9; font-weight: 650; }
+    .metrics { display: flex; gap: 0; min-width: 245px; background: #172825; border: 1px solid #314b43; border-radius: 14px; padding: 11px 5px; }
+    .metric { padding: 3px 19px; text-align: center; flex: 1; }
+    .metric + .metric { border-left: 1px solid #355048; }
+    .metric b { display: block; font-size: 25px; font-variant-numeric: tabular-nums; letter-spacing: -.045em; }
+    .metric small { color: #88a49a; font-size: 11px; }
+    .insights { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 13px; margin-top: 28px; }
+    .insight { padding: 17px 18px; border: 1px solid #29403a; border-radius: 14px; background: #162622a8; }
+    .insight .number { color: #d59f6d; font-weight: 750; font-size: 12px; letter-spacing: .04em; }
+    .insight h2 { font-size: 14px; font-weight: 750; margin: 8px 0 6px; }
+    .insight p { margin: 0; font-size: 12px; line-height: 1.65; color: #9db3a8; }
+    footer { display: flex; justify-content: space-between; gap: 12px; font-size: 11px; color: #76938a; margin-top: 22px; padding: 0 3px; }
+    kbd { display: inline-block; min-width: 22px; text-align: center; padding: 2px 5px; color: #e1e9e0; border: 1px solid #557166; border-bottom-width: 2px; border-radius: 5px; margin: 0 3px; background: #264039; font-size: 11px; }
+    @media (max-width: 720px) { .shell { width: calc(100% - 22px); padding-top: 21px; } header { flex-direction: column; align-items: start; } .game-frame { padding: 5px; border-radius: 11px; } canvas { border-radius: 7px; } .control-panel { grid-template-columns: 1fr; gap: 14px; } .metrics { max-width: 320px; } .insights { grid-template-columns: 1fr; gap: 8px; } .btn { flex: 1; padding: 0 10px; } .btn.main { min-width: 160px; } .experiment { display: none; } footer { flex-direction: column; } .corner-label { display: none; } }
+  </style></head><body>
+<main class="shell">
+  <header>
+    <div>
+      <div class="eyebrow">TIME MECHANICS LAB / 001</div>
+      <h1>REWIND <span>一杆清台</span></h1>
+      <div class="subtitle">只能击球一次。让白球反复倒流并创造新的运动历史，打进全部目标球。</div>
+    </div>
+    <div class="experiment">8H GAME JAM · <strong>PLAYABLE EXPERIMENT</strong></div>
+  </header>
+  <div class="top-bar">
+    <div class="legend"><span><i class="dot"></i>橙色：白球倒带轨迹</span><span><i class="dot green"></i>青色：完整历史轨迹</span></div>
+    <div class="status" id="status"><span></span><label id="statusText">等待击球</label></div>
+  </div>
+  <section class="game-frame" aria-label="可交互的逆时台球桌">
+    <canvas id="table" width="1040" height="560" aria-label="台球桌：只能拖动白球击球一次，之后按住R让白球沿完整历史倒流"></canvas>
+    <div class="corner-label">PHYSICS · REWIND · INTERACTION</div>
+  </section>
+  <section class="control-panel">
+    <div class="left-controls">
+      <div class="actions">
+        <button class="btn main" id="rewind" aria-label="按住以倒流白球">↶ 白球倒流 <small>R</small></button>
+        <button class="btn secondary" id="reset">↻ 重新开局</button>
+        <button class="btn secondary" id="trail">◉ 隐藏轨迹</button>
+        <button class="btn secondary" id="pause">Ⅱ 暂停</button>
+      </div>
+      <div class="helper" id="hint"><strong>玩法：</strong>从白球向后拖动并松手，仅允许击出第一杆。之后按住 <kbd>R</kbd> 倒流白球，松开时保留逆向速度；每次撞库，白球动量 ×1.5。</div>
+    </div>
+    <div class="metrics">
+      <div class="metric"><b id="pocketed">0/10</b><small>目标球进袋</small></div>
+      <div class="metric"><b id="rewinds">0</b><small>倒流次数</small></div>
+      <div class="metric"><b id="hits">0</b><small>逆时碰撞</small></div>
+    </div>
+  </section>
+  <section class="insights">
+    <div class="insight"><div class="number">01 / ONE SHOT</div><h2>只有第一杆</h2><p>初次击球后球杆锁定。目标球进袋永久计分，白球进袋仍可倒流救回。</p></div>
+    <div class="insight"><div class="number">02 / FULL HISTORY</div><h2>完整历史，不删除分支</h2><p>A→B，倒回 C，再运动到 D，会保存 A→B→C→D。下一次可以完整倒带。</p></div>
+    <div class="insight"><div class="number">03 / WALL BOOST</div><h2>撞库获得动量</h2><p>正常运动的白球撞库后反射，动量大小变为原来的 1.5 倍。彩球仍遵循普通反弹。</p></div>
+  </section>
+  <footer><span>规则实验：单杆清台 · 完整历史 · 白球撞库加速</span><span>桌面鼠标 / 触屏均可试玩 · 无须安装</span></footer>
+</main>
+
+<script>
+(() => {
+  'use strict';
+  const canvas = document.getElementById('table');
+  const ctx = canvas.getContext('2d');
+  const W = 1040, H = 560;
+  const T = { left: 65, right: 975, top: 63, bottom: 497 };
+  const R = 12.2;
+  const STEP = 1 / 120;
+  const ballColors = ['#f3f1e9','#e7b841','#4e8fda','#cc5649','#7d62bf','#d88d46','#3aa88d','#aa4949','#282e35','#dbbb3d'];
+  const pockets = [ [T.left,T.top],[(T.left+T.right)/2,T.top],[T.right,T.top],[T.left,T.bottom],[(T.left+T.right)/2,T.bottom],[T.right,T.bottom] ];
+  const ui = {
+    status: document.getElementById('status'), statusText: document.getElementById('statusText'),
+    pocketed: document.getElementById('pocketed'), rewinds: document.getElementById('rewinds'), hits: document.getElementById('hits'), hint: document.getElementById('hint'),
+    rewind: document.getElementById('rewind'), reset: document.getElementById('reset'), trail: document.getElementById('trail'), pause: document.getElementById('pause')
+  };
+  let balls = [], selected = 0, aiming = null, rewinding = false, paused = false, trails = true, shotUsed = false, won = false;
+  let stats = { rewinds:0, hits:0 }, accumulator = 0, lastTime = performance.now(), nowTime = 0;
+  let particles = [], rewindContact = new Map();
+  function makeBall(id,x,y) {
+    return {id,x,y,vx:0,vy:0,r:R,color:ballColors[id % ballColors.length],pocketed:false,history:[{x,y,vx:0,vy:0}],reverse:false,rewindTrack:null,rewindCursor:-1};
+  }
+  function init() {
+    balls=[makeBall(0,292,280)];
+    let id=1;
+    for(let col=0;col<4;col++) for(let row=0;row<=col;row++) {
+      const x=675+col*R*1.82, y=280+(row-col/2)*R*2.12;
+      balls.push(makeBall(id++,x,y));
+    }
+    selected=0; aiming=null; rewinding=false; paused=false; shotUsed=false; won=false; particles=[]; rewindContact.clear(); stats={rewinds:0,hits:0}; accumulator=0;
+    ui.pause.textContent='Ⅱ 暂停'; ui.rewind.classList.remove('active');
+    updateUI();
+  }
+  const ballById=id=>balls.find(b=>b.id===id);
+  function record(b) {
+    const old=b.history[b.history.length-1];
+    if(!old || Math.hypot(b.x-old.x,b.y-old.y)>.00001) {
+      b.history.push({x:b.x,y:b.y,vx:b.vx,vy:b.vy});
+    }
+  }
+  function startRewind() {
+    if(paused || won || !shotUsed) return;
+    const b=ballById(selected);
+    if(!b || b.history.length<2) { setHint('这颗球还没有运动历史。先击球，或点击另一颗球选中它。'); return; }
+    if(rewinding) return;
+    aiming=null; rewinding=true; b.reverse=true;
+    // Keep a fixed playback snapshot. The actual reverse traversal is appended
+    // to the live history, so A→B→C→D can later rewind D→C→B→A.
+    b.rewindTrack=b.history.slice();b.rewindCursor=b.rewindTrack.length-1;
+    stats.rewinds++;
+    ui.rewind.classList.add('active'); updateUI();
+  }
+  function endRewind() {
+    if(!rewinding) return;
+    rewinding=false;
+    const b=ballById(selected); if(b){b.reverse=false;b.rewindTrack=null;b.rewindCursor=-1;}
+    ui.rewind.classList.remove('active'); updateUI();
+  }
+  function setHint(s) { ui.hint.innerHTML='<strong>提示：</strong>'+s; }
+  function updateUI() {
+    ui.pocketed.textContent=balls.filter(b=>b.id!==0&&b.pocketed).length+'/10';
+    ui.rewinds.textContent=stats.rewinds;
+    ui.hits.textContent=stats.hits;
+    ui.status.classList.toggle('reversing',rewinding);
+    ui.statusText.textContent=won?'全部清台！':rewinding?'白球倒流中':shotUsed?'第一杆已击出 · 只能倒流':'等待唯一的一杆';
+  }
+  function collideBalls(a,b) {
+    if(a.pocketed||b.pocketed) return;
+    let dx=b.x-a.x,dy=b.y-a.y,d2=dx*dx+dy*dy;
+    const min=a.r+b.r;
+    if(d2>=min*min) return;
+    let dist=Math.sqrt(d2);
+    if(dist<.0001) { dx=1;dy=0;dist=1; }
+    const nx=dx/dist,ny=dy/dist;
+    const penetration=Math.max(0,min-dist)+.06;
+    if(a.reverse && b.reverse) return;
+    if(a.reverse || b.reverse) {
+      const mover=a.reverse?a:b, target=a.reverse?b:a;
+      const fromX=a.reverse?nx:-nx, fromY=a.reverse?ny:-ny;
+      target.x+=fromX*penetration;target.y+=fromY*penetration;
+      const rel=(mover.vx-target.vx)*fromX+(mover.vy-target.vy)*fromY;
+      if(rel>0) {
+        const kick=Math.min(1300,1.6*rel);
+        target.vx+=fromX*kick;target.vy+=fromY*kick;
+        const key=[mover.id,target.id].join(':');
+        if(!rewindContact.has(key)||nowTime-rewindContact.get(key)>.22) { stats.hits++;rewindContact.set(key,nowTime);spark(target.x,target.y,'#f6bc78'); updateUI(); }
+      }
+      return;
+    }
+    a.x-=nx*penetration*.5;a.y-=ny*penetration*.5;
+    b.x+=nx*penetration*.5;b.y+=ny*penetration*.5;
+    const rvx=b.vx-a.vx,rvy=b.vy-a.vy, vAlong=rvx*nx+rvy*ny;
+    if(vAlong>=0) return;
+    const impulse=-(1+.955)*vAlong/2;
+    a.vx-=impulse*nx;a.vy-=impulse*ny;
+    b.vx+=impulse*nx;b.vy+=impulse*ny;
+    if(Math.abs(vAlong)>210) spark((a.x+b.x)/2,(a.y+b.y)/2,'#b8e5ca');
+  }
+  function spark(x,y,color) {
+    for(let i=0;i<7;i++) {const a=Math.random()*Math.PI*2,s=40+Math.random()*135;particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:.25+Math.random()*.25,color});}
+  }
+  function inPocket(b) {
+    return pockets.some(([x,y])=>Math.hypot(x-b.x,y-b.y)<24);
+  }
+  function rails(b) {
+    // Pocketing takes priority over rail bounce; side pockets and corners leave a deliberate opening.
+    if(inPocket(b)) {
+      b.pocketed=true;b.vx=b.vy=0;spark(b.x,b.y,'#e4cf96');
+      if(b.id!==0&&balls.every(other=>other.id===0||other.pocketed)) {won=true;endRewind();}
+      updateUI();return;
+    }
+    let bounced=false;
+    if(b.x-b.r<T.left-.001) {b.x=T.left+b.r;b.vx=Math.abs(b.vx);bounced=true;}
+    if(b.x+b.r>T.right+.001){b.x=T.right-b.r;b.vx=-Math.abs(b.vx);bounced=true;}
+    if(b.y-b.r<T.top-.001){b.y=T.top+b.r;b.vy=Math.abs(b.vy);bounced=true;}
+    if(b.y+b.r>T.bottom+.001){b.y=T.bottom-b.r;b.vy=-Math.abs(b.vy);bounced=true;}
+    if(bounced) {
+      // Equal ball mass: ×1.5 momentum means ×1.5 speed after reflection.
+      // Multiply both components once, including a simultaneous corner bounce.
+      const factor=b.id===0?1.5:.85;
+      b.vx*=factor;b.vy*=factor;
+      if(b.id===0) spark(b.x,b.y,'#ffc979');
+    }
+  }
+  function simulation(dt) {
+    nowTime+=dt;
+    for(const b of balls) {
+      if(b.reverse) {
+        if(b.rewindCursor>0) {
+          // This traversal is itself part of the new append-only history.
+          // Rewind reads its frozen snapshot, never the entries just appended.
+          const p=b.rewindTrack[--b.rewindCursor];
+          const ox=b.x,oy=b.y;
+          b.x=p.x;b.y=p.y;
+          b.vx=(b.x-ox)/dt;b.vy=(b.y-oy)/dt;
+          b.pocketed=false;
+          record(b);
+        } else { endRewind();b.vx=b.vy=0; }
+        continue;
+      }
+      if(b.pocketed) continue;
+      const speed=Math.hypot(b.vx,b.vy);
+      if(speed>0) {
+        const damping=Math.exp(-1.07*dt);
+        b.vx*=damping;b.vy*=damping;
+        if(Math.hypot(b.vx,b.vy)<9){b.vx=0;b.vy=0;}
+        b.x+=b.vx*dt;b.y+=b.vy*dt;
+      }
+      rails(b);
+    }
+    for(let i=0;i<balls.length;i++) for(let j=i+1;j<balls.length;j++) collideBalls(balls[i],balls[j]);
+    for(const b of balls) if(!b.pocketed&&!b.reverse){rails(b);if(b.id===0)record(b);}
+    for(const p of particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;}
+    particles=particles.filter(p=>p.life>0);
+  }
+  function roundRect(x,y,w,h,r,fill,stroke,line=1){ctx.beginPath();ctx.roundRect(x,y,w,h,r);if(fill){ctx.fillStyle=fill;ctx.fill();}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=line;ctx.stroke();}}
+  function renderTable() {
+    const wood=ctx.createLinearGradient(0,0,W,H);
+    wood.addColorStop(0,'#795037');wood.addColorStop(.23,'#4c3229');wood.addColorStop(.75,'#3c2922');wood.addColorStop(1,'#76513a');
+    roundRect(7,7,W-14,H-14,29,wood,'#9c7150',5);
+    roundRect(25,25,W-50,H-50,23,'#142b28','#2d4239',5);
+    const felt=ctx.createRadialGradient(490,210,60,490,280,690);
+    felt.addColorStop(0,'#20664b');felt.addColorStop(.67,'#184f3b');felt.addColorStop(1,'#103c2e');
+    roundRect(T.left-3,T.top-3,T.right-T.left+6,T.bottom-T.top+6,14,felt,'#42715a',3);
+    ctx.save();ctx.beginPath();ctx.rect(T.left,T.top,T.right-T.left,T.bottom-T.top);ctx.clip();
+    for(let x=90;x<980;x+=48)for(let y=86;y<490;y+=48){ctx.fillStyle='#ffffff04';ctx.fillRect(x,y,1,1);}
+    ctx.beginPath();ctx.moveTo(294,T.top);ctx.lineTo(294,T.bottom);ctx.setLineDash([4,6]);ctx.strokeStyle='#c2d7b51e';ctx.lineWidth=1.5;ctx.stroke();ctx.setLineDash([]);
+    ctx.beginPath();ctx.arc(294,280,82,-Math.PI/2,Math.PI/2);ctx.strokeStyle='#c2d7b51a';ctx.stroke();
+    ctx.restore();
+    for(const [x,y] of pockets) {
+      ctx.beginPath();ctx.arc(x,y,26,0,Math.PI*2);ctx.fillStyle='#0b1715';ctx.fill();ctx.lineWidth=6;ctx.strokeStyle='#5a4134';ctx.stroke();
+      ctx.beginPath();ctx.arc(x,y,17,0,Math.PI*2);ctx.fillStyle='#050e0c';ctx.fill();
+    }
+    for(let i=0;i<9;i++){const x=102+i*104;for(const y of [36,524]){ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fillStyle='#ca9c68';ctx.fill();}}
+    for(let i=0;i<3;i++){const y=146+i*134;for(const x of [38,1002]){ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fillStyle='#ca9c68';ctx.fill();}}
+  }
+  function renderTrail(b) {
+    const history=b.history;
+    if(!trails||history.length<2) return;
+    const sample=Math.max(1,Math.floor(history.length/140));
+    ctx.save();ctx.beginPath();
+    for(let i=0;i<history.length;i+=sample){const p=history[i];if(i===0)ctx.moveTo(p.x,p.y);else ctx.lineTo(p.x,p.y);}
+    const last=history[history.length-1];ctx.lineTo(last.x,last.y);
+    ctx.strokeStyle=b.reverse?'#ffaa65b6':'#b9dec073';
+    ctx.setLineDash(b.reverse?[4,6]:[3,7]);ctx.lineWidth=b.reverse?3:1.7;ctx.stroke();ctx.setLineDash([]);
+    ctx.restore();
+  }
+  function renderBall(b){
+    if(b.pocketed) return;
+    ctx.save();
+    ctx.shadowColor='#000a';ctx.shadowBlur=9;ctx.shadowOffsetY=4;
+    const gradient=ctx.createRadialGradient(b.x-5,b.y-6,2,b.x,b.y,b.r);
+    gradient.addColorStop(0,'#ffffff');gradient.addColorStop(.18,b.color);gradient.addColorStop(.77,b.color);gradient.addColorStop(1,'#273834');
+    ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,Math.PI*2);ctx.fillStyle=gradient;ctx.fill();
+    ctx.restore();
+    if(b.id!==0){ctx.beginPath();ctx.arc(b.x,b.y,5.2,0,Math.PI*2);ctx.fillStyle='#f3ede3';ctx.fill();ctx.fillStyle='#273432';ctx.font='bold 8px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(b.id,b.x,b.y+.2);}
+    if(selected===b.id){
+      ctx.beginPath();ctx.arc(b.x,b.y,b.r+6,0,Math.PI*2);ctx.strokeStyle=b.reverse?'#ffc887':'#e8c58c';ctx.lineWidth=2;ctx.setLineDash([5,4]);ctx.stroke();ctx.setLineDash([]);
+      ctx.beginPath();ctx.arc(b.x,b.y,b.r+11,0,Math.PI*2);ctx.strokeStyle='#e3bb7848';ctx.lineWidth=1;ctx.stroke();
+    }
+  }
+  function renderAim(){
+    if(!aiming) return;
+    const b=ballById(0);if(!b||b.pocketed) return;
+    const dx=b.x-aiming.x,dy=b.y-aiming.y,len=Math.hypot(dx,dy);
+    if(len<3)return;
+    const nx=dx/len,ny=dy/len,power=Math.min(len,160);
+    ctx.save();ctx.setLineDash([9,7]);ctx.beginPath();ctx.moveTo(b.x+nx*(b.r+9),b.y+ny*(b.r+9));ctx.lineTo(b.x+nx*450,b.y+ny*450);ctx.strokeStyle='#ffe1a6c9';ctx.lineWidth=2;ctx.stroke();ctx.setLineDash([]);
+    ctx.beginPath();ctx.moveTo(b.x-nx*(b.r+9),b.y-ny*(b.r+9));ctx.lineTo(b.x-nx*(b.r+55+power*.35),b.y-ny*(b.r+55+power*.35));ctx.strokeStyle='#dfb78b';ctx.lineWidth=7;ctx.lineCap='round';ctx.stroke();
+    roundRect(33,33,165,18,9,'#11251f','#496c52');roundRect(36,36,power/160*159,12,6,'#dda566');
+    ctx.restore();
+  }
+  function render() {
+    ctx.clearRect(0,0,W,H);renderTable();
+    const b=ballById(selected);if(b)renderTrail(b);
+    for(const ball of balls)renderBall(ball);
+    renderAim();
+    for(const p of particles){ctx.beginPath();ctx.arc(p.x,p.y,Math.max(.4,p.life*4),0,Math.PI*2);ctx.globalAlpha=Math.min(1,p.life*3);ctx.fillStyle=p.color;ctx.fill();}ctx.globalAlpha=1;
+    // Pocketed object balls stay scored; the cue ball alone can return.
+    const gone=balls.filter(x=>x.pocketed);
+    if(gone.length){
+      roundRect(352,15,Math.max(90,gone.length*27+15),30,9,'#09221fcc','#6c8c7040');
+      gone.forEach((g,i)=>{const x=371+i*27,y=30;ctx.beginPath();ctx.arc(x,y,9,0,Math.PI*2);ctx.fillStyle=g.color;ctx.fill();ctx.fillStyle=g.id===0?'#26352e':'#fff';ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='bold 10px system-ui';ctx.fillText(g.id===0?'●':g.id,x,y);if(g.id===selected){ctx.beginPath();ctx.arc(x,y,12,0,Math.PI*2);ctx.strokeStyle='#f1b777';ctx.stroke();}});
+    }
+    if(won){
+      ctx.fillStyle='#091b17bb';ctx.fillRect(0,0,W,H);
+      roundRect(337,188,366,181,20,'#19392e','#b7d8b0',2);
+      ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillStyle='#e8f7e4';ctx.font='800 37px system-ui';ctx.fillText('一杆清台！',W/2,251);
+      ctx.fillStyle='#b2d4bf';ctx.font='16px system-ui';ctx.fillText('你利用完整历史打进了全部目标球',W/2,297);
+      ctx.fillStyle='#e7b783';ctx.font='14px system-ui';ctx.fillText('点击「重新开局」再试一次',W/2,337);
+    }
+    if(paused && !globalThis.__FREEZE){ctx.fillStyle='#071412a9';ctx.fillRect(0,0,W,H);ctx.fillStyle='#e8efe9';ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='800 38px system-ui';ctx.fillText('已暂停',W/2,H/2);}
+  }
+  function animation(ts){
+    let frame=Math.min(.045,(ts-lastTime)/1000);lastTime=ts;
+    if (!globalThis.__FREEZE) { if(!paused){accumulator+=frame;let count=0;while(accumulator>=STEP&&count<6){simulation(STEP);accumulator-=STEP;count++;}}
+    render(); requestAnimationFrame(animation); } else { requestAnimationFrame(animation); }
+  }
+  function point(e){const rect=canvas.getBoundingClientRect();return {x:(e.clientX-rect.left)*W/rect.width,y:(e.clientY-rect.top)*H/rect.height};}
+  canvas.addEventListener('pointerdown',e=>{
+    e.preventDefault();if(paused||won)return;
+    const p=point(e);
+    const hit=balls.filter(b=>!b.pocketed).map(b=>({b,d:Math.hypot(p.x-b.x,p.y-b.y)})).filter(o=>o.d<o.b.r+10).sort((a,b)=>a.d-b.d)[0];
+    if(hit){
+      if(hit.b.id!==0){setHint('现在只能操作白球。目标球只能靠碰撞进袋，且进袋后不会被回溯复原。');return;}
+      if(shotUsed){setHint('唯一的一杆已经打出。用 R 倒退白球，再松开释放逆向动量；不能再次用球杆击球。');return;}
+      if(Math.hypot(hit.b.vx,hit.b.vy)<23){aiming=p;canvas.setPointerCapture(e.pointerId);}
+    }
+  });
+  canvas.addEventListener('pointermove',e=>{if(!aiming)return;e.preventDefault();aiming=point(e);});
+  function releaseShot(e){
+    if(!aiming)return;
+    if(shotUsed||won){aiming=null;return;}
+    const p=point(e), cue=ballById(0), dx=cue.x-p.x,dy=cue.y-p.y,len=Math.hypot(dx,dy);
+    aiming=null;if(len<12)return;
+    const power=Math.min(len,170);
+    cue.vx=(dx/len)*power*7.4;cue.vy=(dy/len)*power*7.4;
+    shotUsed=true;updateUI();
+    record(cue);
+    setHint('第一杆已打出。白球 A→B，再倒回 C、松开走向 D，全部记录为 A→B→C→D；下一次可以完整倒带。');
+  }
+  canvas.addEventListener('pointerup',releaseShot);
+  canvas.addEventListener('pointercancel',()=>{aiming=null;});
+  window.addEventListener('keydown',e=>{
+    if(e.code==='KeyR'&&!e.repeat){e.preventDefault();startRewind();}
+    if(e.code==='Space'&&!e.repeat){e.preventDefault();togglePause();}
+  });
+  window.addEventListener('keyup',e=>{if(e.code==='KeyR'){e.preventDefault();endRewind();}});
+  window.addEventListener('blur',endRewind);
+  ui.rewind.addEventListener('pointerdown',e=>{e.preventDefault();ui.rewind.setPointerCapture(e.pointerId);startRewind();});
+  ui.rewind.addEventListener('pointerup',endRewind);
+  ui.rewind.addEventListener('pointercancel',endRewind);
+  ui.rewind.addEventListener('lostpointercapture',endRewind);
+  ui.reset.addEventListener('click',()=>{init();setHint('重新开局：只有一次击球机会。之后用 R 控制白球倒流；正常撞库动量 ×1.5。');});
+  ui.trail.addEventListener('click',()=>{trails=!trails;ui.trail.textContent=trails?'◉ 隐藏轨迹':'◎ 显示轨迹';});
+  function togglePause(){paused=!paused;if(paused)endRewind();ui.pause.textContent=paused?'▶ 继续':'Ⅱ 暂停';}
+  ui.pause.addEventListener('click',togglePause);
+  init();
+  const __STEP = 0.008333333333333333;
+  globalThis.__R = {
+    simulation, startRewind, endRewind, render, init, ballById,
+    balls: () => balls,
+    forceShotUsed: () => { shotUsed = true; if (typeof updateUI === 'function') updateUI(); },
+    setPaused: v => { paused = v; }
+  };
+  globalThis.__PROBE = function () {
+    const R = globalThis.__R;
+    R.setPaused(true);                 // stop the rAF loop stepping physics, so every
+                                       // number below is byte-for-byte reproducible
+    const cue = R.ballById(0);
+    let probeT = 0;
+    const snap = () => {
+      const bs = R.balls().map(b => ({ id: b.id, x: +b.x.toFixed(2), y: +b.y.toFixed(2),
+        v: +Math.hypot(b.vx, b.vy).toFixed(1), pocketed: b.pocketed,
+        finite: isFinite(b.x) && isFinite(b.y) }));
+      return { t: +probeT.toFixed(3),
+               pocketedObjectBalls: bs.filter(b => b.id !== 0 && b.pocketed).length,
+               cueHist: cue.history.length, allFinite: bs.every(b => b.finite), balls: bs };
+    };
+    const advance = (seconds) => {
+      const n = Math.round(seconds / __STEP);
+      for (let i = 0; i < n; i++) { R.simulation(__STEP); probeT += __STEP; }
+    };
+    const log = [];
+    const mark = (label) => { const s = snap(); s.label = label; log.push(s); };
+
+    const MODE = "break";
+    if (MODE === 'rack') {
+      advance(1.0);
+      mark('settled');
+    } else {
+      // Exactly what releaseShot() does at full power: v = unit * min(len,170) * 7.4
+      const speed = 170 * 7.4;
+      cue.vx = speed; cue.vy = 0;
+      R.forceShotUsed();
+      advance(0.02); mark('just_after_strike');
+      advance(12); mark('settled');
+      if (MODE === 'rewind') { R.startRewind(); advance(0.35); mark('rewinding'); }
+    }
+
+    globalThis.__FREEZE = true;        // hold this frame
+    R.render();
+    return { mode: MODE, stepSeconds: __STEP, steps: Math.round(probeT / __STEP),
+             seconds: +probeT.toFixed(3), log, final: snap() };
+  };
+  globalThis.__PROBE_READY = true;
+})();
+</script><script>window.onerror=function(m,s,l){var d=document.getElementById('errbox')||document.createElement('pre');
+  d.id='errbox';d.style.cssText='position:fixed;left:0;top:0;z-index:99999;background:#900;color:#fff;font:12px monospace;padding:6px';
+  d.textContent='JSERROR: '+m+' @line '+l;document.body.appendChild(d);};
+function __dump(){
+  var r = window.__PROBE_RESULT;
+  if (!r) { return; }
+  var f = r.final;
+  var lines = [];
+  lines.push('MODE=' + r.mode + '  steps=' + r.steps + '  seconds=' + r.seconds);
+  lines.push('pocketedObjectBalls=' + f.pocketedObjectBalls + '  cueHist=' + f.cueHist
+             + '  allFinite=' + f.allFinite);
+  for (var i = 0; i < f.balls.length; i++) {
+    var b = f.balls[i];
+    lines.push('  ball ' + (b.id < 10 ? ' ' : '') + b.id
+      + '  x=' + String(b.x).padStart(8) + '  y=' + String(b.y).padStart(8)
+      + '  v=' + String(b.v).padStart(8) + '  pocketed=' + (b.pocketed ? 'YES' : 'no')
+      + (b.finite ? '' : '   <<< NON-FINITE'));
+  }
+  var d = document.createElement('pre');
+  d.id = 'probedump';
+  d.style.cssText = 'position:fixed;left:0;top:0;z-index:99999;background:#001b12;color:#7CFC9A;'
+    + 'font:11px/1.35 monospace;padding:8px;margin:0;white-space:pre;border:1px solid #2a6';
+  d.textContent = lines.join('\n');
+  document.body.appendChild(d);
+}
+(function(){ var tries=0;
+  function go(){
+    if (globalThis.__PROBE_READY) {
+      try { window.__PROBE_RESULT = globalThis.__PROBE(); window.__PROBE_DONE = true; __dump(); }
+      catch(e){ var d=document.createElement('pre'); d.id='probeerr';
+        d.style.cssText='position:fixed;left:0;top:140px;z-index:99999;background:#06c;color:#fff;font:12px monospace;padding:6px';
+        d.textContent='PROBE ERROR: '+e.message+'\n'+e.stack; document.body.appendChild(d);
+        window.__PROBE_DONE = true; }
+    } else if (++tries < 800) { setTimeout(go, 25); }
+    else { var d=document.createElement('pre'); d.id='probeerr';
+      d.style.cssText='position:fixed;left:0;top:140px;z-index:99999;background:#06c;color:#fff;font:12px monospace;padding:6px';
+      d.textContent='PROBE TIMEOUT: __PROBE_READY never became true'; document.body.appendChild(d); }
+  }
+  go(); })();
+</script></body></html>

@@ -1,0 +1,16 @@
+﻿=== CONTROL 1: solver step loop vs h5harness/sim.mjs (prototype config) ===
+shot: full 11-ball factory rack, 720 steps @ 1/120 s, 8 angles
+
+  angle      0 power 170: max |delta| = 0.000e+0  BIT-IDENTICAL
+  angle   17.6 power 170: max |delta| = 0.000e+0  BIT-IDENTICAL
+  angle     90 power 170: max |delta| = 0.000e+0  BIT-IDENTICAL
+  angle    115 power 170: max |delta| = 0.000e+0  BIT-IDENTICAL
+  angle    218 power 170: max |delta| = 0.000e+0  BIT-IDENTICAL
+  angle     45 power 100: max |delta| = 0.000e+0  BIT-IDENTICAL
+  angle    250 power 170: max |delta| = 0.000e+0  BIT-IDENTICAL
+  angle    305 power 60: max |delta| = 0.000e+0  BIT-IDENTICAL
+
+  verdict: PASS — bit-identical on all 8 shots x 720 steps
+  (bit-identical = every x, y, vx, vy equal to the last bit, including the
+   unbounded x1.5 rail divergence and the Infinity blow-ups, if any)
+

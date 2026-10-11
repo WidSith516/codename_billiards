@@ -1,0 +1,31 @@
+{
+ "perAngleMean": {
+  "inCorridor": 0.16054929434460352,
+  "kick250": 0.14014789995600227,
+  "kickPocket": 0.11195327218781366
+ },
+ "union": {
+  "corridor": 1,
+  "kick250": 1,
+  "pocket": 1
+ },
+ "arms": [
+  {
+   "armName": "their-sampler",
+   "n": 328,
+   "someAngleCoversAll": 163,
+   "rate": 0.4969512195121951,
+   "meanAnglesPerLayout": 1.41
+  },
+  {
+   "armName": "free-sampler",
+   "n": 328,
+   "someAngleCoversAll": 164,
+   "rate": 0.5,
+   "meanAnglesPerLayout": 1.51
+  }
+ ],
+ "grid": 6,
+ "nAngles": 360,
+ "totalCells": 9849
+}

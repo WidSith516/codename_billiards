@@ -1,0 +1,17 @@
+﻿verifying tools/solver/out/locked.json (solver config "locked")
+
+  L0_factory   UNSOLVED  (best 0/10 with the strike alone, 0/10 with rewinds)
+  OK   L1           2/2 potted, won=true   strike 0deg / power 170
+        rewind 1: hold R for 650 steps (5.42 s), walk back to the strike origin (auto-stop, v=0)
+  OK   L2           3/3 potted, won=true   strike 0deg / power 170
+        rewind 1: hold R for 60 steps (0.50 s), walk back to the strike origin (auto-stop, v=0)
+  OK   L3           3/3 potted, won=true   strike 15deg / power 170
+        rewind 1: hold R for 493 steps (4.11 s), walk back to the strike origin (auto-stop, v=0)
+  OK   L4           4/4 potted, won=true   strike 12deg / power 170
+        rewind 1: hold R for 88 steps (0.73 s), walk back to the strike origin (auto-stop, v=0)
+  OK   L5           4/4 potted, won=true   strike 349deg / power 170
+        rewind 1: hold R for 5 steps (0.04 s), walk back to the strike origin (auto-stop, v=0)
+  OK   L6           4/4 potted, won=true   strike 11deg / power 170
+        rewind 1: hold R for 4 steps (0.03 s), release at path index 1 at 1256.2 px/s
+
+6 replay-verified, 0 FAILED, 1 not solved

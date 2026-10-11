@@ -1,0 +1,475 @@
+{
+ "config": "locked",
+ "levels": [
+  {
+   "level": "L1",
+   "balls": 2,
+   "angle": 0,
+   "power": 170,
+   "pathSamples": 651,
+   "railBounces": 1,
+   "strikePocketed": 0,
+   "planPocketed": 2,
+   "clearedByDesignedPlan": true,
+   "ballsNeedingRailBounce": 0,
+   "ballsKickedByRewind": 2,
+   "perBall": [
+    {
+     "id": 1,
+     "pottedByStrike": false,
+     "distToSegment1": 22.1,
+     "distToWholePath": 22.1,
+     "needsRailBounce": false,
+     "maxRewindKick": 912,
+     "nearestPocket": {
+      "pocket": [
+       65,
+       63
+      ],
+      "dist": 292,
+      "need": 611
+     },
+     "kickReachesPocket": true,
+     "finalX": 276.9,
+     "finalY": 263.8
+    },
+    {
+     "id": 2,
+     "pottedByStrike": false,
+     "distToSegment1": 22.1,
+     "distToWholePath": 22.1,
+     "needsRailBounce": false,
+     "maxRewindKick": 912,
+     "nearestPocket": {
+      "pocket": [
+       65,
+       497
+      ],
+      "dist": 292,
+      "need": 611
+     },
+     "kickReachesPocket": true,
+     "finalX": 276.9,
+     "finalY": 296.2
+    }
+   ]
+  },
+  {
+   "level": "L2",
+   "balls": 3,
+   "angle": 0,
+   "power": 170,
+   "pathSamples": 61,
+   "railBounces": 1,
+   "strikePocketed": 1,
+   "planPocketed": 3,
+   "clearedByDesignedPlan": true,
+   "ballsNeedingRailBounce": 0,
+   "ballsKickedByRewind": 2,
+   "perBall": [
+    {
+     "id": 1,
+     "pottedByStrike": false,
+     "distToSegment1": 22.1,
+     "distToWholePath": 22.1,
+     "needsRailBounce": false,
+     "maxRewindKick": 912,
+     "nearestPocket": {
+      "pocket": [
+       65,
+       63
+      ],
+      "dist": 292,
+      "need": 611
+     },
+     "kickReachesPocket": true,
+     "finalX": 276.9,
+     "finalY": 263.8
+    },
+    {
+     "id": 2,
+     "pottedByStrike": false,
+     "distToSegment1": 22.1,
+     "distToWholePath": 22.1,
+     "needsRailBounce": false,
+     "maxRewindKick": 912,
+     "nearestPocket": {
+      "pocket": [
+       65,
+       497
+      ],
+      "dist": 292,
+      "need": 611
+     },
+     "kickReachesPocket": true,
+     "finalX": 276.9,
+     "finalY": 296.2
+    },
+    {
+     "id": 3,
+     "pottedByStrike": true,
+     "distToSegment1": 23.6,
+     "distToWholePath": 23.6,
+     "needsRailBounce": false,
+     "maxRewindKick": null,
+     "nearestPocket": {
+      "pocket": [
+       520,
+       497
+      ],
+      "dist": 289,
+      "need": 608
+     },
+     "kickReachesPocket": null,
+     "finalX": 963.2,
+     "finalY": 476.4
+    }
+   ]
+  },
+  {
+   "level": "L3",
+   "balls": 3,
+   "angle": 15,
+   "power": 170,
+   "pathSamples": 494,
+   "railBounces": 3,
+   "strikePocketed": 1,
+   "planPocketed": 3,
+   "clearedByDesignedPlan": true,
+   "ballsNeedingRailBounce": 1,
+   "ballsKickedByRewind": 2,
+   "perBall": [
+    {
+     "id": 1,
+     "pottedByStrike": false,
+     "distToSegment1": 21.8,
+     "distToWholePath": 21.8,
+     "needsRailBounce": false,
+     "maxRewindKick": 1104,
+     "nearestPocket": {
+      "pocket": [
+       65,
+       63
+      ],
+      "dist": 292,
+      "need": 612
+     },
+     "kickReachesPocket": true,
+     "finalX": 276.9,
+     "finalY": 264.3
+    },
+    {
+     "id": 2,
+     "pottedByStrike": false,
+     "distToSegment1": 22.5,
+     "distToWholePath": 22.5,
+     "needsRailBounce": false,
+     "maxRewindKick": 658,
+     "nearestPocket": {
+      "pocket": [
+       65,
+       497
+      ],
+      "dist": 292,
+      "need": 611
+     },
+     "kickReachesPocket": true,
+     "finalX": 276.8,
+     "finalY": 296.7
+    },
+    {
+     "id": 3,
+     "pottedByStrike": true,
+     "distToSegment1": 59.2,
+     "distToWholePath": 23.8,
+     "needsRailBounce": true,
+     "maxRewindKick": null,
+     "nearestPocket": {
+      "pocket": [
+       520,
+       497
+      ],
+      "dist": 219,
+      "need": 529
+     },
+     "kickReachesPocket": null,
+     "finalX": 526,
+     "finalY": 473.8
+    }
+   ]
+  },
+  {
+   "level": "L4",
+   "balls": 4,
+   "angle": 15,
+   "power": 170,
+   "pathSamples": 87,
+   "railBounces": 1,
+   "strikePocketed": 2,
+   "planPocketed": 4,
+   "clearedByDesignedPlan": true,
+   "ballsNeedingRailBounce": 1,
+   "ballsKickedByRewind": 2,
+   "perBall": [
+    {
+     "id": 1,
+     "pottedByStrike": false,
+     "distToSegment1": 21.8,
+     "distToWholePath": 21.8,
+     "needsRailBounce": false,
+     "maxRewindKick": 1104,
+     "nearestPocket": {
+      "pocket": [
+       65,
+       63
+      ],
+      "dist": 292,
+      "need": 612
+     },
+     "kickReachesPocket": true,
+     "finalX": 276.9,
+     "finalY": 264.3
+    },
+    {
+     "id": 2,
+     "pottedByStrike": false,
+     "distToSegment1": 22.5,
+     "distToWholePath": 22.5,
+     "needsRailBounce": false,
+     "maxRewindKick": 658,
+     "nearestPocket": {
+      "pocket": [
+       65,
+       497
+      ],
+      "dist": 292,
+      "need": 611
+     },
+     "kickReachesPocket": true,
+     "finalX": 276.8,
+     "finalY": 296.7
+    },
+    {
+     "id": 3,
+     "pottedByStrike": true,
+     "distToSegment1": 22.3,
+     "distToWholePath": 22.3,
+     "needsRailBounce": false,
+     "maxRewindKick": null,
+     "nearestPocket": {
+      "pocket": [
+       520,
+       497
+      ],
+      "dist": 283,
+      "need": 602
+     },
+     "kickReachesPocket": null,
+     "finalX": 504.5,
+     "finalY": 481.9
+    },
+    {
+     "id": 4,
+     "pottedByStrike": true,
+     "distToSegment1": 184.4,
+     "distToWholePath": 24.4,
+     "needsRailBounce": true,
+     "maxRewindKick": null,
+     "nearestPocket": {
+      "pocket": [
+       520,
+       63
+      ],
+      "dist": 123,
+      "need": 398
+     },
+     "kickReachesPocket": null,
+     "finalX": 504.2,
+     "finalY": 80.1
+    }
+   ]
+  },
+  {
+   "level": "L5",
+   "balls": 4,
+   "angle": 345,
+   "power": 170,
+   "pathSamples": 6,
+   "railBounces": 0,
+   "strikePocketed": 2,
+   "planPocketed": 4,
+   "clearedByDesignedPlan": true,
+   "ballsNeedingRailBounce": 0,
+   "ballsKickedByRewind": 2,
+   "perBall": [
+    {
+     "id": 1,
+     "pottedByStrike": false,
+     "distToSegment1": 21.8,
+     "distToWholePath": 21.8,
+     "needsRailBounce": false,
+     "maxRewindKick": 1104,
+     "nearestPocket": {
+      "pocket": [
+       65,
+       497
+      ],
+      "dist": 292,
+      "need": 612
+     },
+     "kickReachesPocket": true,
+     "finalX": 276.9,
+     "finalY": 295.7
+    },
+    {
+     "id": 2,
+     "pottedByStrike": false,
+     "distToSegment1": 22.5,
+     "distToWholePath": 22.5,
+     "needsRailBounce": false,
+     "maxRewindKick": 658,
+     "nearestPocket": {
+      "pocket": [
+       65,
+       63
+      ],
+      "dist": 292,
+      "need": 611
+     },
+     "kickReachesPocket": true,
+     "finalX": 276.8,
+     "finalY": 263.3
+    },
+    {
+     "id": 3,
+     "pottedByStrike": true,
+     "distToSegment1": 22.7,
+     "distToWholePath": 22.7,
+     "needsRailBounce": false,
+     "maxRewindKick": null,
+     "nearestPocket": {
+      "pocket": [
+       520,
+       63
+      ],
+      "dist": 283,
+      "need": 602
+     },
+     "kickReachesPocket": null,
+     "finalX": 504.5,
+     "finalY": 78.1
+    },
+    {
+     "id": 4,
+     "pottedByStrike": true,
+     "distToSegment1": 24.4,
+     "distToWholePath": 24.4,
+     "needsRailBounce": false,
+     "maxRewindKick": null,
+     "nearestPocket": {
+      "pocket": [
+       520,
+       497
+      ],
+      "dist": 285,
+      "need": 604
+     },
+     "kickReachesPocket": null,
+     "finalX": 503.4,
+     "finalY": 480.2
+    }
+   ]
+  },
+  {
+   "level": "L6",
+   "balls": 4,
+   "angle": 15,
+   "power": 170,
+   "pathSamples": 6,
+   "railBounces": 0,
+   "strikePocketed": 2,
+   "planPocketed": 4,
+   "clearedByDesignedPlan": true,
+   "ballsNeedingRailBounce": 0,
+   "ballsKickedByRewind": 2,
+   "perBall": [
+    {
+     "id": 1,
+     "pottedByStrike": false,
+     "distToSegment1": 21.8,
+     "distToWholePath": 21.8,
+     "needsRailBounce": false,
+     "maxRewindKick": 1104,
+     "nearestPocket": {
+      "pocket": [
+       65,
+       63
+      ],
+      "dist": 292,
+      "need": 612
+     },
+     "kickReachesPocket": true,
+     "finalX": 276.9,
+     "finalY": 264.3
+    },
+    {
+     "id": 2,
+     "pottedByStrike": false,
+     "distToSegment1": 22.5,
+     "distToWholePath": 22.5,
+     "needsRailBounce": false,
+     "maxRewindKick": 658,
+     "nearestPocket": {
+      "pocket": [
+       65,
+       497
+      ],
+      "dist": 292,
+      "need": 611
+     },
+     "kickReachesPocket": true,
+     "finalX": 276.8,
+     "finalY": 296.7
+    },
+    {
+     "id": 3,
+     "pottedByStrike": true,
+     "distToSegment1": 22.7,
+     "distToWholePath": 22.7,
+     "needsRailBounce": false,
+     "maxRewindKick": null,
+     "nearestPocket": {
+      "pocket": [
+       520,
+       497
+      ],
+      "dist": 283,
+      "need": 602
+     },
+     "kickReachesPocket": null,
+     "finalX": 504.5,
+     "finalY": 481.9
+    },
+    {
+     "id": 4,
+     "pottedByStrike": true,
+     "distToSegment1": 24.4,
+     "distToWholePath": 24.4,
+     "needsRailBounce": false,
+     "maxRewindKick": null,
+     "nearestPocket": {
+      "pocket": [
+       520,
+       63
+      ],
+      "dist": 285,
+      "need": 604
+     },
+     "kickReachesPocket": null,
+     "finalX": 503.4,
+     "finalY": 79.8
+    }
+   ]
+  }
+ ]
+}

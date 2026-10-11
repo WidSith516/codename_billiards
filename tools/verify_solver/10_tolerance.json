@@ -1,0 +1,1484 @@
+[
+ {
+  "level": "L1",
+  "balls": 2,
+  "baseline": {
+   "ok": true,
+   "potted": 2,
+   "total": 2
+  },
+  "angle": {
+   "0": {
+    "ok": true,
+    "potted": 2,
+    "total": 2
+   },
+   "1": {
+    "ok": true,
+    "potted": 2,
+    "total": 2
+   },
+   "2": {
+    "ok": true,
+    "potted": 2,
+    "total": 2
+   },
+   "4": {
+    "ok": true,
+    "potted": 2,
+    "total": 2
+   },
+   "8": {
+    "ok": true,
+    "potted": 2,
+    "total": 2
+   },
+   "-8": {
+    "ok": true,
+    "potted": 2,
+    "total": 2
+   },
+   "-4": {
+    "ok": true,
+    "potted": 2,
+    "total": 2
+   },
+   "-2": {
+    "ok": true,
+    "potted": 2,
+    "total": 2
+   },
+   "-1": {
+    "ok": true,
+    "potted": 2,
+    "total": 2
+   },
+   "-0.5": {
+    "ok": true,
+    "potted": 2,
+    "total": 2
+   },
+   "-0.25": {
+    "ok": true,
+    "potted": 2,
+    "total": 2
+   },
+   "0.25": {
+    "ok": true,
+    "potted": 2,
+    "total": 2
+   },
+   "0.5": {
+    "ok": true,
+    "potted": 2,
+    "total": 2
+   }
+  },
+  "power": {
+   "0": {
+    "ok": true,
+    "potted": 2,
+    "total": 2
+   },
+   "1": {
+    "ok": true,
+    "potted": 2,
+    "total": 2
+   },
+   "2": {
+    "ok": true,
+    "potted": 2,
+    "total": 2
+   },
+   "5": {
+    "ok": true,
+    "potted": 2,
+    "total": 2
+   },
+   "10": {
+    "ok": true,
+    "potted": 2,
+    "total": 2
+   },
+   "-10": {
+    "ok": true,
+    "potted": 2,
+    "total": 2
+   },
+   "-5": {
+    "ok": true,
+    "potted": 2,
+    "total": 2
+   },
+   "-2": {
+    "ok": true,
+    "potted": 2,
+    "total": 2
+   },
+   "-1": {
+    "ok": true,
+    "potted": 2,
+    "total": 2
+   }
+  },
+  "cue": {
+   "0": {
+    "ok": true,
+    "potted": 2,
+    "total": 2
+   },
+   "1": {
+    "ok": false,
+    "potted": 0,
+    "total": 2
+   },
+   "2": {
+    "ok": false,
+    "potted": 0,
+    "total": 2
+   },
+   "-2": {
+    "ok": false,
+    "potted": 0,
+    "total": 2
+   },
+   "-1": {
+    "ok": false,
+    "potted": 0,
+    "total": 2
+   },
+   "-0.5": {
+    "ok": true,
+    "potted": 2,
+    "total": 2
+   },
+   "-0.2": {
+    "ok": true,
+    "potted": 2,
+    "total": 2
+   },
+   "-0.1": {
+    "ok": true,
+    "potted": 2,
+    "total": 2
+   },
+   "-0.05": {
+    "ok": true,
+    "potted": 2,
+    "total": 2
+   },
+   "0.05": {
+    "ok": true,
+    "potted": 2,
+    "total": 2
+   },
+   "0.1": {
+    "ok": true,
+    "potted": 2,
+    "total": 2
+   },
+   "0.2": {
+    "ok": true,
+    "potted": 2,
+    "total": 2
+   },
+   "0.5": {
+    "ok": true,
+    "potted": 2,
+    "total": 2
+   }
+  },
+  "hold": {
+   "0": {
+    "ok": true,
+    "potted": 2,
+    "total": 2
+   },
+   "1": {
+    "ok": true,
+    "potted": 2,
+    "total": 2
+   },
+   "2": {
+    "ok": true,
+    "potted": 2,
+    "total": 2
+   },
+   "10": {
+    "ok": true,
+    "potted": 2,
+    "total": 2
+   },
+   "20": {
+    "ok": true,
+    "potted": 2,
+    "total": 2
+   },
+   "40": {
+    "ok": true,
+    "potted": 2,
+    "total": 2
+   },
+   "-40": {
+    "ok": false,
+    "potted": 0,
+    "total": 2
+   },
+   "-20": {
+    "ok": false,
+    "potted": 0,
+    "total": 2
+   },
+   "-10": {
+    "ok": false,
+    "potted": 0,
+    "total": 2
+   },
+   "-2": {
+    "ok": false,
+    "potted": 0,
+    "total": 2
+   },
+   "-1": {
+    "ok": true,
+    "potted": 2,
+    "total": 2
+   }
+  }
+ },
+ {
+  "level": "L2",
+  "balls": 3,
+  "baseline": {
+   "ok": true,
+   "potted": 3,
+   "total": 3
+  },
+  "angle": {
+   "0": {
+    "ok": true,
+    "potted": 3,
+    "total": 3
+   },
+   "1": {
+    "ok": true,
+    "potted": 3,
+    "total": 3
+   },
+   "2": {
+    "ok": true,
+    "potted": 3,
+    "total": 3
+   },
+   "4": {
+    "ok": true,
+    "potted": 3,
+    "total": 3
+   },
+   "8": {
+    "ok": false,
+    "potted": 2,
+    "total": 3
+   },
+   "-8": {
+    "ok": false,
+    "potted": 0,
+    "total": 3
+   },
+   "-4": {
+    "ok": false,
+    "potted": 0,
+    "total": 3
+   },
+   "-2": {
+    "ok": false,
+    "potted": 0,
+    "total": 3
+   },
+   "-1": {
+    "ok": false,
+    "potted": 0,
+    "total": 3
+   },
+   "-0.5": {
+    "ok": false,
+    "potted": 0,
+    "total": 3
+   },
+   "-0.25": {
+    "ok": false,
+    "potted": 1,
+    "total": 3
+   },
+   "0.25": {
+    "ok": true,
+    "potted": 3,
+    "total": 3
+   },
+   "0.5": {
+    "ok": true,
+    "potted": 3,
+    "total": 3
+   }
+  },
+  "power": {
+   "0": {
+    "ok": true,
+    "potted": 3,
+    "total": 3
+   },
+   "1": {
+    "ok": true,
+    "potted": 3,
+    "total": 3
+   },
+   "2": {
+    "ok": true,
+    "potted": 3,
+    "total": 3
+   },
+   "5": {
+    "ok": true,
+    "potted": 3,
+    "total": 3
+   },
+   "10": {
+    "ok": true,
+    "potted": 3,
+    "total": 3
+   },
+   "-10": {
+    "ok": true,
+    "potted": 3,
+    "total": 3
+   },
+   "-5": {
+    "ok": true,
+    "potted": 3,
+    "total": 3
+   },
+   "-2": {
+    "ok": true,
+    "potted": 3,
+    "total": 3
+   },
+   "-1": {
+    "ok": true,
+    "potted": 3,
+    "total": 3
+   }
+  },
+  "cue": {
+   "0": {
+    "ok": true,
+    "potted": 3,
+    "total": 3
+   },
+   "1": {
+    "ok": false,
+    "potted": 0,
+    "total": 3
+   },
+   "2": {
+    "ok": false,
+    "potted": 0,
+    "total": 3
+   },
+   "-2": {
+    "ok": false,
+    "potted": 0,
+    "total": 3
+   },
+   "-1": {
+    "ok": false,
+    "potted": 0,
+    "total": 3
+   },
+   "-0.5": {
+    "ok": false,
+    "potted": 0,
+    "total": 3
+   },
+   "-0.2": {
+    "ok": false,
+    "potted": 1,
+    "total": 3
+   },
+   "-0.1": {
+    "ok": false,
+    "potted": 0,
+    "total": 3
+   },
+   "-0.05": {
+    "ok": false,
+    "potted": 2,
+    "total": 3
+   },
+   "0.05": {
+    "ok": true,
+    "potted": 3,
+    "total": 3
+   },
+   "0.1": {
+    "ok": true,
+    "potted": 3,
+    "total": 3
+   },
+   "0.2": {
+    "ok": true,
+    "potted": 3,
+    "total": 3
+   },
+   "0.5": {
+    "ok": true,
+    "potted": 3,
+    "total": 3
+   }
+  },
+  "hold": {
+   "0": {
+    "ok": true,
+    "potted": 3,
+    "total": 3
+   },
+   "1": {
+    "ok": true,
+    "potted": 3,
+    "total": 3
+   },
+   "2": {
+    "ok": true,
+    "potted": 3,
+    "total": 3
+   },
+   "10": {
+    "ok": true,
+    "potted": 3,
+    "total": 3
+   },
+   "20": {
+    "ok": true,
+    "potted": 3,
+    "total": 3
+   },
+   "40": {
+    "ok": true,
+    "potted": 3,
+    "total": 3
+   },
+   "-40": {
+    "ok": false,
+    "potted": 1,
+    "total": 3
+   },
+   "-20": {
+    "ok": false,
+    "potted": 1,
+    "total": 3
+   },
+   "-10": {
+    "ok": false,
+    "potted": 1,
+    "total": 3
+   },
+   "-2": {
+    "ok": false,
+    "potted": 1,
+    "total": 3
+   },
+   "-1": {
+    "ok": true,
+    "potted": 3,
+    "total": 3
+   }
+  }
+ },
+ {
+  "level": "L3",
+  "balls": 3,
+  "baseline": {
+   "ok": true,
+   "potted": 3,
+   "total": 3
+  },
+  "angle": {
+   "0": {
+    "ok": true,
+    "potted": 3,
+    "total": 3
+   },
+   "1": {
+    "ok": false,
+    "potted": 1,
+    "total": 3
+   },
+   "2": {
+    "ok": false,
+    "potted": 2,
+    "total": 3
+   },
+   "4": {
+    "ok": false,
+    "potted": 1,
+    "total": 3
+   },
+   "8": {
+    "ok": false,
+    "potted": 2,
+    "total": 3
+   },
+   "-8": {
+    "ok": false,
+    "potted": 0,
+    "total": 3
+   },
+   "-4": {
+    "ok": false,
+    "potted": 2,
+    "total": 3
+   },
+   "-2": {
+    "ok": false,
+    "potted": 1,
+    "total": 3
+   },
+   "-1": {
+    "ok": false,
+    "potted": 2,
+    "total": 3
+   },
+   "-0.5": {
+    "ok": false,
+    "potted": 2,
+    "total": 3
+   },
+   "-0.25": {
+    "ok": false,
+    "potted": 2,
+    "total": 3
+   },
+   "0.25": {
+    "ok": false,
+    "potted": 1,
+    "total": 3
+   },
+   "0.5": {
+    "ok": false,
+    "potted": 1,
+    "total": 3
+   }
+  },
+  "power": {
+   "0": {
+    "ok": true,
+    "potted": 3,
+    "total": 3
+   },
+   "1": {
+    "ok": true,
+    "potted": 3,
+    "total": 3
+   },
+   "2": {
+    "ok": true,
+    "potted": 3,
+    "total": 3
+   },
+   "5": {
+    "ok": true,
+    "potted": 3,
+    "total": 3
+   },
+   "10": {
+    "ok": true,
+    "potted": 3,
+    "total": 3
+   },
+   "-10": {
+    "ok": false,
+    "potted": 2,
+    "total": 3
+   },
+   "-5": {
+    "ok": false,
+    "potted": 2,
+    "total": 3
+   },
+   "-2": {
+    "ok": false,
+    "potted": 1,
+    "total": 3
+   },
+   "-1": {
+    "ok": false,
+    "potted": 1,
+    "total": 3
+   }
+  },
+  "cue": {
+   "0": {
+    "ok": true,
+    "potted": 3,
+    "total": 3
+   },
+   "1": {
+    "ok": false,
+    "potted": 1,
+    "total": 3
+   },
+   "2": {
+    "ok": false,
+    "potted": 1,
+    "total": 3
+   },
+   "-2": {
+    "ok": false,
+    "potted": 1,
+    "total": 3
+   },
+   "-1": {
+    "ok": false,
+    "potted": 2,
+    "total": 3
+   },
+   "-0.5": {
+    "ok": true,
+    "potted": 3,
+    "total": 3
+   },
+   "-0.2": {
+    "ok": true,
+    "potted": 3,
+    "total": 3
+   },
+   "-0.1": {
+    "ok": true,
+    "potted": 3,
+    "total": 3
+   },
+   "-0.05": {
+    "ok": true,
+    "potted": 3,
+    "total": 3
+   },
+   "0.05": {
+    "ok": true,
+    "potted": 3,
+    "total": 3
+   },
+   "0.1": {
+    "ok": true,
+    "potted": 3,
+    "total": 3
+   },
+   "0.2": {
+    "ok": false,
+    "potted": 1,
+    "total": 3
+   },
+   "0.5": {
+    "ok": false,
+    "potted": 1,
+    "total": 3
+   }
+  },
+  "hold": {
+   "0": {
+    "ok": true,
+    "potted": 3,
+    "total": 3
+   },
+   "1": {
+    "ok": true,
+    "potted": 3,
+    "total": 3
+   },
+   "2": {
+    "ok": true,
+    "potted": 3,
+    "total": 3
+   },
+   "10": {
+    "ok": true,
+    "potted": 3,
+    "total": 3
+   },
+   "20": {
+    "ok": true,
+    "potted": 3,
+    "total": 3
+   },
+   "40": {
+    "ok": true,
+    "potted": 3,
+    "total": 3
+   },
+   "-40": {
+    "ok": false,
+    "potted": 2,
+    "total": 3
+   },
+   "-20": {
+    "ok": false,
+    "potted": 2,
+    "total": 3
+   },
+   "-10": {
+    "ok": false,
+    "potted": 2,
+    "total": 3
+   },
+   "-2": {
+    "ok": false,
+    "potted": 2,
+    "total": 3
+   },
+   "-1": {
+    "ok": true,
+    "potted": 3,
+    "total": 3
+   }
+  }
+ },
+ {
+  "level": "L4",
+  "balls": 4,
+  "baseline": {
+   "ok": true,
+   "potted": 4,
+   "total": 4
+  },
+  "angle": {
+   "0": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "1": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "2": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "4": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "8": {
+    "ok": false,
+    "potted": 2,
+    "total": 4
+   },
+   "-8": {
+    "ok": false,
+    "potted": 0,
+    "total": 4
+   },
+   "-4": {
+    "ok": false,
+    "potted": 0,
+    "total": 4
+   },
+   "-2": {
+    "ok": false,
+    "potted": 1,
+    "total": 4
+   },
+   "-1": {
+    "ok": false,
+    "potted": 1,
+    "total": 4
+   },
+   "-0.5": {
+    "ok": false,
+    "potted": 3,
+    "total": 4
+   },
+   "-0.25": {
+    "ok": false,
+    "potted": 3,
+    "total": 4
+   },
+   "0.25": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "0.5": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   }
+  },
+  "power": {
+   "0": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "1": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "2": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "5": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "10": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "-10": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "-5": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "-2": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "-1": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   }
+  },
+  "cue": {
+   "0": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "1": {
+    "ok": false,
+    "potted": 3,
+    "total": 4
+   },
+   "2": {
+    "ok": false,
+    "potted": 1,
+    "total": 4
+   },
+   "-2": {
+    "ok": false,
+    "potted": 0,
+    "total": 4
+   },
+   "-1": {
+    "ok": false,
+    "potted": 0,
+    "total": 4
+   },
+   "-0.5": {
+    "ok": false,
+    "potted": 0,
+    "total": 4
+   },
+   "-0.2": {
+    "ok": false,
+    "potted": 1,
+    "total": 4
+   },
+   "-0.1": {
+    "ok": false,
+    "potted": 3,
+    "total": 4
+   },
+   "-0.05": {
+    "ok": false,
+    "potted": 3,
+    "total": 4
+   },
+   "0.05": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "0.1": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "0.2": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "0.5": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   }
+  },
+  "hold": {
+   "0": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "1": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "2": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "10": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "20": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "40": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "-40": {
+    "ok": false,
+    "potted": 2,
+    "total": 4
+   },
+   "-20": {
+    "ok": false,
+    "potted": 2,
+    "total": 4
+   },
+   "-10": {
+    "ok": false,
+    "potted": 2,
+    "total": 4
+   },
+   "-2": {
+    "ok": false,
+    "potted": 3,
+    "total": 4
+   },
+   "-1": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   }
+  }
+ },
+ {
+  "level": "L5",
+  "balls": 4,
+  "baseline": {
+   "ok": true,
+   "potted": 4,
+   "total": 4
+  },
+  "angle": {
+   "0": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "1": {
+    "ok": false,
+    "potted": 3,
+    "total": 4
+   },
+   "2": {
+    "ok": false,
+    "potted": 3,
+    "total": 4
+   },
+   "4": {
+    "ok": false,
+    "potted": 2,
+    "total": 4
+   },
+   "8": {
+    "ok": false,
+    "potted": 2,
+    "total": 4
+   },
+   "-8": {
+    "ok": false,
+    "potted": 3,
+    "total": 4
+   },
+   "-4": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "-2": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "-1": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "-0.5": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "-0.25": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "0.25": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "0.5": {
+    "ok": false,
+    "potted": 3,
+    "total": 4
+   }
+  },
+  "power": {
+   "0": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "1": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "2": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "5": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "10": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "-10": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "-5": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "-2": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "-1": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   }
+  },
+  "cue": {
+   "0": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "1": {
+    "ok": false,
+    "potted": 0,
+    "total": 4
+   },
+   "2": {
+    "ok": false,
+    "potted": 0,
+    "total": 4
+   },
+   "-2": {
+    "ok": false,
+    "potted": 2,
+    "total": 4
+   },
+   "-1": {
+    "ok": false,
+    "potted": 3,
+    "total": 4
+   },
+   "-0.5": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "-0.2": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "-0.1": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "-0.05": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "0.05": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "0.1": {
+    "ok": false,
+    "potted": 3,
+    "total": 4
+   },
+   "0.2": {
+    "ok": false,
+    "potted": 3,
+    "total": 4
+   },
+   "0.5": {
+    "ok": false,
+    "potted": 3,
+    "total": 4
+   }
+  },
+  "hold": {
+   "0": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "1": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "2": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "10": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "20": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "40": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "-40": {
+    "ok": false,
+    "potted": 3,
+    "total": 4
+   },
+   "-20": {
+    "ok": false,
+    "potted": 3,
+    "total": 4
+   },
+   "-10": {
+    "ok": false,
+    "potted": 3,
+    "total": 4
+   },
+   "-2": {
+    "ok": false,
+    "potted": 2,
+    "total": 4
+   },
+   "-1": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   }
+  }
+ },
+ {
+  "level": "L6",
+  "balls": 4,
+  "baseline": {
+   "ok": true,
+   "potted": 4,
+   "total": 4
+  },
+  "angle": {
+   "0": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "1": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "2": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "4": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "8": {
+    "ok": false,
+    "potted": 2,
+    "total": 4
+   },
+   "-8": {
+    "ok": false,
+    "potted": 2,
+    "total": 4
+   },
+   "-4": {
+    "ok": false,
+    "potted": 2,
+    "total": 4
+   },
+   "-2": {
+    "ok": false,
+    "potted": 3,
+    "total": 4
+   },
+   "-1": {
+    "ok": false,
+    "potted": 3,
+    "total": 4
+   },
+   "-0.5": {
+    "ok": false,
+    "potted": 3,
+    "total": 4
+   },
+   "-0.25": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "0.25": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "0.5": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   }
+  },
+  "power": {
+   "0": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "1": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "2": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "5": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "10": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "-10": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "-5": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "-2": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "-1": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   }
+  },
+  "cue": {
+   "0": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "1": {
+    "ok": false,
+    "potted": 3,
+    "total": 4
+   },
+   "2": {
+    "ok": false,
+    "potted": 2,
+    "total": 4
+   },
+   "-2": {
+    "ok": false,
+    "potted": 0,
+    "total": 4
+   },
+   "-1": {
+    "ok": false,
+    "potted": 1,
+    "total": 4
+   },
+   "-0.5": {
+    "ok": false,
+    "potted": 3,
+    "total": 4
+   },
+   "-0.2": {
+    "ok": false,
+    "potted": 3,
+    "total": 4
+   },
+   "-0.1": {
+    "ok": false,
+    "potted": 3,
+    "total": 4
+   },
+   "-0.05": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "0.05": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "0.1": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "0.2": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "0.5": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   }
+  },
+  "hold": {
+   "0": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "1": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "2": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "10": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "20": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "40": {
+    "ok": true,
+    "potted": 4,
+    "total": 4
+   },
+   "-40": {
+    "ok": false,
+    "potted": 3,
+    "total": 4
+   },
+   "-20": {
+    "ok": false,
+    "potted": 3,
+    "total": 4
+   },
+   "-10": {
+    "ok": false,
+    "potted": 3,
+    "total": 4
+   },
+   "-2": {
+    "ok": false,
+    "potted": 2,
+    "total": 4
+   },
+   "-1": {
+    "ok": false,
+    "potted": 2,
+    "total": 4
+   }
+  }
+ }
+]

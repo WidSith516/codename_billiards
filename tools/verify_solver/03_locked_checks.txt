@@ -1,0 +1,46 @@
+﻿=== CONTROL 2a: constant deceleration 640 px/s^2 (locked §3) ===
+  cue fired -x (angle 180) from (292,280); left rail 214.8 px away, so
+  powers with v0^2/1280 < 214.8 never touch a rail. Distance measured by
+  integrating |dx| per step (NOT from the 2 px-quantised history).
+
+  power   v0(px/s)   glide(px)   theory v0^2/1280   err%    stop(s)   theory
+     20    148.000      16.500             17.113  -3.579     0.2333   0.2313
+     30    222.000      37.583             38.503  -2.389     0.3500   0.3469
+     40    296.000      67.222             68.450  -1.794     0.4667   0.4625
+     50    370.000     105.417            106.953  -1.437     0.5833   0.5781
+     55    407.000     127.722            129.413  -1.307     0.6417   0.6359
+  worst glide error 3.579% (Euler integration of a constant
+  deceleration: exact up to the final partial step)
+
+=== CONTROL 2b: rail transform |v| -> min(0.92|v| + 120, 2000) (locked §4) ===
+  read from actual rail events inside the physics step (mid-step safe)
+
+   ball   v_at_wall      v_after    0.92*v+120    ratio    exact?
+      0     272.0000     370.2400     370.2400  1.36118   YES
+      0     714.6667     777.4933     777.4933  1.08791   YES
+      0    1142.4444    1171.0489    1171.0489  1.02504   YES
+      0     483.9378     565.2228     565.2228  1.16797   YES
+  cue, full power, 60 s: 2 rail hits; max post-rail speed = 1171.05 px/s (fixed point 120/(1-0.92)=1500, V_CAP 2000)
+
+=== CONTROL 2c: V_CAP 2000, no Infinity/NaN over 60 s (locked §4 assertion) ===
+  8 full-power breaks x 60 s + full rewinds: max speed 1252.667 px/s, max during rewind 0.000, NaN 0, Infinity 0, cap events 0
+  PASS = true
+
+=== CONTROL 2d: rewind crawl = 240 px/s, release = stored v negated (locked §6) ===
+  history at press = 651 entries (1302 px of path)
+  held R 50 steps = 0.417 s -> cue moved back 100.000 px = 240.00 px/s (locked 240)
+  release velocity vs -(stored v at that entry): relative error 0.000e+0
+  release speed 360.6667 px/s vs stored entry speed 360.6667
+  stated cost of the fixed crawl: rewinding this whole path takes 5.42 s of held R
+
+=== CONTROL 2e: rewind impulse j = max(0,(v_cue-v_target).n)*1.0 (locked §7) ===
+  lateral offset     0 px: |v_target| = 355.333 px/s, j = 350.000, ratio K = 1.015238  OK
+  lateral offset    10 px: |v_target| = 323.484 px/s, j = 323.484, ratio K = 1.000000  OK
+  lateral offset    20 px: |v_target| = 193.793 px/s, j = 191.049, ratio K = 1.014363  OK
+      (cue approach speed at contact 371.33 px/s, centre distance 24.46 px)
+  lateral offset  23.5 px: |v_target| = 95.820 px/s, j = 94.500, ratio K = 1.013962  OK
+
+=== THROUGHPUT (sets the search budgets) ===
+  locked config, 11-ball rack, strike+settle: 40 shots in 538 ms
+  -> 13.45 ms per strike-settle, 9357 physics steps total, 17392 steps/s, 74.3 sims/s (single process)
+  prototype config (substep=1): 13.85 ms per strike-settle

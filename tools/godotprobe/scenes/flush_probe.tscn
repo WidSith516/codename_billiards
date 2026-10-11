@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://eprobe0flush01"]
+
+[ext_resource type="Script" path="res://scripts/FlushProbe.cs" id="1_flush"]
+
+[node name="FlushProbe" type="Node"]
+script = ExtResource("1_flush")

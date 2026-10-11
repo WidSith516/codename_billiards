@@ -1,0 +1,230 @@
+[
+ {
+  "level": "L1",
+  "balls": 2,
+  "cue": {
+   "x": 292,
+   "y": 280
+  },
+  "ballPos": [
+   {
+    "id": 1,
+    "x": 276.942,
+    "y": 263.836,
+    "note": "backstop kick: ball 23.5 px from history sample #1 along sample#1->pocket(65,63)"
+   },
+   {
+    "id": 2,
+    "x": 276.942,
+    "y": 296.164,
+    "note": "backstop kick: ball 23.5 px from history sample #1 along sample#1->pocket(65,497)"
+   }
+  ],
+  "reportedPathSamples": 651,
+  "reportedArc": 1300,
+  "reportedStrikePots": 0,
+  "reportedAfterRewind": 2,
+  "bestStrikeOnly": 1,
+  "designPathSamples": 651,
+  "designAngle": 0,
+  "rewindHold": "650"
+ },
+ {
+  "level": "L2",
+  "balls": 3,
+  "cue": {
+   "x": 292,
+   "y": 280
+  },
+  "ballPos": [
+   {
+    "id": 1,
+    "x": 276.942,
+    "y": 263.836,
+    "note": "backstop kick: ball 23.5 px from history sample #1 along sample#1->pocket(65,63)"
+   },
+   {
+    "id": 2,
+    "x": 276.942,
+    "y": 296.164,
+    "note": "backstop kick: ball 23.5 px from history sample #1 along sample#1->pocket(65,497)"
+   },
+   {
+    "id": 3,
+    "x": 321.236,
+    "y": 287.448,
+    "note": "cut at path[3] (298,280) v=1254 px/s, 18 deg cut -> pocket(975,497)"
+   }
+  ],
+  "reportedPathSamples": 61,
+  "reportedArc": 120,
+  "reportedStrikePots": 1,
+  "reportedAfterRewind": 3,
+  "bestStrikeOnly": 1,
+  "designPathSamples": 61,
+  "designAngle": 0,
+  "rewindHold": "60"
+ },
+ {
+  "level": "L3",
+  "balls": 3,
+  "cue": {
+   "x": 292,
+   "y": 280
+  },
+  "ballPos": [
+   {
+    "id": 1,
+    "x": 276.896,
+    "y": 264.331,
+    "note": "backstop kick: ball 23.5 px from history sample #1 along sample#1->pocket(65,63)"
+   },
+   {
+    "id": 2,
+    "x": 276.857,
+    "y": 296.664,
+    "note": "backstop kick: ball 23.5 px from history sample #1 along sample#1->pocket(65,497)"
+   },
+   {
+    "id": 3,
+    "x": 735.35,
+    "y": 459.982,
+    "note": "cut at path[452] (759,456) v=777 px/s, 25 deg cut -> pocket(520,497)"
+   }
+  ],
+  "reportedPathSamples": 494,
+  "reportedArc": 986,
+  "reportedStrikePots": 1,
+  "reportedAfterRewind": 3,
+  "bestStrikeOnly": 1,
+  "designPathSamples": 494,
+  "designAngle": 15,
+  "rewindHold": "493"
+ },
+ {
+  "level": "L4",
+  "balls": 4,
+  "cue": {
+   "x": 292,
+   "y": 280
+  },
+  "ballPos": [
+   {
+    "id": 1,
+    "x": 276.896,
+    "y": 264.331,
+    "note": "backstop kick: ball 23.5 px from history sample #1 along sample#1->pocket(65,63)"
+   },
+   {
+    "id": 2,
+    "x": 276.857,
+    "y": 296.664,
+    "note": "backstop kick: ball 23.5 px from history sample #1 along sample#1->pocket(65,497)"
+   },
+   {
+    "id": 3,
+    "x": 317.2,
+    "y": 299.074,
+    "note": "cut at path[4] (300,282) v=1253 px/s, 29 deg cut -> pocket(520,497)"
+   },
+   {
+    "id": 4,
+    "x": 436.204,
+    "y": 153.673,
+    "note": "cut at path[86] (420,172) v=411 px/s, 4 deg cut -> pocket(520,63)"
+   }
+  ],
+  "reportedPathSamples": 89,
+  "reportedArc": 176,
+  "reportedStrikePots": 2,
+  "reportedAfterRewind": 4,
+  "bestStrikeOnly": 2,
+  "designPathSamples": 87,
+  "designAngle": 15,
+  "rewindHold": "88"
+ },
+ {
+  "level": "L5",
+  "balls": 4,
+  "cue": {
+   "x": 292,
+   "y": 280
+  },
+  "ballPos": [
+   {
+    "id": 1,
+    "x": 276.896,
+    "y": 295.669,
+    "note": "backstop kick: ball 23.5 px from history sample #1 along sample#1->pocket(65,497)"
+   },
+   {
+    "id": 2,
+    "x": 276.857,
+    "y": 263.336,
+    "note": "backstop kick: ball 23.5 px from history sample #1 along sample#1->pocket(65,63)"
+   },
+   {
+    "id": 3,
+    "x": 317.2,
+    "y": 260.926,
+    "note": "cut at path[4] (300,278) v=1253 px/s, 29 deg cut -> pocket(520,63)"
+   },
+   {
+    "id": 4,
+    "x": 318.876,
+    "y": 294.755,
+    "note": "cut at path[5] (302,277) v=1253 px/s, 60 deg cut -> pocket(520,497)"
+   }
+  ],
+  "reportedPathSamples": 6,
+  "reportedArc": 10,
+  "reportedStrikePots": 2,
+  "reportedAfterRewind": 4,
+  "bestStrikeOnly": 2,
+  "designPathSamples": 6,
+  "designAngle": 345,
+  "rewindHold": "5"
+ },
+ {
+  "level": "L6",
+  "balls": 4,
+  "cue": {
+   "x": 292,
+   "y": 280
+  },
+  "ballPos": [
+   {
+    "id": 1,
+    "x": 276.896,
+    "y": 264.331,
+    "note": "backstop kick: ball 23.5 px from history sample #1 along sample#1->pocket(65,63)"
+   },
+   {
+    "id": 2,
+    "x": 276.857,
+    "y": 296.664,
+    "note": "backstop kick: ball 23.5 px from history sample #1 along sample#1->pocket(65,497)"
+   },
+   {
+    "id": 3,
+    "x": 317.2,
+    "y": 299.074,
+    "note": "cut at path[4] (300,282) v=1253 px/s, 29 deg cut -> pocket(520,497)"
+   },
+   {
+    "id": 4,
+    "x": 318.876,
+    "y": 265.245,
+    "note": "cut at path[5] (302,283) v=1253 px/s, 60 deg cut -> pocket(520,63)"
+   }
+  ],
+  "reportedPathSamples": 6,
+  "reportedArc": 10,
+  "reportedStrikePots": 2,
+  "reportedAfterRewind": 4,
+  "bestStrikeOnly": 2,
+  "designPathSamples": 6,
+  "designAngle": 15,
+  "rewindHold": "4"
+ }
+]

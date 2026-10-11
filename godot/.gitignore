@@ -1,0 +1,5 @@
+# Godot import cache, build intermediates and gate logs are all local artifacts.
+.godot/
+.tmp/
+build/
+*.user
