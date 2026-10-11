@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using Godot;
@@ -88,30 +88,30 @@ public static class Hud
         ci.DrawLine(new Vector2(0, 28), new Vector2(1040, 28), Palette.PanelEdge, 1.0f);
 
         var x = 8.0f;
-        x = Text(ci, font, x, 19, $"REWIND  |  {m.LevelId}", 15, Palette.TextMain);
+        x = Text(ci, font, x, 19, $"回溯  |  {m.LevelId}", 15, Palette.TextMain);
         x += 10;
 
         var ballsLeft = m.ObjectBallCount - m.PocketedObjectCount;
-        x = Chip(ci, font, x, "BALLS", $"{ballsLeft} / {m.ObjectBallCount}", ballsLeft == 0 ? Palette.Good : Palette.Accent);
+        x = Chip(ci, font, x, "目标球", $"{ballsLeft} / {m.ObjectBallCount}", ballsLeft == 0 ? Palette.Good : Palette.Accent);
 
-        var strikeText = m.ShotUsed ? "STRIKE USED - REWIND ONLY" : "STRIKE AVAILABLE";
-        x = Chip(ci, font, x, "STRIKE", strikeText, m.ShotUsed ? Palette.Bad : Palette.Good);
+        var strikeText = m.ShotUsed ? "已击出 · 仅可回溯" : "可击球（每关一杆）";
+        x = Chip(ci, font, x, "击球", strikeText, m.ShotUsed ? Palette.Bad : Palette.Good);
 
         if (m.Rewinding)
         {
-            var label = m.Scrubbing ? "REWIND PAUSED (scrub)" : "REWINDING";
-            x = Chip(ci, font, x, "TIME", label, Palette.RewindCue);
+            var label = m.Scrubbing ? "回溯暂停（微调中）" : "回溯中";
+            x = Chip(ci, font, x, "时间", label, Palette.RewindCue);
         }
         else if (m.Won)
         {
-            x = Chip(ci, font, x, "TIME", "CLEARED", Palette.Good);
+            x = Chip(ci, font, x, "时间", "已清台", Palette.Good);
         }
         else
         {
-            x = Chip(ci, font, x, "TIME", "FORWARD", Palette.TextDim);
+            x = Chip(ci, font, x, "时间", "正放", Palette.TextDim);
         }
 
-        var t = $"t={m.Time:F2}s   tick={m.Tick}   rewinds={m.Rewinds}   trail={m.HistoryEntries}";
+        var t = $"t={m.Time:F2}s   步={m.Tick}   回溯={m.Rewinds}   轨迹={m.HistoryEntries}";
         Text(ci, font, 1040 - Pad - Measure(font, t, 12), 19, t, 12, Palette.TextDim);
     }
 
@@ -143,29 +143,29 @@ public static class Hud
         var x = rect.Position.X + 10;
 
         // --- STRIKE --------------------------------------------------------- y 50 .. 81
-        Text(ci, font, x, 50, "STRIKE", 12, Palette.TextDim);
-        Text(ci, font, x, 66, m.ShotUsed ? "USED - LOCKED FOREVER" : "AVAILABLE (1 per level)", 14,
+        Text(ci, font, x, 50, "击球", 12, Palette.TextDim);
+        Text(ci, font, x, 66, m.ShotUsed ? "已击出 · 永久锁定" : "可击球（每关仅一杆）", 14,
             m.ShotUsed ? Palette.Bad : Palette.Good);
-        Text(ci, font, x, 81, m.ShotUsed ? "verb left: REWIND only" : "drag back from the cue ball", 11, Palette.TextDim);
+        Text(ci, font, x, 81, m.ShotUsed ? "剩余操作：仅可回溯" : "从白球向后拖动", 11, Palette.TextDim);
 
         // --- POWER --------------------------------------------------------- y 104 .. 150
         DrawPowerMeter(ci, font, x, 104, m);
 
         // --- REWIND BUDGET ------------------------------------------------- y 160 .. 206
-        Text(ci, font, x, 168, "REWIND BUDGET", 12, Palette.TextDim);
-        var segMax = m.RewindSegmentsMax > 0 ? m.RewindSegmentsMax.ToString(CultureInfo.InvariantCulture) : "inf";
-        Text(ci, font, x, 185, $"segments {m.RewindSegmentsUsed} / {segMax}", 12,
+        Text(ci, font, x, 168, "回溯预算", 12, Palette.TextDim);
+        var segMax = m.RewindSegmentsMax > 0 ? m.RewindSegmentsMax.ToString(CultureInfo.InvariantCulture) : "无限";
+        Text(ci, font, x, 185, $"段数 {m.RewindSegmentsUsed} / {segMax}", 12,
             m.RewindSegmentsMax > 0 && m.RewindSegmentsUsed >= m.RewindSegmentsMax ? Palette.Bad : Palette.TextMain);
         DrawBudgetBar(ci, font, x, 192, m);
 
         // --- TRAIL --------------------------------------------------------- y 216 .. 285
-        Text(ci, font, x, 224, "TRAIL", 12, Palette.TextDim);
+        Text(ci, font, x, 224, "轨迹", 12, Palette.TextDim);
         var rows = new (string Key, string Value, Color C)[]
         {
-            ("points", m.HistoryEntries.ToString(CultureInfo.InvariantCulture), Palette.TextMain),
-            ("sessions", m.TrailSessions.ToString(CultureInfo.InvariantCulture), Palette.TextMain),
-            ("turn-backs", m.TurnBacks.ToString(CultureInfo.InvariantCulture), Palette.TurnMarker),
-            ("turn-forwards", m.TurnForwards.ToString(CultureInfo.InvariantCulture), Palette.TurnForwardMarker),
+            ("采样点", m.HistoryEntries.ToString(CultureInfo.InvariantCulture), Palette.TextMain),
+            ("回溯段", m.TrailSessions.ToString(CultureInfo.InvariantCulture), Palette.TextMain),
+            ("折返", m.TurnBacks.ToString(CultureInfo.InvariantCulture), Palette.TurnMarker),
+            ("回正", m.TurnForwards.ToString(CultureInfo.InvariantCulture), Palette.TurnForwardMarker),
         };
         var ry = 241.0f;
         foreach (var row in rows)
@@ -177,34 +177,38 @@ public static class Hud
 
         if (m.ForecastContacts > 0)
         {
-            Text(ci, font, x, Math.Max(ry + 2, 291), $"hits pending {m.ForecastContacts}", 12, Palette.ContactSoon);
+            Text(ci, font, x, Math.Max(ry + 2, 291), $"待碰撞 {m.ForecastContacts}", 12, Palette.ContactSoon);
         }
 
         // --- transport hint ------------------------------------------------ y 306 .. 322
         if (m.ShotUsed && !m.Won)
         {
-            Text(ci, font, x, 342, m.Rewinding ? (m.Scrubbing ? "P  release at marker" : "P  pause + scrub") : "hold R  rewind",
+            Text(ci, font, x, 342, m.Rewinding ? (m.Scrubbing ? "P  在标记处松开" : "P  暂停 + 微调") : "按住 R  回溯",
                 12, Palette.RewindCue);
-            Text(ci, font, x, 358, m.Rewinding ? "release R  resume" : "release R  keep stored v", 12, Palette.TextDim);
+            Text(ci, font, x, 358, m.Rewinding ? "松开 R  继续" : "松开 R  保留当时速度", 12, Palette.TextDim);
         }
 
         // --- CONTROLS, pinned to the panel bottom --------------------------- y 436 .. 540
         var cy = rect.Position.Y + rect.Size.Y - 108;
         ci.DrawLine(new Vector2(x, cy - 10), new Vector2(x + 226, cy - 10), Palette.PanelEdge, 1.0f);
-        Text(ci, font, x, cy + 4, "CONTROLS", 12, Palette.TextDim);
-        var controls = new[]
+        Text(ci, font, x, cy + 4, "操作", 12, Palette.TextDim);
+        // Two real columns instead of one space-padded string: the English layout leaned on a
+        // fixed-width grid that a proportional CJK face cannot reproduce, so the columns are now
+        // positioned by pixel instead of by counting spaces.
+        var controls = new (string Key, string Desc)[]
         {
-            "drag + release   aim / strike",
-            "R (hold)         rewind",
-            "P                pause + scrub",
-            "left / right     move marker",
-            "Space            reset (debug)",
-            "F1 debug F2 ghost F3 trail",
+            ("拖动后松开", "瞄准 / 击球"),
+            ("R（按住）", "回溯"),
+            ("P", "暂停 + 微调"),
+            ("← / →", "移动释放点"),
+            ("空格", "重置（调试）"),
+            ("F1 / F2 / F3", "调试 / 残影 / 轨迹"),
         };
         var ky = cy + 21;
         foreach (var line in controls)
         {
-            Text(ci, font, x, ky, line, 11, Palette.TextMain);
+            Text(ci, font, x, ky, line.Key, 11, Palette.TextMain);
+            Text(ci, font, x + 78, ky, line.Desc, 11, Palette.TextDim);
             ky += 14;
         }
 
@@ -248,7 +252,7 @@ public static class Hud
 
     private static void DrawPowerMeter(CanvasItem ci, Font font, float x, float y, Model m)
     {
-        Text(ci, font, x, y, "POWER", 12, Palette.TextDim);
+        Text(ci, font, x, y, "力度", 12, Palette.TextDim);
         var speed = m.Dragging || !m.ShotUsed ? m.AimPower * 7.4 : 0.0;
         if (m.ShotUsed) speed = m.World.Cue.Speed;
         Text(ci, font, x + 150, y, $"{speed:F0} px/s", 12, Palette.TextMain);
@@ -272,17 +276,17 @@ public static class Hud
         // Minimum-power tick: below this the kernel refuses the shot (locked MinPower = 12 px).
         var minX = bar.Position.X + bar.Size.X * (float)(m.MinPower / Math.Max(1.0, m.MaxPower));
         ci.DrawLine(new Vector2(minX, bar.Position.Y - 3), new Vector2(minX, bar.Position.Y + bar.Size.Y + 3), Palette.Warn, 2.0f);
-        Text(ci, font, minX - 10, bar.Position.Y + bar.Size.Y + 12, "min", 10, Palette.Warn);
-        Text(ci, font, bar.Position.X + bar.Size.X - 22, bar.Position.Y + bar.Size.Y + 12, "max", 10, Palette.TextDim);
+        Text(ci, font, minX - 12, bar.Position.Y + bar.Size.Y + 12, "最小", 10, Palette.Warn);
+        Text(ci, font, bar.Position.X + bar.Size.X - 24, bar.Position.Y + bar.Size.Y + 12, "最大", 10, Palette.TextDim);
 
         ci.DrawRect(bar, Palette.PanelEdge, false, 1.0f);
         if (m.HasAim && !m.ShotUsed)
         {
-            Text(ci, font, x, y + 46, $"angle {m.AimAngle:F1} deg  drag {m.AimPower:F0} / {m.MaxPower:F0} px", 11, Palette.TextMain);
+            Text(ci, font, x, y + 46, $"角度 {m.AimAngle:F1}°  拖动 {m.AimPower:F0} / {m.MaxPower:F0} px", 11, Palette.TextMain);
         }
         else if (!m.ShotUsed)
         {
-            Text(ci, font, x, y + 46, "drag back from the cue ball", 11, Palette.TextDim);
+            Text(ci, font, x, y + 46, "从白球向后拖动", 11, Palette.TextDim);
         }
     }
 
@@ -296,12 +300,12 @@ public static class Hud
             ci.DrawRect(new Rect2(bar.Position, new Vector2(bar.Size.X * t, bar.Size.Y)),
                 t > 0.99f ? Palette.Bad : Palette.RewindTraversed);
             ci.DrawRect(bar, Palette.PanelEdge, false, 1.0f);
-            Text(ci, font, x, y + 22, $"distance {m.RewindDistanceUsed:F0} / {m.RewindDistanceMax:F0} px", 12, Palette.TextMain);
+            Text(ci, font, x, y + 22, $"距离 {m.RewindDistanceUsed:F0} / {m.RewindDistanceMax:F0} px", 12, Palette.TextMain);
         }
         else
         {
             ci.DrawRect(bar, Palette.PanelEdge, false, 1.0f);
-            Text(ci, font, x, y + 22, $"distance {m.RewindDistanceUsed:F0} px (no limit)", 12, Palette.TextMain);
+            Text(ci, font, x, y + 22, $"距离 {m.RewindDistanceUsed:F0} px（无上限）", 12, Palette.TextMain);
         }
     }
 
@@ -318,46 +322,46 @@ public static class Hud
         var w = m.World;
         var nonFinite = w.HasNonFiniteState();
 
-        Text(ci, font, x, y, "DEBUG OVERLAY (F1)", 13, Palette.SessionStripe);
+        Text(ci, font, x, y, "调试面板（F1）", 13, Palette.SessionStripe);
         y += 8;
-        Text(ci, font, x, y + 12, $"level {m.LevelId}  dt {w.Config.SimulationStep * 1000:F3} ms  engineTicks {Engine.PhysicsTicksPerSecond}", 11, Palette.TextDim);
+        Text(ci, font, x, y + 12, $"关卡 {m.LevelId}  步长 {w.Config.SimulationStep * 1000:F3} ms  引擎刻 {Engine.PhysicsTicksPerSecond}", 11, Palette.TextDim);
         y += 30;
-        Text(ci, font, x, y, $"tick        {w.Tick}", 12, Palette.TextMain);
+        Text(ci, font, x, y, $"步数        {w.Tick}", 12, Palette.TextMain);
         y += 15;
-        Text(ci, font, x, y, $"time        {w.Time:F4} s", 12, Palette.TextMain);
+        Text(ci, font, x, y, $"时间        {w.Time:F4} s", 12, Palette.TextMain);
         y += 15;
-        Text(ci, font, x, y, $"shotUsed    {w.ShotUsed}   won {w.Won}   frozen {w.Frozen}", 12, Palette.TextMain);
+        Text(ci, font, x, y, $"已击球 {w.ShotUsed}   已清台 {w.Won}   冻结 {w.Frozen}", 12, Palette.TextMain);
         y += 15;
-        Text(ci, font, x, y, $"rewinding   {w.Rewinding}   paused {m.Paused}   scrub {m.Scrubbing}", 12, Palette.TextMain);
+        Text(ci, font, x, y, $"回溯中 {w.Rewinding}   暂停 {m.Paused}   微调 {m.Scrubbing}", 12, Palette.TextMain);
         y += 15;
-        Text(ci, font, x, y, $"nonfinite   {(nonFinite ? "YES ***" : "no")}", 12, nonFinite ? Palette.Bad : Palette.Good);
+        Text(ci, font, x, y, $"非有限值    {(nonFinite ? "是 ***" : "否")}", 12, nonFinite ? Palette.Bad : Palette.Good);
         y += 15;
-        Text(ci, font, x, y, $"history     {w.Cue.History.Count} entries  gap {w.Cue.History.Interval:F2} px", 12, Palette.TextMain);
+        Text(ci, font, x, y, $"历史        {w.Cue.History.Count} 条  间隔 {w.Cue.History.Interval:F2} px", 12, Palette.TextMain);
         y += 15;
-        Text(ci, font, x, y, $"samples+    {w.Cue.History.DistanceSinceSample:F3} px", 12, Palette.TextMain);
+        Text(ci, font, x, y, $"采样累加    {w.Cue.History.DistanceSinceSample:F3} px", 12, Palette.TextMain);
         y += 15;
         if (w.RewindTrack != null)
         {
-            Text(ci, font, x, y, $"snapshot    {w.RewindTrack.Length} pts  cursor {w.RewindCursor}  u {w.RewindFraction:F3}", 12, Palette.TextMain);
+            Text(ci, font, x, y, $"快照        {w.RewindTrack.Length} 点  游标 {w.RewindCursor}  u {w.RewindFraction:F3}", 12, Palette.TextMain);
             y += 15;
         }
 
         y += 12;
-        Text(ci, font, x, y + 6, "BALLS  id  x      y      |v|     state", 12, Palette.TextDim);
+        Text(ci, font, x, y + 6, "球  id  x      y      |v|     状态", 12, Palette.TextDim);
         y += 24;
         foreach (var b in w.Balls)
         {
-            var state = b.Pocketed ? "POCKETED" : b.Speed > 0.0 ? "moving" : "rest";
+            var state = b.Pocketed ? "已入袋" : b.Speed > 0.0 ? "运动" : "静止";
             var line = string.Format(CultureInfo.InvariantCulture,
                 "  {0,2}  {1,6:F1} {2,6:F1}  {3,7:F1}  {4}{5}", b.Id, b.Position.X, b.Position.Y, b.Speed, state,
-                b.IsCue ? " (cue)" : "");
+                b.IsCue ? "（白球）" : "");
             var color = b.Pocketed ? Palette.TextDim : b.IsCue ? Palette.Cue : Palette.TextMain;
             Text(ci, font, x, y, line, 12, color);
             y += 15;
         }
 
         y += 8;
-        Text(ci, font, x, y, "VIEW", 12, Palette.TextDim);
+        Text(ci, font, x, y, "视图", 12, Palette.TextDim);
         y += 16;
 
         // Left panel. The layout is hand-computed on a fixed grid because there is no Control tree to
@@ -368,13 +372,13 @@ public static class Hud
         var x1 = rect.Position.X + rect.Size.X - 10;
         var rows2 = new List<(string Text, Color Color, int Size)>
         {
-            ($"frame    {m.FrameMs:F2} ms (max {m.MaxFrameMs:F2})", Palette.TextDim, 11),
-            ($"draw/sim {m.DrawMs:F2} / {m.SimMs:F2} ms", Palette.TextDim, 11),
-            ($"verts    {m.TrailVertices}  sessions {m.TrailSessions}", Palette.TextDim, 11),
-            ($"turns    back {m.TurnBacks}  fwd {m.TurnForwards}", Palette.TextDim, 11),
-            ($"ghost    {(m.Trail == null ? 0 : GhostLength(m.Trail))} pts  segments {m.RewindSegmentsUsed}/{m.RewindSegmentsMax}", Palette.TextDim, 11),
-            ($"forecast {m.ForecastContacts} hits  {m.ForecastUs} us", Palette.TextDim, 11),
-            ($"traversed {m.Trail?.TraversedRange.From}..{m.Trail?.TraversedRange.To}", Palette.TextDim, 11),
+            ($"帧耗时  {m.FrameMs:F2} ms（峰值 {m.MaxFrameMs:F2}）", Palette.TextDim, 11),
+            ($"绘制/模拟 {m.DrawMs:F2} / {m.SimMs:F2} ms", Palette.TextDim, 11),
+            ($"顶点    {m.TrailVertices}  回溯段 {m.TrailSessions}", Palette.TextDim, 11),
+            ($"折返    {m.TurnBacks} 次  回正 {m.TurnForwards} 次", Palette.TextDim, 11),
+            ($"残影    {(m.Trail == null ? 0 : GhostLength(m.Trail))} 点  段数 {m.RewindSegmentsUsed}/{m.RewindSegmentsMax}", Palette.TextDim, 11),
+            ($"预测    {m.ForecastContacts} 次碰撞  {m.ForecastUs} us", Palette.TextDim, 11),
+            ($"已走过  {m.Trail?.TraversedRange.From}..{m.Trail?.TraversedRange.To}", Palette.TextDim, 11),
         };
         foreach (var row in rows2)
         {
@@ -388,16 +392,16 @@ public static class Hud
         if (m.Aim != null && m.Aim.Valid)
         {
             y += 6;
-            Text(ci, font, x, y, "PREDICTION", 12, Palette.TextDim);
+            Text(ci, font, x, y, "瞄准预测", 12, Palette.TextDim);
             y += 16;
             var a = new[]
             {
-                $"contact  {m.Aim.Contact}  ball {m.Aim.ContactBallId}",
-                $"toContact {m.Aim.TimeToContact * 1000:F1} ms  steps {m.Aim.Steps}",
-                $"struck   {m.Aim.StruckSpeed:F0} px/s",
-                $"cue next {m.Aim.CueDeflectSpeed:F0} px/s",
-                $"trace    {m.Aim.Microseconds} us",
-                $"rest at  {m.Aim.StopPoint.X:F0},{m.Aim.StopPoint.Y:F0} reached={m.Aim.ReachedRest}",
+                $"接触    {m.Aim.Contact}  球 {m.Aim.ContactBallId}",
+                $"到接触  {m.Aim.TimeToContact * 1000:F1} ms  步数 {m.Aim.Steps}",
+                $"被撞球  {m.Aim.StruckSpeed:F0} px/s",
+                $"白球随后 {m.Aim.CueDeflectSpeed:F0} px/s",
+                $"解算用时 {m.Aim.Microseconds} us",
+                $"静止于  {m.Aim.StopPoint.X:F0},{m.Aim.StopPoint.Y:F0} 已到达={m.Aim.ReachedRest}",
             };
             foreach (var line in a)
             {
@@ -414,12 +418,12 @@ public static class Hud
         {
             y += 6;
             if (y > rect.Position.Y + rect.Size.Y - 30) return;
-            Text(ci, font, x, y, "REWIND FORECAST (before contact)", 12, Palette.ContactSoon);
+            Text(ci, font, x, y, "回溯预测（碰撞前）", 12, Palette.ContactSoon);
             y += 16;
             foreach (var f in m.RewindVis.BallContacts)
             {
                 var toGo = f.ArcFromCursor - m.RewindVis.ArcWalked;
-                Text(ci, font, x, y, $"  ball {f.BallId} in {toGo:F0} px / {f.Seconds:F2}s", 11,
+                Text(ci, font, x, y, $"  球 {f.BallId} 还需 {toGo:F0} px / {f.Seconds:F2}s", 11,
                     toGo < 0 ? Palette.TextDim : Palette.ContactSoon);
                 y += 14;
                 if (y > rect.Position.Y + rect.Size.Y - 20) break;
@@ -441,7 +445,11 @@ public static class Hud
         return font.GetStringSize(text, HorizontalAlignment.Left, -1, size).X;
     }
 
-    /// <summary>Greedy word wrap to a pixel width: the debug panel must not spill outside itself.</summary>
+    /// <summary>
+    /// Greedy word wrap to a pixel width: the debug panel must not spill outside itself. Chinese
+    /// has no spaces, so a single "word" can be a whole clause; when that happens it is broken
+    /// per character rather than allowed to overflow the panel.
+    /// </summary>
     private static List<string> Wrap(Font font, string text, int size, float maxWidth)
     {
         var lines = new List<string>();
@@ -452,6 +460,23 @@ public static class Hud
             var candidate = current.Length == 0 ? word : current + " " + word;
             if (Measure(font, candidate, size) <= maxWidth || current.Length == 0)
             {
+                if (current.Length == 0 && Measure(font, candidate, size) > maxWidth)
+                {
+                    // Unbreakable-by-space token wider than the panel (typical for CJK): split it.
+                    foreach (var ch in word)
+                    {
+                        if (current.Length > 0 && Measure(font, current + ch, size) > maxWidth)
+                        {
+                            lines.Add(current);
+                            current = "";
+                        }
+
+                        current += ch;
+                    }
+
+                    continue;
+                }
+
                 current = candidate;
             }
             else

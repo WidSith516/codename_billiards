@@ -45,3 +45,11 @@ tools/solver/.tmp/
 # tools/author/ 一类的辅助工程同样会产生 obj/bin，故改为全局模式。
 **/obj/
 **/bin/
+
+# ── 发行包（可由一条命令重新导出，不入库，约 180 MB）────────────────────────
+# 重新生成：tools\godot\godot_console.exe --headless --path godot ^
+#            --export-release "Windows Desktop" dist\REWIND.exe
+# 注意：导出时 PATH 上必须先是官方 dotnet（C:\Program Files\dotnet），
+# 否则 dotnet publish 失败——而 Godot 仍会返回 rc=0 并**静默产出一个空壳 exe**。
+# 详见 docs/KNOWN_PITFALLS.md 与 dist/本地运行说明.md。
+dist/

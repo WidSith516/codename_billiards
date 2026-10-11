@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Godot;
 
@@ -94,9 +94,49 @@ public partial class Play : Node2D
 
     // ================================================================== setup
 
+    /// <summary>
+    /// The UI font, and the only reason this is explicit: the localization is Simplified Chinese and
+    /// Godot's built-in fallback font contains no CJK glyphs, so a translated string drawn with it
+    /// renders as tofu boxes (□□□) while every "is the frame non-blank" check still passes.
+    /// The file is a plain single-face .ttf on purpose - .ttc collections need a face index and are
+    /// the other way this silently fails. See LOCALIZATION.md for the licence note.
+    /// </summary>
+    private const string UiFontPath = "res://assets/DroidSansFallback.ttf";
+
+    private static Font LoadUiFont()
+    {
+        Font font = null;
+        if (ResourceLoader.Exists(UiFontPath))
+        {
+            font = ResourceLoader.Load<FontFile>(UiFontPath);
+        }
+
+        if (font == null && FileAccess.FileExists(UiFontPath))
+        {
+            // Reachable when the .ttf has not been through the importer yet (fresh checkout, so no
+            // .godot/imported entry): load the file directly rather than falling back to tofu.
+            var direct = new FontFile();
+            if (direct.LoadDynamicFont(UiFontPath) == Error.Ok) font = direct;
+        }
+
+        if (font == null)
+        {
+            GD.PushError($"[play] CJK font not loadable from {UiFontPath}; Chinese text will be tofu");
+            font = ThemeDB.FallbackFont;
+        }
+
+        return font;
+    }
+
     public override void _Ready()
     {
-        _font = ThemeDB.FallbackFont;
+        _font = LoadUiFont();
+
+        // Player-facing text is Simplified Chinese and Godot's built-in fallback font has no CJK
+        // glyphs at all, so anything that draws without an explicit font would render as tofu boxes.
+        // Installing the same font as the window theme default makes that failure mode unreachable
+        // for Controls added later, not just for the immediate-mode draw calls below.
+        GetTree().Root.Theme = new Theme { DefaultFont = _font, DefaultFontSize = 13 };
 
         // The table is 910x434 px inside a 1040x560 canvas, which left a dead strip at the bottom and
         // made the playfield read cramped. Scaling the whole view (kernel coordinates are untouched)
@@ -122,6 +162,7 @@ public partial class Play : Node2D
         _world = new World(_level);
         _trail = new TimelineTrail(this)
         {
+            LabelFont = _font,
             ShowTrail = !HasArg("--no-trail"),
             ShowGhost = !HasArg("--no-ghost"),
             ShowSessionStripes = !HasArg("--no-stripes"),
@@ -311,7 +352,7 @@ public partial class Play : Node2D
     {
         if (!_world.Shot(_aimAngle, _aimPower)) return;
         _aimCache.Invalidate();
-        Notify($"STRIKE  angle {_aimAngle:F1} deg  power {_aimPower:F0} px  speed {_world.Cue.Speed:F0} px/s", Palette.Accent);
+        Notify($"击球  角度 {_aimAngle:F1}°  力度 {_aimPower:F0} px  速度 {_world.Cue.Speed:F0} px/s", Palette.Accent);
     }
 
     private void Settle(int maxSteps = 12000)
@@ -330,13 +371,13 @@ public partial class Play : Node2D
     {
         if (!_world.StartRewind())
         {
-            Notify("REWIND refused (no path / budget exhausted / nothing to rewind)", Palette.Bad);
+            Notify("无法回溯（没有可走路径 / 预算已耗尽 / 没有历史）", Palette.Bad);
             return;
         }
 
         _rewindVis.Reset();
         _aimCache.Invalidate();
-        Notify("REWINDING - hold R, release R to keep the stored velocity", Palette.RewindCue);
+        Notify("回溯中 · 按住 R 倒退，松开保留当时的逆向速度", Palette.RewindCue);
     }
 
     /// <summary>Crawl until the traversed arc reaches <paramref name="arc"/> px (or the path ends).</summary>
@@ -405,7 +446,7 @@ public partial class Play : Node2D
                 {
                     if (_world.Won) break;
                     step++;
-                    Notify($"AUTOPLAY stroke {step}/{plan.Count}: angle {shot.Angle:F2} power {shot.Power:F1}", Palette.Accent);
+                    Notify($"自动击球 {step}/{plan.Count}：角度 {shot.Angle:F2}°  力度 {shot.Power:F1}", Palette.Accent);
                     _aimAngle = shot.Angle;
                     _aimPower = shot.Power;
                     FireShot();
@@ -711,7 +752,7 @@ public partial class Play : Node2D
                     {
                         // Resume the crawl so a normal release works from wherever it lands.
                         _rewindVis.EndScrub(keepPaused: false);
-                        Notify("REWIND resumed", Palette.RewindCue);
+                        Notify("继续回溯", Palette.RewindCue);
                     }
                     else if (_world.Rewinding)
                     {
@@ -737,12 +778,12 @@ public partial class Play : Node2D
                     if (_rewindVis.Scrubbing) _rewindVis.EndScrub(keepPaused: false);
                     else _rewindVis.BeginScrub();
                     Notify(_rewindVis.Scrubbing
-                        ? "PAUSED - drag or use arrows to move the release point backwards, R to release there"
-                        : "REWIND resumed", Palette.RewindTarget);
+                        ? "已暂停 · 拖动或用 ← → 把释放点向后移，按 R 在该点松开"
+                        : "继续回溯", Palette.RewindTarget);
                 }
                 else
                 {
-                    Notify("nothing to rewrite yet (strike first, then hold R)", Palette.TextDim);
+                    Notify("还没有可回溯的历史（先击球，再按住 R）", Palette.TextDim);
                 }
 
                 break;
@@ -773,7 +814,7 @@ public partial class Play : Node2D
 
             case Key.Space:
                 if (!key.Pressed) break;
-                if (_world.Rewinding) Notify("cannot reset while rewinding", Palette.Bad);
+                if (_world.Rewinding) Notify("回溯中无法重置", Palette.Bad);
                 else
                 {
                     ResetLevel();
@@ -789,7 +830,7 @@ public partial class Play : Node2D
                 if (key.Pressed)
                 {
                     _trail.ShowGhost = !_trail.ShowGhost;
-                    Notify($"ghost path {(_trail.ShowGhost ? "on" : "off")}", Palette.TextDim);
+                    Notify($"残影路径：{(_trail.ShowGhost ? "开" : "关")}", Palette.TextDim);
                 }
 
                 break;
@@ -798,7 +839,7 @@ public partial class Play : Node2D
                 if (key.Pressed)
                 {
                     _trail.ShowTrail = !_trail.ShowTrail;
-                    Notify($"history trail {(_trail.ShowTrail ? "on" : "off")}", Palette.TextDim);
+                    Notify($"历史轨迹：{(_trail.ShowTrail ? "开" : "关")}", Palette.TextDim);
                 }
 
                 break;
@@ -833,9 +874,9 @@ public partial class Play : Node2D
             // 2. Start aiming, but ONLY when the strike is still available and the cue is at rest.
             if (_world.ShotUsed || _world.Rewinding || _world.Won)
             {
-                Notify(_world.Won ? "level already won"
-                    : _world.Rewinding ? "cannot aim while rewinding"
-                    : "ONE STRIKE PER LEVEL - it has been used; the only verb left is REWIND", Palette.Bad);
+                Notify(_world.Won ? "本关已清台"
+                    : _world.Rewinding ? "回溯中无法瞄准"
+                    : "每关仅一杆 · 已经用掉，剩余唯一操作是回溯", Palette.Bad);
                 return;
             }
 
@@ -847,7 +888,7 @@ public partial class Play : Node2D
             }
             else
             {
-                Notify("click ON the cue ball, then drag back and release", Palette.TextDim);
+                Notify("请点中白球，再向后拖动并松开", Palette.TextDim);
             }
         }
         else
@@ -865,7 +906,7 @@ public partial class Play : Node2D
             var len = drag.Length();
             if (len < (float)_world.Config.MinPower)
             {
-                Notify($"drag at least {(float)_world.Config.MinPower:F0} px (this was {len:F0})", Palette.Warn);
+                Notify($"至少要拖动 {(float)_world.Config.MinPower:F0} px（本次只有 {len:F0}）", Palette.Warn);
                 return;
             }
 
@@ -901,7 +942,7 @@ public partial class Play : Node2D
         if (best < 0) return;
         if (best > to)
         {
-            Notify("a rewind cannot skip forward along the path", Palette.Bad);
+            Notify("回溯不能沿路径向前跳", Palette.Bad);
             return;
         }
 
@@ -909,7 +950,7 @@ public partial class Play : Node2D
         _rewindVis.SetPlannedRelease(best);
         if (old >= 0 && _rewindVis.PlannedReleaseIndex <= old)
         {
-            Notify($"release point moved back {Math.Abs(_rewindVis.PlannedReleaseIndex - old)} samples", Palette.TextDim);
+            Notify($"释放点后移了 {Math.Abs(_rewindVis.PlannedReleaseIndex - old)} 个采样点", Palette.TextDim);
         }
     }
 
@@ -923,7 +964,7 @@ public partial class Play : Node2D
 
         _world.EndRewind();
         _rewindVis.Reset();
-        Notify($"RELEASED - velocity is the stored v at this history point ({_world.Cue.Speed:F0} px/s)", Palette.RewindTraversed);
+        Notify($"已松开 · 速度取该历史点存储的 v（{_world.Cue.Speed:F0} px/s）", Palette.RewindTraversed);
     }
 
     /// <summary>
@@ -952,7 +993,7 @@ public partial class Play : Node2D
         _rewindVis.EndScrub(keepPaused: false);
         _world.EndRewind();
         _rewindVis.Reset();
-        Notify($"RELEASED at the scrubbed point - stored v was {_world.Cue.Speed:F0} px/s", Palette.RewindTraversed);
+        Notify($"已在微调点松开 · 存储的 v 为 {_world.Cue.Speed:F0} px/s", Palette.RewindTraversed);
     }
 
     private int _liveIndexForTrack(int trackIndex)
@@ -971,7 +1012,7 @@ public partial class Play : Node2D
         _aimCache.Invalidate();
         _dragging = false;
         _hasAim = false;
-        Notify("level reset - the strike is available again (this is a debug key, not a rule)", Palette.TextDim);
+        Notify("关卡已重置 · 击球重新可用（调试键，不是规则）", Palette.TextDim);
     }
 
     private void Notify(string message, Color color)
@@ -1121,7 +1162,7 @@ public partial class Play : Node2D
             if (len > (float)_world.Config.PowerMax)
             {
                 DrawCircle(cue + dir * clamped, 11.0f, Palette.Warn, false, 1.4f, true);
-                DrawString(_font, cue + dir * clamped + new Vector2(10, -10), "MAX", HorizontalAlignment.Left, -1, 11, Palette.Warn);
+                DrawString(_font, cue + dir * clamped + new Vector2(10, -10), "满力", HorizontalAlignment.Left, -1, 11, Palette.Warn);
             }
         }
     }
@@ -1173,7 +1214,7 @@ public partial class Play : Node2D
             DrawLine(p + n * 6.0f - d * 4.0f, p + d * 4.0f, new Color(1f, 0.85f, 0.6f, 0.85f - i * 0.22f), 2.0f, true);
         }
 
-        DrawString(_font, c + new Vector2(0, -r - 14.0f), "REWINDING", HorizontalAlignment.Center, 120.0f, 12, Palette.RewindCue);
+        DrawString(_font, c + new Vector2(0, -r - 14.0f), "回溯中", HorizontalAlignment.Center, 120.0f, 12, Palette.RewindCue);
     }
 
     private void DrawWinBanner()
@@ -1181,12 +1222,12 @@ public partial class Play : Node2D
         var rect = new Rect2(300, 190, 440, 150);
         DrawRect(rect, new Color(0.03f, 0.08f, 0.05f, 0.92f));
         DrawRect(rect, Palette.Good, false, 3.0f);
-        DrawString(_font, new Vector2(rect.Position.X, rect.Position.Y + 52), "TABLE CLEARED", HorizontalAlignment.Center, rect.Size.X, 34, Palette.Good);
+        DrawString(_font, new Vector2(rect.Position.X, rect.Position.Y + 52), "清台成功", HorizontalAlignment.Center, rect.Size.X, 34, Palette.Good);
         DrawString(_font, new Vector2(rect.Position.X, rect.Position.Y + 88),
-            $"{_world.PocketedObjectCount}/{_world.ObjectBallCount} object balls in {_world.Time:F2}s",
+            $"{_world.PocketedObjectCount}/{_world.ObjectBallCount} 颗目标球 · 用时 {_world.Time:F2}s",
             HorizontalAlignment.Center, rect.Size.X, 16, Palette.TextMain);
         DrawString(_font, new Vector2(rect.Position.X, rect.Position.Y + 116),
-            $"rewinds {_world.Stats.Rewinds}   distance {_world.RewindDistanceUsed:F0}px   trail {_world.Cue.History.Count} pts",
+            $"回溯 {_world.Stats.Rewinds} 次   距离 {_world.RewindDistanceUsed:F0} px   轨迹 {_world.Cue.History.Count} 点",
             HorizontalAlignment.Center, rect.Size.X, 14, Palette.TextDim);
     }
 

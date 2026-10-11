@@ -48,6 +48,12 @@ public sealed class TimelineTrail
     /// <summary>Draw a dark halo under the gradient so a thin line cannot dissolve into the felt.</summary>
     public bool HaloPass = true;
 
+    /// <summary>
+    /// Font for the on-table session labels. Injected rather than taken from ThemeDB.FallbackFont,
+    /// which has no CJK glyphs and would draw them as tofu boxes.
+    /// </summary>
+    public Font LabelFont;
+
     private readonly CanvasItem _ci;
 
     // Cached geometry, index-aligned with the kernel's history samples.
@@ -377,7 +383,7 @@ public sealed class TimelineTrail
             var n = new Vector2(-d.Y, d.X);
             _ci.DrawLine(p - n * 9.0f, p + n * 9.0f, Palette.SessionStripe, 2.2f, true);
             _ci.DrawCircle(p, 3.4f, Palette.SessionStripe, true, -1.0f, true);
-            _ci.DrawString(ThemeDB.FallbackFont, p + new Vector2(6, -6), "S" + (s + 1), HorizontalAlignment.Left, -1, 11,
+            _ci.DrawString(LabelFont ?? ThemeDB.FallbackFont, p + new Vector2(6, -6), $"第{s + 1}段", HorizontalAlignment.Left, -1, 11,
                 Palette.SessionStripe);
         }
     }

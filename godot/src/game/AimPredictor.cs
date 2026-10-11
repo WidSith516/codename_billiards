@@ -315,7 +315,7 @@ public static class AimPredictor
         }
         else if (p.Contact != ContactKind.None)
         {
-            ci.DrawString(font, p.ContactPoint + new Vector2(8, 16), "cue stops", HorizontalAlignment.Left, -1, 11, Palette.TextDim);
+            ci.DrawString(font, p.ContactPoint + new Vector2(8, 16), "白球停住", HorizontalAlignment.Left, -1, 11, Palette.TextDim);
         }
 
         // 6. Where the cue would settle.
@@ -323,7 +323,7 @@ public static class AimPredictor
 
         if (font != null)
         {
-            var label = $"speed {p.Speed:F0} px/s  t={p.TimeToContact * 1000.0:F0} ms";
+            var label = $"速度 {p.Speed:F0} px/s  接触 {p.TimeToContact * 1000.0:F0} ms";
             ci.DrawString(font, p.CueStart + new Vector2(14, -14), label, HorizontalAlignment.Left, -1, 11, Palette.TextDim);
         }
     }

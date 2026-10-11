@@ -252,7 +252,7 @@ public sealed class RewindVisualizer
             ci.DrawLine(f.At + new Vector2(-9, 9), f.At + new Vector2(9, -9), color, 1.6f, true);
             if (font != null)
             {
-                ci.DrawString(font, f.At + new Vector2(10, -12), $"HIT {f.Seconds:F1}s", HorizontalAlignment.Left, -1, 11, color);
+                ci.DrawString(font, f.At + new Vector2(10, -12), $"命中 {f.Seconds:F1}s", HorizontalAlignment.Left, -1, 11, color);
             }
         }
 
@@ -266,7 +266,7 @@ public sealed class RewindVisualizer
                 ci.DrawCircle(_arrival.At, 6.0f, color, false, 1.6f, true);
                 if (font != null)
                 {
-                    ci.DrawString(font, _arrival.At + new Vector2(8, 16), $"PATH START {_arrival.Seconds:F1}s", HorizontalAlignment.Left, -1, 10, color);
+                    ci.DrawString(font, _arrival.At + new Vector2(8, 16), $"起点 {_arrival.Seconds:F1}s", HorizontalAlignment.Left, -1, 10, color);
                 }
             }
         }
@@ -282,7 +282,7 @@ public sealed class RewindVisualizer
             ci.DrawCircle(p, 3.0f, Palette.RewindTarget, true, -1.0f, true);
             if (font != null)
             {
-                ci.DrawString(font, p + new Vector2(14, -14), "RELEASE", HorizontalAlignment.Left, -1, 12, Palette.RewindTarget);
+                ci.DrawString(font, p + new Vector2(14, -14), "释放", HorizontalAlignment.Left, -1, 12, Palette.RewindTarget);
             }
         }
     }
