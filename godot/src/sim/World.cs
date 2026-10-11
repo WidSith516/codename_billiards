@@ -464,12 +464,22 @@ public sealed class World
         Inputs.Add(new InputCommand { Tick = Tick, Kind = InputKind.RewindEnd });
     }
 
+    /// <summary>
+    /// The cue's velocity when a rewind is released: the stored velocity reversed, then the pot bonus, then
+    /// the release floor.
+    ///
+    /// ORDER MATTERS and is deliberate: the bonus is an ADDITION on top of what the path stored, and the
+    /// floor is a MINIMUM afterwards. Doing it the other way round (floor then bonus) would let a pot
+    /// inflate a release that the floor had already flattened, so two balls potted could not be told apart
+    /// from a stronger floor.
+    /// </summary>
     private Vec2 ReverseReleaseVelocityWithBonus()
     {
         var baseVel = ReverseReleaseVelocity();
-        if (PocketedObjectCount <= 0 || Config.RewindPotBonus <= 0.0) return baseVel;
-
         var speed = baseVel.Length;
+
+        // Resolve DIRECTION first. Every branch below needs one, including the floor case, and the old
+        // shape returned early whenever there was no pot -- which silently skipped the floor entirely.
         Vec2 dir;
         if (speed > 1e-6)
         {
@@ -477,30 +487,37 @@ public sealed class World
         }
         else if (_track != null && _track.Length >= 2 && _cursor <= 0)
         {
-            // Released at the very START of the track, where the stored velocity is zero (the cue was
-            // at rest when the level began). A pot bonus must still let the player resume, or "rewind
-            // all the way home and let go" would silently cancel the reward. Direction: forward along
-            // the path they originally took, i.e. the reverse of the first recorded heading.
+            // Released at the very START of the track, where the stored velocity is zero BY DEFINITION:
+            // that is where the cue was at rest. Direction: forward along the path it originally took.
             var forward = _track[1].Position - _track[0].Position;
             if (forward.LengthSquared < 1e-12) return baseVel;
             dir = forward.Normalized();
         }
         else if (_track != null && _track.Length > 0)
         {
-            // Mid-track but the stored speed is zero, which can happen where the cue was momentarily
-            // stationary. Use the local heading for direction.
+            // Mid-track but momentarily stationary. Use the local heading.
             var heading = _track[_cursor].Velocity;
             dir = heading.LengthSquared > 1e-12 ? heading.Normalized() : new Vec2(0.0, 1.0);
         }
         else
         {
-            return baseVel;
+            // No usable path at all: nothing to derive a direction from, so respect the floor alone using
+            // the cue's last travelled heading if there is one.
+            if (Config.RewindMinReleaseFrac <= 0.0 || LaunchSpeed <= 0.0) return baseVel;
+            dir = Config.LastResortReleaseDir;
         }
 
-        // POT BONUS: a fraction of the launch speed per potted ball, capped by the global speed cap so
-        // a multi-pot break cannot push the cue past what the integrator is tuned for.
-        var bonus = Config.RewindPotBonus * LaunchSpeed * PocketedObjectCount;
-        var total = Math.Min(speed + bonus, Config.SpeedCap);
+        // 1. POT BONUS: a fraction of the launch speed per potted ball.
+        var bonus = PocketedObjectCount > 0 && Config.RewindPotBonus > 0.0
+            ? Config.RewindPotBonus * LaunchSpeed * PocketedObjectCount
+            : 0.0;
+        var total = speed + bonus;
+
+        // 2. RELEASE FLOOR: never hand the player a dead ball. See RewindMinReleaseFrac for why.
+        var floor = Config.RewindMinReleaseFrac * LaunchSpeed;
+        if (total < floor) total = floor;
+
+        total = Math.Min(total, Config.SpeedCap);
         return dir * total;
     }
 

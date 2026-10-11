@@ -181,6 +181,29 @@ public sealed class PhysicsConfig
     /// </summary>
     public double RewindPotBonus = 0.5;
 
+    /// <summary>
+    /// NOT LOCKED. Floor on the rewind RELEASE speed, as a fraction of the launch speed: releasing always
+    /// gives the cue at least this much speed, so a rewind can always (re)start the ball.
+    ///
+    /// Why it exists: without it, releasing near the start of the recorded path released the cue at almost
+    /// nothing -- the stored velocity there is near zero BY DEFINITION, because that is where the ball was
+    /// at rest. So "rewind most of the way home and let go", the most natural thing a new player does,
+    /// produced a dead ball and the level ended. That is a trap, not a puzzle.
+    ///
+    /// It is a FLOOR, not an addition: releasing mid-path with plenty of stored speed is unchanged, so this
+    /// cannot inflate a good release. Applied AFTER the pot bonus so the two compose in a predictable order.
+    /// Still clamped by <see cref="SpeedCap"/>.
+    /// </summary>
+    public double RewindMinReleaseFrac = 0.35;
+
+    /// <summary>
+    /// Direction used when the release floor has to fire but there is no recorded path to derive a heading
+    /// from at all. Points down the table (positive y is up in this kernel, so this aims toward the bottom
+    /// rail and the bottom pockets) because that is the direction any opening strike would have travelled.
+    /// Only reachable in a degenerate case; a real release always has a path.
+    /// </summary>
+    public Vec2 LastResortReleaseDir = new Vec2(0.0, -1.0);
+
     /// <summary>LOCKED. Pocket capture radius, px.</summary>
     public double PocketRadius = 24.0;
 

@@ -183,7 +183,10 @@ public sealed class LevelData
         var level = new LevelData
         {
             Id = root.Text("id", "unnamed"),
-            Name = root.Text("name", "unnamed"),
+            // The display name lives in the VISUAL layer now, which is the whole point of the split: a level
+            // can be renamed or re-skinned without touching anything the simulation reads. The top-level
+            // "name" is still honoured as a fallback so older level files keep loading.
+            Name = ReadVisualName(root),
         };
 
         // Physics overrides first: table/ball defaults below are taken from the merged config.
@@ -389,6 +392,8 @@ public sealed class LevelData
                 case "ballRestitution": cfg.BallRestitution = v; break;
                 case "historyStepPx": cfg.HistoryStepPx = v; break;
                 case "rewindImpulseK": cfg.RewindImpulseK = v; break;
+                case "rewindPotBonus": cfg.RewindPotBonus = v; break;
+                case "rewindMinReleaseFrac": cfg.RewindMinReleaseFrac = v; break;
                 case "pocketRadius": cfg.PocketRadius = v; break;
                 case "rewindCrawlPxPerS": cfg.RewindCrawlPxPerS = v; break;
                 case "subStepTravelBudget": cfg.SubStepTravelBudget = v; break;
@@ -414,6 +419,26 @@ public sealed class LevelData
     /// A negative value is the inherit sentinel (use the locked global); <c>maxWallBoosts</c>
     /// negative means unlimited.
     /// </summary>
+    /// <summary>
+    /// The level's display name, taken from the VISUAL layer when present.
+    ///
+    /// Levels are split into three layers -- visual (packaging), abilities (what the level can do) and
+    /// physics (raw constants) -- so that re-theming a level cannot change how it plays. The simulation
+    /// only ever reads the NAME out of the visual layer; everything else there is presentation, and nothing
+    /// else in the visual layer is parsed here at all.
+    /// </summary>
+    private static string ReadVisualName(JsonValue root)
+    {
+        var visual = root.Get("visual");
+        if (visual != null && visual.Kind == JsonKind.Object)
+        {
+            var n = visual.Text("name", null);
+            if (!string.IsNullOrEmpty(n)) return n;
+        }
+
+        return root.Text("name", "unnamed");
+    }
+
     public static void ApplyTypeOverrides(PhysicsConfig cfg, JsonValue types)
     {
         if (types == null) return;
