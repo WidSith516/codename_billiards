@@ -117,6 +117,9 @@ public partial class TestMain : Node
             Run(runner, "P02", BallTypeTests.P02_MassChangesCollisionResponse);
             Run(runner, "P03", BallTypeTests.P03_WallBoostIsCappedByCount);
             Run(runner, "P04", BallTypeTests.P04_TypeOverridesComeFromLevelData);
+            Run(runner, "B01", CollisionBoostTests.B01_BoostAcceleratesTheStruckBall);
+            Run(runner, "B02", CollisionBoostTests.B02_DefaultBoostIsANoOp);
+            Run(runner, "B03", CollisionBoostTests.B03_ShippedLevelCarriesTheBoost);
         }
 
         if (negative)

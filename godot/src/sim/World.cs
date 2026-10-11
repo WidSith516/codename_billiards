@@ -1154,18 +1154,30 @@ public sealed class World
         var restitution = 0.5 * (restA + restB);
 
         var j = -(1.0 + restitution) * vAlong / invSum;
+
+        // Capture pre-impact velocities so a per-type collision boost can scale only the velocity
+        // that the impact actually adds.
+        var aPreVelocity = a.Velocity;
+        var bPreVelocity = b.Velocity;
+
         a.Velocity -= n * (j * invA);
         b.Velocity += n * (j * invB);
 
-        // Optional per-type collision boost. 1.0 (the shipped default) is a plain energy-conserving
-        // collision. Values above 1.0 deliberately inject energy, which the user asked for; because
-        // that silently changes every level's tolerance window, it is OFF by default and must be
-        // measured before it is turned on. Only the ball that GAINED speed is scaled, so a boost on
-        // one type does not amplify the other.
-        var boostA = a.Params.CollisionBoost > 0.0 ? a.Params.CollisionBoost : 1.0;
-        var boostB = b.Params.CollisionBoost > 0.0 ? b.Params.CollisionBoost : 1.0;
-        if (boostA != 1.0 && b.Speed > a.Speed) a.Velocity = a.Velocity * boostA;
-        if (boostB != 1.0 && a.Speed > b.Speed) b.Velocity = b.Velocity * boostB;
+        // Optional per-type collision boost. 1.0 (the default) is a plain energy-conserving
+        // collision. Above 1.0 the STRUCK ball's newly gained velocity is multiplied by ITS OWN
+        // type's boost -- the "a collision accelerates the ball according to its type" behaviour
+        // that was asked for.
+        //
+        // It must scale what the impact ADDED, not the struck ball's whole velocity: otherwise a
+        // ball that was already rolling would have its pre-existing motion amplified too, and the
+        // result would depend on history rather than on the collision.
+        var struck = a.IsCue ? b : a;
+        var struckBoost = struck.Params.CollisionBoost;
+        if (struckBoost > 0.0 && Math.Abs(struckBoost - 1.0) > 1e-12)
+        {
+            var preVel = a.IsCue ? bPreVelocity : aPreVelocity;
+            struck.Velocity = preVel + (struck.Velocity - preVel) * struckBoost;
+        }
 
         if (Config.SpeedCap > 0.0)
         {
