@@ -18,7 +18,7 @@ public static class Palette
 {
     // ---------------------------------------------------------------- table
     public static readonly Color RoomBg = new Color("#101418");
-    public static readonly Color RailWood = new Color("#2b2320");
+    public static readonly Color RailWood = new Color("#5a3a22");
     public static readonly Color RailInner = new Color("#3d322c");
     public static readonly Color Felt = new Color("#14402f");
     public static readonly Color FeltEdge = new Color("#0c2a1e");
@@ -74,6 +74,19 @@ public static class Palette
     public static readonly Color WhiteHoleHalo = new Color("#6fd8f0");
     public static readonly Color WhiteHoleBody = new Color("#3fd0e8");
     public static readonly Color WhiteHoleCore = new Color("#ffffff");
+
+    // ---------------------------------------------------------------- table depth
+    // The table used to be a single flat felt rectangle plus a border, which read as a diagram
+    // rather than a physical object. These give it a rail frame and a cushion bevel drawn OUTSIDE
+    // the physics box, so the visible cushion edge and the rail collision boundary are the same line.
+    public static readonly Color RailShadow = new Color("#0d0906");
+    public static readonly Color RailLight = new Color("#7a5233");
+    public static readonly Color CushionLight = new Color("#2f6b4c");
+    public static readonly Color CushionMid = new Color("#1d4c36");
+    public static readonly Color CushionInner = new Color("#123425");
+    public static readonly Color FeltShade = new Color("#0c2a1e");
+    public static readonly Color PocketMouth = new Color("#241a12");
+    public static readonly Color PocketLiner = new Color("#0b0806");
 
     // ---------------------------------------------------------------- aim
     public static readonly Color AimLine = new Color("#f8f4e6");

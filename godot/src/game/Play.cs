@@ -1501,38 +1501,115 @@ public partial class Play : Node2D
         DrawRect(new Rect2(-600, -600, 2400, 2000), Palette.RoomBg);
     }
 
+    /// <summary>
+    /// The table. Two sources, in priority order:
+    ///
+    ///  1. the re-used H5 prototype artwork (`res://assets/h5/table.svg`), which is stitched to the
+    ///     level's physical surface so alternate table sizes still line up;
+    ///  2. <see cref="DrawProceduralTable"/>, a rail frame plus cushion bevel, used when that texture
+    ///     is missing so a shipped build never degrades to a bare canvas.
+    ///
+    /// Both are drawn so the visible cushion edge coincides with the physics boundary
+    /// (TableLeft/Right/Top/Bottom). Decorate the inside and balls would appear to bounce off nothing.
+    /// </summary>
     private void DrawTable()
     {
-        var felt = new Rect2(
+        var inner = new Rect2(
             (float)_level.TableLeft, (float)_level.TableTop,
             (float)_level.TableWidth, (float)_level.TableHeight);
-        // H5 decoration follows this level's physical surface, including alternate table sizes.
-        var sx = felt.Size.X / 910.0f;
-        var sy = felt.Size.Y / 434.0f;
-        DrawTextureRect(_tableTexture, new Rect2(
-            felt.Position - new Vector2(65 * sx, 63 * sy),
-            new Vector2(1040 * sx, 560 * sy)), false);
+        if (_tableTexture != null)
+        {
+            // The H5 artwork is authored for the 1040x560 design canvas: its felt occupies
+            // 65,63..975,497, i.e. exactly the default level's physics box (910x434), with the rail,
+            // six pockets and rail markers outside that.
+            //
+            // So the art is scaled about the CENTRE of the physical box and aligned so the two
+            // centres coincide. The original version anchored the art's top-left to the box's
+            // top-left, which correctly overlaid the default table but pushed the side pockets and
+            // both corner columns past the canvas edge (the right column landed at x=1078 on a
+            // 1040-wide canvas), so the art was cropped exactly where it matters.
+            //
+            // For the default level this is an exact identity: scale 0.993 x 0.977 and a 0.7 px
+            // nudge, because the art's felt centre sits 1.5 px above the level's box centre.
+            const float artFeltW = 910.0f;
+            const float artFeltH = 434.0f;
+            const float artW = 1040.0f;
+            const float artH = 560.0f;
+            const float artFeltCx = 520.0f;
+            const float artFeltCy = 278.5f;
+
+            var sx = inner.Size.X / artFeltW;
+            var sy = inner.Size.Y / artFeltH;
+            var innerCx = inner.Position.X + inner.Size.X * 0.5f;
+            var innerCy = inner.Position.Y + inner.Size.Y * 0.5f;
+
+            var artPos = new Vector2(
+                innerCx - artFeltCx * sx,
+                innerCy - artFeltCy * sy);
+            DrawTextureRect(_tableTexture, new Rect2(artPos, new Vector2(artW * sx, artH * sy)), false);
+        }
+        else
+        {
+            DrawProceduralTable(inner);
+        }
 
         // Faint quarter markers so the player can judge angles (the prototype had nothing).
         for (var i = 1; i < 4; i++)
         {
-            var x = felt.Position.X + felt.Size.X * i / 4.0f;
-            DrawLine(new Vector2(x, felt.Position.Y), new Vector2(x, felt.Position.Y + 10.0f), Palette.FeltGrid, 1.0f);
-            DrawLine(new Vector2(x, felt.Position.Y + felt.Size.Y - 10.0f), new Vector2(x, felt.Position.Y + felt.Size.Y), Palette.FeltGrid, 1.0f);
-            var y = felt.Position.Y + felt.Size.Y * i / 4.0f;
-            DrawLine(new Vector2(felt.Position.X, y), new Vector2(felt.Position.X + 10.0f, y), Palette.FeltGrid, 1.0f);
-            DrawLine(new Vector2(felt.Position.X + felt.Size.X - 10.0f, y), new Vector2(felt.Position.X + felt.Size.X, y), Palette.FeltGrid, 1.0f);
+            var x = inner.Position.X + inner.Size.X * i / 4.0f;
+            DrawLine(new Vector2(x, inner.Position.Y), new Vector2(x, inner.Position.Y + 10.0f), Palette.FeltGrid, 1.0f);
+            DrawLine(new Vector2(x, inner.End.Y - 10.0f), new Vector2(x, inner.End.Y), Palette.FeltGrid, 1.0f);
+            var y = inner.Position.Y + inner.Size.Y * i / 4.0f;
+            DrawLine(new Vector2(inner.Position.X, y), new Vector2(inner.Position.X + 10.0f, y), Palette.FeltGrid, 1.0f);
+            DrawLine(new Vector2(inner.End.X - 10.0f, y), new Vector2(inner.End.X, y), Palette.FeltGrid, 1.0f);
         }
 
+        DrawPockets();
+
+        DrawWhiteHoles();
+    }
+
+    /// <summary>
+    /// Fallback table when the H5 artwork is unavailable: a rail frame outside the physics box plus a
+    /// three-band cushion bevel. Kept so a missing texture degrades to a plain but correct table
+    /// rather than a bare canvas.
+    /// </summary>
+    private void DrawProceduralTable(Rect2 inner)
+    {
+        const float railThick = 26.0f;
+        var outer = inner.Grow(railThick);
+        DrawRect(outer, Palette.RailShadow);
+        DrawRect(outer.Grow(-3.0f), Palette.RailWood);
+        DrawRect(outer.Grow(-3.0f), Palette.RailLight, false, 1.0f);
+
+        DrawRect(inner.Grow(8.0f), Palette.CushionLight);
+        DrawRect(inner.Grow(4.0f), Palette.CushionMid);
+        DrawRect(inner, Palette.CushionInner);
+
+        DrawRect(inner, Palette.Felt);
+    }
+
+    /// <summary>
+    /// Pocket mouths. Drawn as an opening rather than a flat disc: a dark ring of rail material
+    /// around a near-black hole, plus a crescent of shadow on the table side so the hole reads as
+    /// going DOWN into the table.
+    /// </summary>
+    private void DrawPockets()
+    {
         foreach (var pocket in _level.Pockets)
         {
             var c = new Vector2((float)pocket.Center.X, (float)pocket.Center.Y);
-            DrawCircle(c, (float)pocket.Radius + 5.0f, new Color("#5a4134"), true, -1.0f, true);
-            DrawCircle(c, (float)pocket.Radius + 2.0f, new Color("#0b1715"), true, -1.0f, true);
-            DrawCircle(c, (float)pocket.Radius - 7.0f, new Color("#050e0c"), true, -1.0f, true);
-        }
+            var r = (float)pocket.Radius;
 
-        DrawWhiteHoles();
+            DrawCircle(c, r + 5.0f, Palette.PocketMouth, true, -1.0f, true);   // cut through the rail
+            DrawCircle(c, r + 1.5f, Palette.PocketLiner, true, -1.0f, true);   // liner highlight
+            DrawCircle(c, r, Palette.Pocket, true, -1.0f, true);               // the hole itself
+
+            // Shadow crescent on the table side: an offset dark disc clipped visually by the liner.
+            DrawCircle(c + new Vector2(-r * 0.18f, r * 0.18f), r * 0.86f,
+                new Color(0, 0, 0, 0.35f), true, -1.0f, true);
+            DrawCircle(c, r * 0.90f, new Color(0, 0, 0, 0.55f), true, -1.0f, true);
+        }
     }
 
     /// <summary>
