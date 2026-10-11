@@ -70,12 +70,6 @@
       "type": "anchor",
       "x": 585.83,
       "y": 162.25
-    },
-    {
-      "id": 5,
-      "type": "object",
-      "x": 717.5,
-      "y": 162.25
     }
   ],
   "budget": {
@@ -196,11 +190,30 @@
     "layout": {
       "placedBy": "tools/relayout_levels.mjs",
       "verified": false,
-      "note": "Ball layout is hand-placed for ball-count progression and has NOT been solver-verified. The witnesses below describe an EARLIER 2-ball layout and do not apply to this one."
+      "note": "Ball layout is hand-placed for the ball-count progression and has NOT been solver-verified. Any witness block below describes an EARLIER layout and does not apply to this one."
     },
     "witnessesStale": true
   },
   "physics": {
-    "maxShots": 2
-  }
+    "maxShots": 1,
+    "types": {
+      "cue": {
+        "wallGain": 0,
+        "maxWallBoosts": 0
+      }
+    }
+  },
+  "whiteHoles": [
+    {
+      "x": 840,
+      "y": 280,
+      "r": 38,
+      "gain": 1.6,
+      "exitSpeed": 700,
+      "maxSpeed": 1500,
+      "cooldown": 0.5,
+      "affectsObjectBalls": 0,
+      "note": "靠右库边的单个白洞。只影响白球，让目标球保持可预测。"
+    }
+  ]
 }

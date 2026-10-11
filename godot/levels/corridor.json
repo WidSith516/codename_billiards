@@ -68,7 +68,9 @@
     "types": {
       "cue": {
         "mass": 1.4,
-        "restitution": 0.92
+        "restitution": 0.92,
+        "wallGain": 0,
+        "maxWallBoosts": 0
       },
       "object": {
         "collisionBoost": 1.45
@@ -76,7 +78,6 @@
     },
     "maxShots": 1
   },
-  "whiteHoles": [],
   "authoring": {
     "tool": "promoted from godot/levels/l1_midrail_reverse.json (tolerance-verified)",
     "mechanism": "backdoor pot by the reverse pass + a strike-potted ball beyond the release floor",
@@ -188,6 +189,11 @@
         ]
       }
     ],
-    "note": "第一关恢复旧版两颗目标球布局，不放白洞；witness = 角度 -90°（向上直击）/ 力度 96 / 释放弧长 102 px。"
+    "note": "第一关恢复旧版两颗目标球布局，不放白洞；witness = 角度 -90°（向上直击）/ 力度 96 / 释放弧长 102 px。",
+    "layout": {
+      "placedBy": "tools/relayout_levels.mjs",
+      "verified": true,
+      "note": "Layout is the original verified 2-ball table, left untouched. Mechanic gating was applied."
+    }
   }
 }
