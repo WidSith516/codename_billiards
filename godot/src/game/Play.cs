@@ -1073,7 +1073,14 @@ public partial class Play : Node2D
     {
         // Node coordinates, scaled into the canvas by ViewScale. The rects are sized so the visible
         // window (0..928 x 0..500 at scale 1.12) is fully covered.
-        DrawRect(new Rect2(0, 0, 940, 505), Palette.RoomBg);
+        //
+        // The backdrop is deliberately drawn far larger than the design canvas. With
+        // stretch/aspect="keep" a window whose aspect differs from 1040x560 letterboxes the
+        // view, and anything outside these rects showed the engine's default clear colour as
+        // a hard BLACK bar at the bottom of the screen (observed in the exported build on a
+        // 1025x578 client area). Overscanning costs two triangles and makes the letterbox
+        // read as part of the room instead of as a bug.
+        DrawRect(new Rect2(-600, -600, 2400, 2000), Palette.RoomBg);
         DrawRect(new Rect2(18, 14, 900, 478), Palette.RailWood);
         DrawRect(new Rect2(27, 24, 882, 460), Palette.RailInner);
     }
