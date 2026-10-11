@@ -125,6 +125,14 @@ public partial class TestMain : Node
             Run(runner, "R02", CueRetentionTests.R02_ShippedLevelRetainsCueSpeed);
         }
 
+        if (suite == "all" || suite == "holes")
+        {
+            Run(runner, "W01", WhiteHoleTests.W01_WhiteHoleReturnsEnergy);
+            Run(runner, "W02", WhiteHoleTests.W02_FiresOncePerEntry);
+            Run(runner, "W03", WhiteHoleTests.W03_RestartsAStoppedCue);
+            Run(runner, "W04", WhiteHoleTests.W04_ShippedLevelHasAWhiteHole);
+        }
+
         if (negative)
         {
             // An acceptance gate that cannot fail is worse than no gate.

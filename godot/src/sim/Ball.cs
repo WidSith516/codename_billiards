@@ -197,6 +197,9 @@ public sealed class SimStats
     public int BallBallContacts;
     public int RailContacts;
     public int PocketCaptures;
+
+    /// <summary>How many times a ball was energised by a white hole.</summary>
+    public int WhiteHoleActivations;
     public long SubStepIntervals;
     public int StepGuardHits;
 

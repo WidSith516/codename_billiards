@@ -1,4 +1,4 @@
-﻿using Godot;
+using Godot;
 
 namespace Rewind.Game;
 
@@ -66,6 +66,14 @@ public static class Palette
     public static readonly Color ContactSoon = new Color("#ff2d55");
     public static readonly Color ContactSoonSoft = new Color("#ffb0bf");
     public static readonly Color GhostBall = new Color(0.95f, 0.95f, 0.95f, 0.30f);
+
+    // ---------------------------------------------------------------- white hole
+    /// <summary>White holes emit energy, so they must never read as a pocket (which swallows).
+    /// Cold cyan-white against the orange rewind, so the two special table features stay distinct.</summary>
+    public static readonly Color WhiteHoleRing = new Color("#9ff2ff");
+    public static readonly Color WhiteHoleHalo = new Color("#6fd8f0");
+    public static readonly Color WhiteHoleBody = new Color("#3fd0e8");
+    public static readonly Color WhiteHoleCore = new Color("#ffffff");
 
     // ---------------------------------------------------------------- aim
     public static readonly Color AimLine = new Color("#f8f4e6");

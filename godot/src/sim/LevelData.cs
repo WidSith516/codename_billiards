@@ -4,6 +4,47 @@ using System.Collections.Generic;
 namespace Rewind.Sim;
 
 /// <summary>
+/// A white hole: a zone on the table that returns energy to any ball passing through it.
+///
+/// Design purpose: the cue ball is the only ball that can be rewound, so once it loses its speed
+/// the level is over. A single strike plus rail bounces is a fragile energy supply; a white hole is
+/// a PLACE the player can route the cue through to get energy back, which turns "keep the cue
+/// alive" into a routing decision instead of luck.
+///
+/// Semantics: a ball entering the zone gets its speed set to at least <see cref="ExitSpeed"/>, or
+/// multiplied by <see cref="Gain"/> if that is larger. One activation per entry, so a ball cannot
+/// farm energy by sitting still inside it.
+/// </summary>
+public sealed class WhiteHoleDef
+{
+    public Vec2 Center;
+    public double Radius = 30.0;
+
+    /// <summary>Speed multiplier applied on entry. 1.0 means only <see cref="ExitSpeed"/> applies.</summary>
+    public double Gain = 1.35;
+
+    /// <summary>Minimum speed a ball leaves with, px/s. The floor is what makes it a reliable
+    /// energy supply rather than a multiplier on nothing.</summary>
+    public double ExitSpeed = 500.0;
+
+    /// <summary>Hard ceiling so a chain of white holes cannot break the integrator.</summary>
+    public double MaxSpeed = 1600.0;
+
+    /// <summary>
+    /// Seconds before the SAME ball can be energised by this hole again. Without it a strong boost
+    /// throws the ball out of the zone and friction brings it straight back, and the hole re-fires;
+    /// measured at four activations in a row, driving a ball that had started at rest to the speed
+    /// ceiling. The cooldown makes "once per entry" mean once per deliberate entry.
+    /// </summary>
+    public double Cooldown = 0.5;
+
+    /// <summary>When false only the cue ball is affected, which keeps object balls predictable.</summary>
+    public bool AffectsObjectBalls = true;
+
+    public WhiteHoleDef Clone() => (WhiteHoleDef)MemberwiseClone();
+}
+
+/// <summary>
 /// A ball as described by level data.
 /// </summary>
 public sealed class BallSpawn
@@ -52,6 +93,9 @@ public sealed class LevelData
 
     public readonly List<PocketDef> Pockets = new List<PocketDef>();
     public readonly List<BallSpawn> Balls = new List<BallSpawn>();
+
+    /// <summary>White holes: energy-return zones. Empty in most levels.</summary>
+    public readonly List<WhiteHoleDef> WhiteHoles = new List<WhiteHoleDef>();
     public RewindBudget Budget = RewindBudget.Unlimited;
 
     /// <summary>Level-specific physics overrides (already merged onto the defaults).</summary>
@@ -211,6 +255,28 @@ public sealed class LevelData
                 Mass = b.Num("mass", -1.0),
             };
             level.Balls.Add(spawn);
+        }
+
+        // White holes (optional). Defaults come from WhiteHoleDef so a level only has to give a
+        // position; everything else, including the switch-off for object balls, is inherited.
+        var holes = root.Get("whiteHoles");
+        if (holes != null)
+        {
+            if (holes.Kind != JsonKind.Array) throw new JsonException("'whiteHoles' must be an array");
+            foreach (var h in holes.Items)
+            {
+                var def = new WhiteHoleDef
+                {
+                    Center = new Vec2(h.Num("x", 0.0), h.Num("y", 0.0)),
+                    Radius = h.Num("r", 30.0),
+                };
+                if (h.Get("gain") != null) def.Gain = h.Num("gain", def.Gain);
+                if (h.Get("exitSpeed") != null) def.ExitSpeed = h.Num("exitSpeed", def.ExitSpeed);
+                if (h.Get("maxSpeed") != null) def.MaxSpeed = h.Num("maxSpeed", def.MaxSpeed);
+                if (h.Get("cooldown") != null) def.Cooldown = h.Num("cooldown", def.Cooldown);
+                if (h.Get("affectsObjectBalls") != null) def.AffectsObjectBalls = h.Num("affectsObjectBalls", 1.0) != 0.0;
+                level.WhiteHoles.Add(def);
+            }
         }
 
         var budget = root.Get("budget");

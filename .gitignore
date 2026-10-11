@@ -53,3 +53,7 @@ tools/solver/.tmp/
 # å¦åˆ™ dotnet publish å¤±è´¥â€”â€”è€Œ Godot ä»ä¼šè¿”å› rc=0 å¹¶**é™é»˜äº§å‡ºä¸€ä¸ªç©ºå£³ exe**ã€‚
 # è¯¦è§ docs/KNOWN_PITFALLS.md ä¸ dist/æœ¬åœ°è¿è¡Œè¯´æ˜.mdã€‚
 dist/
+
+# ·Ö·¢²úÎï£¨¿ÉÖØĞÂµ¼³ö£¬²»Èë¿â£»ÓÃ GitHub Release ¸½¼ş·Ö·¢£©
+*.zip
+

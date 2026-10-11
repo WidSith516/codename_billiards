@@ -1256,6 +1256,61 @@ public partial class Play : Node2D
             DrawCircle(c, (float)pocket.Radius + 3.5f, Palette.PocketRim, true, -1.0f, true);
             DrawCircle(c, (float)pocket.Radius, Palette.Pocket, true, -1.0f, true);
         }
+
+        DrawWhiteHoles();
+    }
+
+    /// <summary>
+    /// White holes: energy-return zones. They must read as the OPPOSITE of a pocket -- a pocket
+    /// swallows the ball, a white hole gives it back with interest -- so they are drawn as a bright
+    /// emitting ring with a soft halo and an inward-pulsing core, never as a dark disc.
+    ///
+    /// The pulse is driven by the simulation clock, not by frame time, so the animation is identical
+    /// in every capture and does not depend on frame rate.
+    /// </summary>
+    private void DrawWhiteHoles()
+    {
+        if (_level.WhiteHoles.Count == 0) return;
+        var t = (float)_world.Time;
+
+        foreach (var hole in _level.WhiteHoles)
+        {
+            var c = new Vector2((float)hole.Center.X, (float)hole.Center.Y);
+            var r = (float)hole.Radius;
+            var pulse = 0.5f + 0.5f * Mathf.Sin(t * 3.4f);
+
+            // Halo: three rings that grow and fade, so it reads as emitting rather than solid.
+            for (var i = 0; i < 3; i++)
+            {
+                var k = (pulse + i / 3.0f) % 1.0f;
+                var rr = r * (0.72f + 0.55f * k);
+                var a = (1.0f - k) * 0.30f;
+                DrawCircle(c, rr, new Color(Palette.WhiteHoleHalo.R, Palette.WhiteHoleHalo.G,
+                    Palette.WhiteHoleHalo.B, a), false, 2.0f, true);
+            }
+
+            // Body: a soft filled disc so it is unmistakably a zone, not a rim.
+            DrawCircle(c, r, new Color(Palette.WhiteHoleBody.R, Palette.WhiteHoleBody.G,
+                Palette.WhiteHoleBody.B, 0.22f + 0.10f * pulse), true, -1.0f, true);
+            DrawCircle(c, r, Palette.WhiteHoleRing, false, 2.0f, true);
+
+            // Core: a bright centre that breathes, reading as the energy source.
+            DrawCircle(c, r * (0.20f + 0.07f * pulse), Palette.WhiteHoleCore, true, -1.0f, true);
+
+            // Four chevrons pointing INWARD: the direction the energy flows.
+            var d = r * 0.55f;
+            for (var i = 0; i < 4; i++)
+            {
+                var ang = Mathf.Pi * 0.5f * i + t * 0.6f;
+                var dirv = new Vector2(Mathf.Cos(ang), Mathf.Sin(ang));
+                var tip = c + dirv * (r * 0.80f);
+                // Not `base`: that is a reserved keyword in C#.
+                var outer = c + dirv * (r * 0.80f + d * 0.42f);
+                var perp = new Vector2(-dirv.Y, dirv.X) * (d * 0.22f);
+                DrawLine(tip, outer + perp, Palette.WhiteHoleRing, 1.6f, true);
+                DrawLine(tip, outer - perp, Palette.WhiteHoleRing, 1.6f, true);
+            }
+        }
     }
 
     private void DrawBalls()

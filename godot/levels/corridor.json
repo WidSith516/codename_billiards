@@ -75,6 +75,17 @@
       }
     }
   },
+  "whiteHoles": [
+    {
+      "x": 520,
+      "y": 430,
+      "r": 34,
+      "gain": 1.4,
+      "exitSpeed": 520,
+      "maxSpeed": 1500,
+      "affectsObjectBalls": 1
+    }
+  ],
   "authoring": {
     "tool": "promoted from godot/levels/l1_midrail_reverse.json (tolerance-verified)",
     "mechanism": "backdoor pot by the reverse pass + a strike-potted ball beyond the release floor",

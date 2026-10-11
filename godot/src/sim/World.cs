@@ -34,6 +34,18 @@ public sealed class World
     private const double ContactSlop = 1e-7;
 
     private readonly int[] _railTransformUsedThisStep;
+
+    /// <summary>[ball, hole] membership from the previous step, used to fire a white hole only on the
+    /// rising edge so a ball cannot farm energy while resting inside one.</summary>
+    private readonly bool[,] _whiteHoleInside;
+
+    /// <summary>
+    /// [ball, hole] simulation time of the last activation, enforcing the hole's cooldown. The rising
+    /// edge alone is NOT enough: a strong boost can throw the ball out of the zone and friction can
+    /// bring it straight back, which re-fired the hole four times in a row and drove a ball that had
+    /// started at rest to the speed ceiling (caught by W02).
+    /// </summary>
+    private readonly double[,] _whiteHoleLastFired;
     private readonly Vec2[] _intervalStartPosition;
     private double _intervalDuration;
     private bool _intervalWasRewind;
@@ -59,6 +71,11 @@ public sealed class World
         Config = level.Config;
         Balls = new Ball[level.Balls.Count];
         _railTransformUsedThisStep = new int[Balls.Length];
+        _whiteHoleInside = new bool[Balls.Length, Math.Max(1, level.WhiteHoles.Count)];
+        _whiteHoleLastFired = new double[Balls.Length, Math.Max(1, level.WhiteHoles.Count)];
+        for (var i = 0; i < Balls.Length; i++)
+            for (var h = 0; h < _whiteHoleLastFired.GetLength(1); h++)
+                _whiteHoleLastFired[i, h] = double.NegativeInfinity;
         _intervalStartPosition = new Vec2[Balls.Length];
         BuildBalls();
         Budget = level.Budget ?? RewindBudget.Unlimited;
@@ -70,7 +87,11 @@ public sealed class World
         Config = other.Config;
         Balls = new Ball[other.Balls.Length];
         _railTransformUsedThisStep = new int[Balls.Length];
+        _whiteHoleInside = new bool[Balls.Length, Math.Max(1, other.Level.WhiteHoles.Count)];
+        _whiteHoleLastFired = new double[Balls.Length, Math.Max(1, other.Level.WhiteHoles.Count)];
         _intervalStartPosition = new Vec2[Balls.Length];
+        Array.Copy(other._whiteHoleInside, _whiteHoleInside, other._whiteHoleInside.Length);
+        Array.Copy(other._whiteHoleLastFired, _whiteHoleLastFired, other._whiteHoleLastFired.Length);
         for (var i = 0; i < Balls.Length; i++) Balls[i] = other.Balls[i].Clone();
 
         Time = other.Time;
@@ -547,6 +568,7 @@ public sealed class World
                 }
 
                 CheckPocketCaptures();
+                ApplyWhiteHoles();
                 remaining -= h;
                 continue;
             }
@@ -562,6 +584,7 @@ public sealed class World
                 }
 
                 CheckPocketCaptures();
+                ApplyWhiteHoles();
             }
 
             ResolveEvents(ref events);
@@ -590,6 +613,7 @@ public sealed class World
                 }
 
                 CheckPocketCaptures();
+                ApplyWhiteHoles();
                 ResolveAllOverlaps();
                 remaining -= hh;
             }
@@ -601,6 +625,7 @@ public sealed class World
                 MoveFree(remaining, tt);
                 MeasureMovement(ref maxTravel, ref maxRel);
                 CheckPocketCaptures();
+                ApplyWhiteHoles();
                 ResolveAllOverlaps();
             }
         }
@@ -650,6 +675,13 @@ public sealed class World
             ResolveRewindContacts();
             ResolveAllOverlaps();
             ApplyRailsToFreeBalls();
+
+            // White holes are evaluated after the position for this substep is final and after the
+            // rails have been resolved, so the boost is applied to the ball's settled velocity for
+            // the step. Rising-edge tracking inside makes once-per-substep correct regardless of how
+            // many substeps the interval took.
+            ApplyWhiteHoles();
+
             CheckPocketCaptures();
             ClampSpeeds();
 
@@ -1306,6 +1338,72 @@ public sealed class World
                 Stats.RewindContacts++;
             }
         }
+    }
+
+    // ---------------------------------------------------------------- white holes
+
+    /// <summary>
+    /// Energy-return zones. Applies once per ENTRY: a ball must leave the zone before it can be
+    /// boosted again, so a ball cannot farm energy by drifting inside it.
+    ///
+    /// This exists because the cue ball is the only ball that can be rewound, so when it runs out of
+    /// speed the level is over. A white hole turns "keep the cue alive" into a routing decision the
+    /// player can plan, rather than a consequence of one strike.
+    /// </summary>
+    private void ApplyWhiteHoles()
+    {
+        if (Level.WhiteHoles.Count == 0) return;
+
+        for (var i = 0; i < Balls.Length; i++)
+        {
+            var b = Balls[i];
+            if (b.Pocketed) continue;
+            if (b.IsCue && Rewinding) continue; // the forced history path cannot be re-energised
+
+            for (var h = 0; h < Level.WhiteHoles.Count; h++)
+            {
+                var hole = Level.WhiteHoles[h];
+                if (!hole.AffectsObjectBalls && !b.IsCue) continue;
+
+                var inside = (hole.Center - b.Position).LengthSquared < hole.Radius * hole.Radius;
+                var wasInside = _whiteHoleInside[i, h];
+                _whiteHoleInside[i, h] = inside;
+
+                // Only fire on a rising edge, and only once the cooldown has elapsed. The edge alone
+                // is not enough: a strong boost throws the ball out and friction brings it back,
+                // which re-fired the hole repeatedly.
+                if (!inside || wasInside) continue;
+                if (Time - _whiteHoleLastFired[i, h] < hole.Cooldown) continue;
+
+                var speed = b.Speed;
+                var next = Math.Max(speed * hole.Gain, hole.ExitSpeed);
+                next = Math.Min(next, Math.Min(hole.MaxSpeed, Config.SpeedCap));
+                if (next <= speed) continue;
+
+                // Keep the direction of travel; if the ball was stationary, give it a nudge along
+                // its last known heading so a stopped cue is not simply teleported sideways.
+                var dir = speed > 1e-6 ? b.Velocity / speed : LastHeading(b);
+                b.Velocity = dir * next;
+                _whiteHoleLastFired[i, h] = Time;
+                Stats.WhiteHoleActivations++;
+            }
+        }
+    }
+
+    /// <summary>Heading to use when a ball is stationary, so a white hole can restart it.</summary>
+    private Vec2 LastHeading(Ball b)
+    {
+        var h = b.History;
+        if (b.RecordsHistory && h != null && h.Samples.Count >= 2)
+        {
+            for (var i = h.Samples.Count - 1; i >= 1; i--)
+            {
+                var d = h.Samples[i].Position - h.Samples[i - 1].Position;
+                if (d.LengthSquared > 1e-9) return d.Normalized();
+            }
+        }
+
+        return new Vec2(0.0, 1.0);
     }
 
     // ---------------------------------------------------------------- pockets
