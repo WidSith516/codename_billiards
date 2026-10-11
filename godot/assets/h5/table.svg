@@ -1,0 +1,35 @@
+<!-- Adapted from h5/index.html renderTable(); pockets remain driven by level geometry. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="560" viewBox="0 0 1040 560">
+  <defs>
+    <linearGradient id="wood" x1="0" y1="0" x2="1040" y2="560" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#795037"/><stop offset=".23" stop-color="#4c3229"/>
+      <stop offset=".75" stop-color="#3c2922"/><stop offset="1" stop-color="#76513a"/>
+    </linearGradient>
+    <radialGradient id="felt" cx="490" cy="280" r="690" fx="490" fy="210" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#20664b"/><stop offset=".67" stop-color="#184f3b"/>
+      <stop offset="1" stop-color="#103c2e"/>
+    </radialGradient>
+    <pattern id="cloth" x="90" y="86" width="48" height="48" patternUnits="userSpaceOnUse">
+      <rect width="1" height="1" fill="white" fill-opacity=".016"/>
+    </pattern>
+    <clipPath id="playingSurface"><rect x="65" y="63" width="910" height="434"/></clipPath>
+  </defs>
+  <rect x="7" y="7" width="1026" height="546" rx="29" fill="url(#wood)" stroke="#9c7150" stroke-width="5"/>
+  <rect x="25" y="25" width="990" height="510" rx="23" fill="#142b28" stroke="#2d4239" stroke-width="5"/>
+  <rect x="62" y="60" width="916" height="440" rx="14" fill="url(#felt)" stroke="#42715a" stroke-width="3"/>
+  <g clip-path="url(#playingSurface)">
+    <rect x="65" y="63" width="910" height="434" fill="url(#cloth)"/>
+    <path d="M294 63V497" stroke="#c2d7b5" stroke-opacity=".118" stroke-width="1.5" stroke-dasharray="4 6"/>
+    <path d="M294 198A82 82 0 0 1 294 362" fill="none" stroke="#c2d7b5" stroke-opacity=".102" stroke-width="1.5"/>
+  </g>
+  <g fill="#ca9c68">
+    <circle cx="102" cy="36" r="3"/><circle cx="206" cy="36" r="3"/><circle cx="310" cy="36" r="3"/>
+    <circle cx="414" cy="36" r="3"/><circle cx="518" cy="36" r="3"/><circle cx="622" cy="36" r="3"/>
+    <circle cx="726" cy="36" r="3"/><circle cx="830" cy="36" r="3"/><circle cx="934" cy="36" r="3"/>
+    <circle cx="102" cy="524" r="3"/><circle cx="206" cy="524" r="3"/><circle cx="310" cy="524" r="3"/>
+    <circle cx="414" cy="524" r="3"/><circle cx="518" cy="524" r="3"/><circle cx="622" cy="524" r="3"/>
+    <circle cx="726" cy="524" r="3"/><circle cx="830" cy="524" r="3"/><circle cx="934" cy="524" r="3"/>
+    <circle cx="38" cy="146" r="3"/><circle cx="38" cy="280" r="3"/><circle cx="38" cy="414" r="3"/>
+    <circle cx="1002" cy="146" r="3"/><circle cx="1002" cy="280" r="3"/><circle cx="1002" cy="414" r="3"/>
+  </g>
+</svg>

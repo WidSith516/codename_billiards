@@ -1,4 +1,5 @@
 using Godot;
+using System.Collections.Generic;
 
 namespace Rewind.Game;
 
@@ -17,6 +18,38 @@ using Rewind.Sim;
 /// </summary>
 public static class BallStyles
 {
+    private static readonly Dictionary<Color, Texture2D> SurfaceTextures = new();
+
+    // Canvas renderBall() uses two offset circles, not a centred radial gradient.
+    // Bake that same gradient once per fill; numbers and type glyphs stay dynamic.
+    private static Texture2D SurfaceTexture(Color fill)
+    {
+        if (SurfaceTextures.TryGetValue(fill, out var cached)) return cached;
+        const int size = 64;
+        const float radius = 12.2f;
+        var image = Image.CreateEmpty(size, size, false, Image.Format.Rgba8);
+        for (var y = 0; y < size; y++)
+        for (var x = 0; x < size; x++)
+        {
+            var p = new Vector2((x + 0.5f) * 2 * radius / size - radius,
+                (y + 0.5f) * 2 * radius / size - radius);
+            var q = p + new Vector2(5, 6);
+            var dr = radius - 2;
+            var a = 61 - dr * dr;
+            var b = -2 * (q.Dot(new Vector2(5, 6)) + 2 * dr);
+            var c = q.LengthSquared() - 4;
+            var discriminant = Mathf.Max(0, b * b - 4 * a * c);
+            var t = Mathf.Clamp((-b - Mathf.Sqrt(discriminant)) / (2 * a), 0, 1);
+            var color = t < 0.18f ? Colors.White.Lerp(fill, t / 0.18f)
+                : t < 0.77f ? fill : fill.Lerp(new Color("#273834"), (t - 0.77f) / 0.23f);
+            color.A = Mathf.Clamp((radius - p.Length()) * size / (2 * radius) + 0.5f, 0, 1);
+            image.SetPixel(x, y, color);
+        }
+        var texture = ImageTexture.CreateFromImage(image);
+        SurfaceTextures.Add(fill, texture);
+        return texture;
+    }
+
     /// <summary>Reserved special ball types declared by level data (see LevelData.DeclaredType).</summary>
     public enum Glyph
     {
@@ -76,10 +109,8 @@ public static class BallStyles
             ci.DrawCircle(center, ringR, new Color(Palette.ContactSoon.R, Palette.ContactSoon.G, Palette.ContactSoon.B, 0.55f + 0.4f * highlightPulse), false, 3.0f, true);
         }
 
-        ci.DrawCircle(center, r, fill, true, -1.0f, true);
-
-        // Inner shading ring: makes the ball read as a sphere, not a flat disc.
-        ci.DrawCircle(center, r * 0.72f, fill.Lerp(Colors.White, 0.18f), true, -1.0f, true);
+        ci.DrawCircle(center + new Vector2(0, 4), r, new Color(0, 0, 0, 0.35f), true, -1.0f, true);
+        ci.DrawTextureRect(SurfaceTexture(fill), new Rect2(center - Vector2.One * r, Vector2.One * r * 2), false);
         ci.DrawCircle(center, r, Palette.BallRingDark, false, 2.0f, true);
 
         var label = Palette.Luma(fill) > 0.55f ? Palette.BallLabelLight : new Color("#f7fbf8");

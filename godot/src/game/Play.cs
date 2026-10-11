@@ -40,7 +40,7 @@ public partial class Play : Node2D
     private const double MaxFrameDelta = 0.25;
 
     /// <summary>Playfield scale: the table geometry comes from the level, this only fills the canvas.</summary>
-    private const float ViewScale = 1.045f;
+    private const float ViewScale = 1.0f;
 
     private World _world;
     private LevelData _level;
@@ -49,6 +49,7 @@ public partial class Play : Node2D
     private readonly RewindVisualizer _rewindVis = new RewindVisualizer();
 
     private Font _font;
+    private Texture2D _tableTexture;
     private double _accumulator;
     private double _wallClock;
 
@@ -169,6 +170,8 @@ public partial class Play : Node2D
     public override void _Ready()
     {
         _font = LoadUiFont();
+        _tableTexture = GD.Load<Texture2D>("res://assets/h5/table.svg");
+        TextureFilter = TextureFilterEnum.Linear;
 
         // Player-facing text is Simplified Chinese and Godot's built-in fallback font has no CJK
         // glyphs at all, so anything that draws without an explicit font would render as tofu boxes.
@@ -176,12 +179,8 @@ public partial class Play : Node2D
         // for Controls added later, not just for the immediate-mode draw calls below.
         GetTree().Root.Theme = new Theme { DefaultFont = _font, DefaultFontSize = 13 };
 
-        // The table is 910x434 px inside a 1040x560 canvas, which left a dead strip at the bottom and
-        // made the playfield read cramped. Scaling the whole view (kernel coordinates are untouched)
-        // fills the canvas without cropping playable geometry: at 1.045 the rails span
-        // 25*1.045=26 .. 1014*1.045=1060 horizontally and 20*1.045=21 .. 505*1.045=528 vertically, so
-        // only decorative wood falls outside the frame. The HUD is drawn in node coordinates and its
-        // panels were resized for this scale.
+        // H5 artwork uses the same 1040x560 design canvas as the game. Keep the complete frame
+        // and six pocket mouths visible; physics and input remain in level coordinates.
         Scale = new Vector2(ViewScale, ViewScale);
 
         // The front end sets SelectedLevelId when the player picks a level; the CLI argument still
@@ -1468,15 +1467,8 @@ public partial class Play : Node2D
         if (_world.Won) DrawWinBanner();
 
         // ---- UI space, not playfield space ------------------------------------------------
-        // The node itself is scaled by ViewScale (1.045) so the table overscans and fills the
-        // canvas. That is right for the PLAYFIELD but wrong for the interface: design-space
-        // x = 1032 renders at 1078 and is silently clipped by the 1040-wide canvas. (Measured: a
-        // tutorial bubble anchored at x=840 came out with its right edge cut off, and the earlier
-        // HUD readout clipped for the same reason.)
-        //
-        // So the interface is drawn under an inverse scale, which makes UI coordinates equal real
-        // canvas pixels and removes the whole class of bug. Anything added here afterwards is
-        // automatically safe.
+        // Keep UI coordinates equal to canvas pixels if ViewScale changes later. At the H5
+        // artwork's current 1:1 scale this is the identity transform.
         DrawSetTransform(Vector2.Zero, 0.0f, new Vector2(1.0f / ViewScale, 1.0f / ViewScale));
         Hud.Draw(this, _font, BuildHudModel());
         if (_debugOverlay) Hud.DrawDebug(this, _font, BuildHudModel());
@@ -1507,8 +1499,6 @@ public partial class Play : Node2D
         // 1025x578 client area). Overscanning costs two triangles and makes the letterbox
         // read as part of the room instead of as a bug.
         DrawRect(new Rect2(-600, -600, 2400, 2000), Palette.RoomBg);
-        DrawRect(new Rect2(18, 14, 900, 478), Palette.RailWood);
-        DrawRect(new Rect2(27, 24, 882, 460), Palette.RailInner);
     }
 
     private void DrawTable()
@@ -1516,8 +1506,12 @@ public partial class Play : Node2D
         var felt = new Rect2(
             (float)_level.TableLeft, (float)_level.TableTop,
             (float)_level.TableWidth, (float)_level.TableHeight);
-        DrawRect(felt, Palette.Felt);
-        DrawRect(felt, Palette.FeltEdge, false, 3.0f);
+        // H5 decoration follows this level's physical surface, including alternate table sizes.
+        var sx = felt.Size.X / 910.0f;
+        var sy = felt.Size.Y / 434.0f;
+        DrawTextureRect(_tableTexture, new Rect2(
+            felt.Position - new Vector2(65 * sx, 63 * sy),
+            new Vector2(1040 * sx, 560 * sy)), false);
 
         // Faint quarter markers so the player can judge angles (the prototype had nothing).
         for (var i = 1; i < 4; i++)
@@ -1533,8 +1527,9 @@ public partial class Play : Node2D
         foreach (var pocket in _level.Pockets)
         {
             var c = new Vector2((float)pocket.Center.X, (float)pocket.Center.Y);
-            DrawCircle(c, (float)pocket.Radius + 3.5f, Palette.PocketRim, true, -1.0f, true);
-            DrawCircle(c, (float)pocket.Radius, Palette.Pocket, true, -1.0f, true);
+            DrawCircle(c, (float)pocket.Radius + 5.0f, new Color("#5a4134"), true, -1.0f, true);
+            DrawCircle(c, (float)pocket.Radius + 2.0f, new Color("#0b1715"), true, -1.0f, true);
+            DrawCircle(c, (float)pocket.Radius - 7.0f, new Color("#050e0c"), true, -1.0f, true);
         }
 
         DrawWhiteHoles();

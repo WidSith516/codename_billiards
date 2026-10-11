@@ -37,6 +37,14 @@ window/size/viewport_height=560
 window/stretch/mode="canvas_items"
 window/stretch/aspect="keep"
 
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/godot_mcp/plugin.cfg")
+
+[godot_mcp]
+
+enabled_tools=PackedStringArray("get_project_structure", "get_debug_output", "install_runtime_probe", "remove_runtime_probe", "await_scene_ready", "get_runtime_scene_tree", "get_runtime_screenshot")
+
 [physics]
 
 ; The kernel runs its own fixed step of 1/120 s (SimulationStep, locked).
