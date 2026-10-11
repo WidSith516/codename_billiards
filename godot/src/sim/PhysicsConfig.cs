@@ -83,29 +83,24 @@ public sealed class PhysicsConfig
         new BallTypeParams { Mass = 1.0, FrictionDecel = -1.0, Restitution = -1.0, WallGain = -1.0, MaxWallBoosts = -1 },
 
         // ---------------------------------------------------------------------------------------
-        // THE FOUR SPACE BODIES. The user asked for the balls to become planets with distinct feel
-        // while REUSING the existing four type slots rather than inventing new mechanics, so each slot
-        // below is a different point in the same four knobs (mass, friction, bounce, rail pay).
+        // THE FOUR SPACE BODIES ARE VISUAL ONLY.
         //
-        // These are LEVEL-DATA tunables, not locked constants: none of the locked globals is touched,
-        // and -1 still means "inherit the locked global". All four keep WallGain 0 and MaxWallBoosts 0,
-        // so no object ball secretly gains energy from a rail -- the cue's rail bonus stays the player's
-        // only free energy, which is what the level tolerances were authored against.
+        // The user's call: "the bodies differ visually only, do not introduce abilities yet". An earlier
+        // version gave each slot its own mass / friction / restitution, which made every level's tolerance
+        // depend on WHICH SLOT a ball happened to occupy -- so re-skinning a ball silently changed the
+        // puzzle. That is a bad property when levels are hand-placed, because art and difficulty become the
+        // same knob.
         //
-        // Comet: the plain target ball, kept exactly as it was so existing levels are unaffected.
+        // All four slots now inherit the locked globals and differ only in how they are DRAWN (see
+        // BallStyles: a tail streak, a thick ring, radiating needles, broken arcs). Collision and momentum
+        // are uniform, so a level behaves the same regardless of its art.
+        //
+        // The per-type table is deliberately LEFT IN PLACE: the knobs (Mass, FrictionDecel, Restitution,
+        // WallGain, MaxWallBoosts, CollisionBoost) still exist and are still per-type, so the frame and
+        // momentum design the user wants next is a change in a LEVEL FILE, not code here. -1 = inherit.
         new BallTypeParams { Mass = 1.0, FrictionDecel = -1.0, Restitution = -1.0, WallGain = 0.0, MaxWallBoosts = 0 },
-
-        //  Meteorite (heavy slot): massive and draggy. Barely moves when clipped, stops fast, so it
-        //  punishes a glancing hit and rewards a straight one.
-        new BallTypeParams { Mass = 3.0, FrictionDecel = 900.0, Restitution = -1.0, WallGain = 0.0, MaxWallBoosts = 0 },
-
-        //  Pulsar (bomb slot): light and lively. Low mass means it is launched hard by any contact, and
-        //  high restitution means it keeps that energy off the rails, so it is the type that runs away.
-        new BallTypeParams { Mass = 0.55, FrictionDecel = 520.0, Restitution = 0.985, WallGain = 0.0, MaxWallBoosts = 0 },
-
-        //  Nebula (anchor slot): almost frictionless. It is the long-glide ball: a gentle nudge sends it
-        //  across the whole table, which makes it the best candidate for a bank or a multi-pocket line.
-        new BallTypeParams { Mass = 0.9, FrictionDecel = 110.0, Restitution = -1.0, WallGain = 0.0, MaxWallBoosts = 0 },
+        new BallTypeParams { Mass = 1.0, FrictionDecel = -1.0, Restitution = -1.0, WallGain = 0.0, MaxWallBoosts = 0 },
+        new BallTypeParams { Mass = 1.0, FrictionDecel = -1.0, Restitution = -1.0, WallGain = 0.0, MaxWallBoosts = 0 },
     };
 
     /// <summary>Params for a type, falling back to the object entry if the table is short.</summary>

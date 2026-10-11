@@ -79,14 +79,22 @@ public static class BallStyles
         _ => "未知天体",
     };
 
-    /// <summary>One-line physical character, so the HUD can teach the four feels without a tutorial.</summary>
+    /// <summary>
+    /// One-line description shown next to a body in the HUD legend.
+    ///
+    /// These describe APPEARANCE, not physics, and that is deliberate. The bodies are currently a visual
+    /// difference only: all four slots share identical mass, friction and restitution, so a level behaves
+    /// the same whatever art its balls carry. The earlier text ("重 · 难推动", "滑 · 几乎无摩擦") stated
+    /// physical traits the game no longer implements, which would have told the player to expect behaviour
+    /// that is not there.
+    /// </summary>
     public static string TraitText(Glyph g) => g switch
     {
         Glyph.Cue => "唯一可回溯",
-        Glyph.Object => "标准",
-        Glyph.Heavy => "重 · 难推动",
-        Glyph.Bomb => "轻 · 弹得远",
-        Glyph.Anchor => "滑 · 几乎无摩擦",
+        Glyph.Object => "彗尾标记",
+        Glyph.Heavy => "实心环标记",
+        Glyph.Bomb => "放射针刺",
+        Glyph.Anchor => "断弧标记",
         _ => "?",
     };
 
