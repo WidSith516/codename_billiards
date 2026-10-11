@@ -141,6 +141,12 @@ public partial class TestMain : Node
             Run(runner, "M04", MenuTests.M04_ProgressRoundTrips);
         }
 
+        if (suite == "all" || suite == "solve")
+        {
+            Run(runner, "S01", LevelSolvabilityTests.S01_EveryOfferedLevelClears);
+            Run(runner, "S02", LevelSolvabilityTests.S02_ShippedLevelIsForgiving);
+        }
+
         if (negative)
         {
             // An acceptance gate that cannot fail is worse than no gate.
