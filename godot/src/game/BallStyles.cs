@@ -61,6 +61,35 @@ public static class BallStyles
         Unknown,
     }
 
+    /// <summary>
+    /// Player-facing names for the four space bodies.
+    ///
+    /// The kernel's type names stay generic (Object/Heavy/Bomb/Anchor) so the SIMULATION never depends on
+    /// a theme, and the level files keep using those names. This is the single place the presentation
+    /// decides what a slot is CALLED, so re-theming is a rename here rather than a change to the kernel or
+    /// to every level.
+    /// </summary>
+    public static string DisplayName(Glyph g) => g switch
+    {
+        Glyph.Cue => "白球",
+        Glyph.Object => "彗星",
+        Glyph.Heavy => "陨石",
+        Glyph.Bomb => "脉冲星",
+        Glyph.Anchor => "星云",
+        _ => "未知天体",
+    };
+
+    /// <summary>One-line physical character, so the HUD can teach the four feels without a tutorial.</summary>
+    public static string TraitText(Glyph g) => g switch
+    {
+        Glyph.Cue => "唯一可回溯",
+        Glyph.Object => "标准",
+        Glyph.Heavy => "重 · 难推动",
+        Glyph.Bomb => "轻 · 弹得远",
+        Glyph.Anchor => "滑 · 几乎无摩擦",
+        _ => "?",
+    };
+
     public static Glyph GlyphFor(Ball b, BallSpawn spawn)
     {
         if (b.IsCue) return Glyph.Cue;
@@ -142,23 +171,45 @@ public static class BallStyles
         }
     }
 
+    /// <summary>
+    /// The type mark drawn on the planet itself.
+    ///
+    /// Every shape is a DIFFERENT KIND of mark, not a different colour, because the palette rules require
+    /// that identity survives with zero colour perception. Shapes chosen so they cannot be confused with
+    /// the ID number drawn on top of them:
+    ///   * Comet    -- one short tail streak (the only asymmetric mark).
+    ///   * Meteorite -- a thick inner ring, reading as dense and cratered.
+    ///   * Pulsar   -- a starburst of needles, reading as emitting.
+    ///   * Nebula   -- a broken double arc, reading as diffuse.
+    /// </summary>
     private static void DrawGlyph(CanvasItem ci, Vector2 c, float r, Glyph glyph, Color color)
     {
         switch (glyph)
         {
-            case Glyph.Anchor: // square
+            case Glyph.Anchor: // Nebula: two broken arcs, suggesting something diffuse
             {
-                var s = r * 0.46f;
-                var rect = new Rect2(c - new Vector2(s, s), new Vector2(s * 2f, s * 2f));
-                ci.DrawRect(rect, color, true, 1.6f);
+                for (var half = 0; half < 2; half++)
+                {
+                    var start = Mathf.Pi * (half == 0 ? 0.15f : 1.15f);
+                    var steps = 7;
+                    for (var i = 0; i < steps; i++)
+                    {
+                        var a0 = start + Mathf.Pi * 0.7f * i / steps;
+                        var a1 = start + Mathf.Pi * 0.7f * (i + 1) / steps;
+                        var rr = r * (half == 0 ? 0.60f : 0.42f);
+                        ci.DrawLine(c + new Vector2(Mathf.Cos(a0), Mathf.Sin(a0)) * rr,
+                            c + new Vector2(Mathf.Cos(a1), Mathf.Sin(a1)) * rr, color, 1.8f, true);
+                    }
+                }
+
                 break;
             }
 
-            case Glyph.Heavy: // thick double ring
-                ci.DrawCircle(c, r * 0.52f, color, false, 3.0f, true);
+            case Glyph.Heavy: // Meteorite: a dense thick ring
+                ci.DrawCircle(c, r * 0.50f, color, false, 3.0f, true);
                 break;
 
-            case Glyph.Bomb: // star burst
+            case Glyph.Bomb: // Pulsar: needles radiating, i.e. emitting
             {
                 for (var i = 0; i < 8; i++)
                 {
@@ -170,14 +221,18 @@ public static class BallStyles
                 break;
             }
 
-            case Glyph.Unknown: // question mark: a type the view does not understand yet
+            case Glyph.Unknown: // a type the view does not understand yet
                 ci.DrawCircle(c, r * 0.5f, color, false, 2.0f, true);
                 break;
 
-            default: // Object: a small tick pair at the rim marks "plain object ball"
+            default: // Comet: a single tail streak, the only asymmetric mark
             {
-                ci.DrawLine(c + new Vector2(-r * 0.78f, 0f), c + new Vector2(-r * 0.5f, 0f), color, 2.0f, true);
-                ci.DrawLine(c + new Vector2(r * 0.5f, 0f), c + new Vector2(r * 0.78f, 0f), color, 2.0f, true);
+                // Drawn as a tapered streak: three segments thinning toward the tail.
+                var head = new Vector2(r * 0.52f, -r * 0.18f);
+                var tail = new Vector2(-r * 0.74f, r * 0.26f);
+                ci.DrawLine(c + head, c + head.Lerp(tail, 0.45f), color, 2.4f, true);
+                ci.DrawLine(c + head.Lerp(tail, 0.45f), c + head.Lerp(tail, 0.78f), color, 1.6f, true);
+                ci.DrawLine(c + head.Lerp(tail, 0.78f), c + tail, color, 1.0f, true);
                 break;
             }
         }

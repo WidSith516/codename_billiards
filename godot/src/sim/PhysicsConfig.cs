@@ -82,18 +82,30 @@ public sealed class PhysicsConfig
         //  120), so shipping behaviour is unchanged; the allowance is unlimited.
         new BallTypeParams { Mass = 1.0, FrictionDecel = -1.0, Restitution = -1.0, WallGain = -1.0, MaxWallBoosts = -1 },
 
-        //  Object: the plain target ball. No rail bonus, exactly as before.
+        // ---------------------------------------------------------------------------------------
+        // THE FOUR SPACE BODIES. The user asked for the balls to become planets with distinct feel
+        // while REUSING the existing four type slots rather than inventing new mechanics, so each slot
+        // below is a different point in the same four knobs (mass, friction, bounce, rail pay).
+        //
+        // These are LEVEL-DATA tunables, not locked constants: none of the locked globals is touched,
+        // and -1 still means "inherit the locked global". All four keep WallGain 0 and MaxWallBoosts 0,
+        // so no object ball secretly gains energy from a rail -- the cue's rail bonus stays the player's
+        // only free energy, which is what the level tolerances were authored against.
+        //
+        // Comet: the plain target ball, kept exactly as it was so existing levels are unaffected.
         new BallTypeParams { Mass = 1.0, FrictionDecel = -1.0, Restitution = -1.0, WallGain = 0.0, MaxWallBoosts = 0 },
 
-        //  Heavy (new type, previously an inert string): hard to move, stops sooner, no rail bonus.
+        //  Meteorite (heavy slot): massive and draggy. Barely moves when clipped, stops fast, so it
+        //  punishes a glancing hit and rewards a straight one.
         new BallTypeParams { Mass = 3.0, FrictionDecel = 900.0, Restitution = -1.0, WallGain = 0.0, MaxWallBoosts = 0 },
 
-        //  Bomb: currently plays as an ordinary object ball; the type exists so tunables and future
-        //  behaviour have somewhere to live.
-        new BallTypeParams { Mass = 1.0, FrictionDecel = -1.0, Restitution = -1.0, WallGain = 0.0, MaxWallBoosts = 0 },
+        //  Pulsar (bomb slot): light and lively. Low mass means it is launched hard by any contact, and
+        //  high restitution means it keeps that energy off the rails, so it is the type that runs away.
+        new BallTypeParams { Mass = 0.55, FrictionDecel = 520.0, Restitution = 0.985, WallGain = 0.0, MaxWallBoosts = 0 },
 
-        //  Anchor: currently ordinary; intended to become immovable.
-        new BallTypeParams { Mass = 1.0, FrictionDecel = -1.0, Restitution = -1.0, WallGain = 0.0, MaxWallBoosts = 0 },
+        //  Nebula (anchor slot): almost frictionless. It is the long-glide ball: a gentle nudge sends it
+        //  across the whole table, which makes it the best candidate for a bank or a multi-pocket line.
+        new BallTypeParams { Mass = 0.9, FrictionDecel = 110.0, Restitution = -1.0, WallGain = 0.0, MaxWallBoosts = 0 },
     };
 
     /// <summary>Params for a type, falling back to the object entry if the table is short.</summary>
