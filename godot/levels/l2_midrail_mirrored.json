@@ -199,8 +199,8 @@
     "types": {
       "cue": {
         "wallGain": 0,
-        "maxWallBoosts": 0,
-        "wallGainFrac": 0
+        "maxWallBoosts": 3,
+        "wallGainFrac": 1
       }
     },
     "rewindPotBonus": 0.5,
@@ -236,6 +236,11 @@
       "cooldown": 0.4,
       "affectsObjectBalls": 0,
       "note": "靠右库边的单个白洞。只影响白球，让目标球保持可预测。"
+    },
+    "railKick": {
+      "wallGain": 0,
+      "wallGainFrac": 1,
+      "maxBoosts": 3
     },
     "rewindKick": {
       "minReleaseFrac": 0.35

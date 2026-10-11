@@ -31,18 +31,21 @@ const LEVELS = path.join('godot', 'levels');
 
 // id, objects, maxShots, segments, distance, whiteHole, railKick, rewindKick
 //
-// BALL PROGRESSION 2/3/4/5/6 and MECHANIC UNLOCKS are the user's design:
-//   L1 nothing yet -- base rule only, and its table is NOT touched (the only verified layout)
-//   L2 WHITE HOLE appears
-//   L4 RAIL KICK appears
-// rewindKick is on from L2 everywhere: "the rewind must always be able to restart the ball" is a usability
-// floor, not a puzzle mechanic, so it is not gated as content.
+// BALL PROGRESSION 2/3/4/5/6 and MECHANIC UNLOCKS are the user's design, revised:
+//   L1 the base rule AND the rail engine -- the user asked for rail acceleration to apply from level 1 too,
+//      so it is no longer gated behind a later level. It stays at a SMALL allowance here (1 boost) so the
+//      first level teaches the base rule rather than becoming a rail-shooting exercise.
+//   L2 the WHITE HOLE appears.
+//   L3 the rail allowance steps up to the full 3 boosts, so from here the rail is a real energy source.
+//   L4/L5 everything on, with the larger ball counts and rewind budgets.
+// rewindKick is on from L2: "the rewind must always be able to restart the ball" is a usability floor, not a
+// puzzle mechanic, so it is not gated as content.
 const PLAN = [
-  ['corridor',            2, 1,  8, 2600, false, false, false],
-  ['l1_midrail_reverse',  3, 1, 12, 4200, true,  false, true ],
-  ['l2_midrail_mirrored', 4, 1, 14, 5200, true,  false, true ],
-  ['l3_deeper_walk',      5, 2, 16, 6200, true,  true,  true ],
-  ['l4_offset_line',      6, 2, 18, 7400, true,  true,  true ],
+  ['corridor',            2, 1,  8, 2600, false, 1, false],
+  ['l1_midrail_reverse',  3, 1, 12, 4200, true,  1, true ],
+  ['l2_midrail_mirrored', 4, 1, 14, 5200, true,  3, true ],
+  ['l3_deeper_walk',      5, 2, 16, 6200, true,  3, true ],
+  ['l4_offset_line',      6, 2, 18, 7400, true,  3, true ],
 ];
 
 const WHITE_HOLE = {
@@ -142,11 +145,15 @@ for (const [id, count, shots, segs, dist, wantHole, wantRail, wantKick] of PLAN)
   };
 
   // ===================== LAYER 2: ABILITIES (what the level can do) =====================
+  // wantRail is a BOOST COUNT, not a flag: 0 off, 1 a small allowance, 3 the full engine. The allowance is
+  // the part that decides whether the rail is a teaching aid or a real energy source, so it belongs in the
+  // abilities layer as a number rather than being hidden in the physics block.
+  const railOn = wantRail > 0;
   const abilities = {
     note: '能力层：决定这一关"能做什么"。加谜题或开第二解应当只改这里。',
   };
   if (wantHole) abilities.whiteHole = Object.assign({}, WHITE_HOLE);
-  if (wantRail) abilities.railKick = Object.assign({}, RAIL_KICK);
+  if (railOn) abilities.railKick = Object.assign({}, RAIL_KICK, { maxBoosts: wantRail });
   if (wantKick) abilities.rewindKick = Object.assign({}, REWIND_KICK);
   j.abilities = abilities;
 
@@ -159,11 +166,12 @@ for (const [id, count, shots, segs, dist, wantHole, wantRail, wantKick] of PLAN)
   j.physics.rewindMinReleaseFrac = wantKick ? REWIND_KICK.minReleaseFrac : 0.0;
   j.physics.types = j.physics.types || {};
   j.physics.types.cue = Object.assign({}, j.physics.types.cue, {
-    // Written explicitly even when OFF: omitting it inherits the locked CueWallGain of 120 and would hand
-    // levels 1-3 a mechanic they are supposed to introduce two levels later.
-    wallGain: wantRail ? RAIL_KICK.wallGain : 0,
-    wallGainFrac: wantRail ? RAIL_KICK.wallGainFrac : 0,
-    maxWallBoosts: wantRail ? RAIL_KICK.maxBoosts : 0,
+    // Written EXPLICITLY even when off. Omitting wallGain would inherit the locked CueWallGain of 120, and
+    // omitting maxWallBoosts would inherit unlimited -- so a level meant to have no rail bonus would have
+    // silently received one. Both are pinned to 0 whenever the rail is off for this level.
+    wallGain: railOn ? RAIL_KICK.wallGain : 0,
+    wallGainFrac: railOn ? RAIL_KICK.wallGainFrac : 0,
+    maxWallBoosts: railOn ? wantRail : 0,
   });
 
   if (wantHole) j.whiteHoles = [Object.assign({}, WHITE_HOLE)];
@@ -185,7 +193,7 @@ for (const [id, count, shots, segs, dist, wantHole, wantRail, wantKick] of PLAN)
   fs.writeFileSync(p, JSON.stringify(j, null, 2) + '\n');
   report.push(
     `${id.padEnd(22)} objs=${keepLayout ? existing.length : count} shots=${shots} ` +
-    `budget=${segs}/${dist} hole=${wantHole ? 'Y' : 'n'} rail=${wantRail ? 'Y' : 'n'} ` +
+    `budget=${segs}/${dist} hole=${wantHole ? 'Y' : 'n'} rail=${railOn ? wantRail + 'x' : 'off'} ` +
     `kick=${wantKick ? 'Y' : 'n'} layout=${keepLayout ? 'KEPT' : 're-placed'}`);
 }
 

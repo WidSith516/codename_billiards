@@ -70,8 +70,8 @@
         "mass": 1.4,
         "restitution": 0.92,
         "wallGain": 0,
-        "maxWallBoosts": 0,
-        "wallGainFrac": 0
+        "maxWallBoosts": 1,
+        "wallGainFrac": 1
       },
       "object": {
         "collisionBoost": 1.45
@@ -205,6 +205,11 @@
     "note": "包装层：只影响外观与命名，不影响任何物理或能力。换皮不会改变关卡难度。"
   },
   "abilities": {
-    "note": "能力层：决定这一关\"能做什么\"。加谜题或开第二解应当只改这里。"
+    "note": "能力层：决定这一关\"能做什么\"。加谜题或开第二解应当只改这里。",
+    "railKick": {
+      "wallGain": 0,
+      "wallGainFrac": 1,
+      "maxBoosts": 1
+    }
   }
 }

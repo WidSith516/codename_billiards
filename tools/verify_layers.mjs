@@ -8,12 +8,14 @@ import fs from 'node:fs';
 const IDS = ['corridor', 'l1_midrail_reverse', 'l2_midrail_mirrored', 'l3_deeper_walk', 'l4_offset_line'];
 
 // The agreed design. Any drift from this table is a failure.
+// rail is a BOOST COUNT (0 = off), not a flag, because the allowance is what decides whether the rail is a
+// teaching aid or a real energy source.
 const EXPECT = {
-  corridor:            { objs: 2, hole: false, rail: false, kick: false },
-  l1_midrail_reverse:  { objs: 3, hole: true,  rail: false, kick: true  },
-  l2_midrail_mirrored: { objs: 4, hole: true,  rail: false, kick: true  },
-  l3_deeper_walk:      { objs: 5, hole: true,  rail: true,  kick: true  },
-  l4_offset_line:      { objs: 6, hole: true,  rail: true,  kick: true  },
+  corridor:            { objs: 2, hole: false, rail: 1, kick: false },
+  l1_midrail_reverse:  { objs: 3, hole: true,  rail: 1, kick: true  },
+  l2_midrail_mirrored: { objs: 4, hole: true,  rail: 3, kick: true  },
+  l3_deeper_walk:      { objs: 5, hole: true,  rail: 3, kick: true  },
+  l4_offset_line:      { objs: 6, hole: true,  rail: 3, kick: true  },
 };
 
 let bad = 0;
@@ -44,21 +46,27 @@ for (const id of IDS) {
   // Rail kick is on when EITHER channel is positive: wallGainFrac is the rail engine (a fraction of the
   // launch speed) and wallGain is the older flat bonus. Testing only wallGain was a false negative once the
   // engine moved to the fractional channel.
-  const hasRail = (cue.wallGainFrac || 0) > 0 || (cue.wallGain || 0) > 0;
+  // The ALLOWANCE is compared as a count, so a level quietly dropping from 3 boosts to 1 fails here.
+  const railBoostCount = (cue.wallGainFrac || 0) > 0 || (cue.wallGain || 0) > 0 ? (cue.maxWallBoosts || 0) : 0;
   const hasKick = (j.physics.rewindMinReleaseFrac || 0) > 0;
 
   if (objs !== want.objs) errs.push(`objects ${objs} != ${want.objs}`);
   if (hasHole !== want.hole) errs.push(`whiteHole ${hasHole} != ${want.hole}`);
-  if (hasRail !== want.rail) errs.push(`railKick ${hasRail} != ${want.rail}`);
+  if (railBoostCount !== want.rail) errs.push(`rail boosts ${railBoostCount} != ${want.rail}`);
   if (hasKick !== want.kick) errs.push(`rewindKick ${hasKick} != ${want.kick}`);
 
-  // --- abilities block and whiteHoles array must agree, or a designer will edit the wrong one
+  // --- abilities block and the physics it lowers into must agree, or a designer will edit the wrong one
   const abHole = !!(j.abilities && j.abilities.whiteHole);
   const abRail = !!(j.abilities && j.abilities.railKick);
   const abKick = !!(j.abilities && j.abilities.rewindKick);
   if (abHole !== hasHole) errs.push('abilities.whiteHole disagrees with whiteHoles array');
-  if (abRail !== hasRail) errs.push('abilities.railKick disagrees with cue.wallGain');
+  if (abRail !== railBoostCount > 0) errs.push('abilities.railKick disagrees with cue.wallGainFrac');
   if (abKick !== hasKick) errs.push('abilities.rewindKick disagrees with rewindMinReleaseFrac');
+  // The boost allowance is duplicated (abilities.railKick.maxBoosts and cue.maxWallBoosts), so the two copies
+  // are checked against each other. This is the field most likely to drift when a level is retuned.
+  if (abRail && j.abilities.railKick.maxBoosts !== cue.maxWallBoosts) {
+    errs.push(`abilities.railKick.maxBoosts ${j.abilities.railKick.maxBoosts} != cue.maxWallBoosts ${cue.maxWallBoosts}`);
+  }
 
   // --- geometry sanity
   for (let i = 0; i < j.balls.length; i++) {
@@ -75,7 +83,8 @@ for (const id of IDS) {
 
   if (errs.length) { bad++; console.log(`FAIL ${id}\n       - ${errs.join('\n       - ')}`); }
   else {
-    console.log(`ok   ${id.padEnd(22)} objs=${objs} hole=${hasHole ? 'Y' : 'n'} rail=${hasRail ? 'Y' : 'n'} ` +
+    console.log(`ok   ${id.padEnd(22)} objs=${objs} hole=${hasHole ? 'Y' : 'n'} ` +
+                `rail=${railBoostCount > 0 ? railBoostCount + 'x' : 'off'} ` +
                 `kick=${hasKick ? 'Y' : 'n'} budget=${j.budget.maxSegments}/${j.budget.maxDistance} ` +
                 `"${j.visual.name}"`);
   }
