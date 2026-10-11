@@ -70,7 +70,8 @@
         "mass": 1.4,
         "restitution": 0.92,
         "wallGain": 0,
-        "maxWallBoosts": 0
+        "maxWallBoosts": 0,
+        "wallGainFrac": 0
       },
       "object": {
         "collisionBoost": 1.45

@@ -462,6 +462,7 @@ public sealed class LevelData
                     case "frictionDecel": p.FrictionDecel = v; break;
                     case "restitution": p.Restitution = v; break;
                     case "wallGain": p.WallGain = v; break;
+                    case "wallGainFrac": p.WallGainFrac = v; break;
                     case "maxWallBoosts": p.MaxWallBoosts = (int)Math.Round(v); break;
                     case "collisionBoost": p.CollisionBoost = v; break;
                     default:

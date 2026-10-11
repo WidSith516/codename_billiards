@@ -193,7 +193,8 @@
     "types": {
       "cue": {
         "wallGain": 0,
-        "maxWallBoosts": 0
+        "maxWallBoosts": 0,
+        "wallGainFrac": 0
       }
     },
     "rewindPotBonus": 0.5,

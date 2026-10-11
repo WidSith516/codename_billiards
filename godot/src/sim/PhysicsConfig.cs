@@ -33,6 +33,21 @@ public sealed class BallTypeParams
     public double WallGain = -1.0;
 
     /// <summary>
+    /// THE RAIL ENGINE. Fraction of the LAUNCH SPEED returned as momentum on each rail hit, on top of
+    /// <see cref="WallGain"/>. 1.0 means a cushion hands back a full launch speed's worth.
+    ///
+    /// Why it is a fraction of the launch speed rather than a flat number: the user asked for rail bounces to
+    /// give "100% of the initial momentum", and a fixed +120 px/s is imperceptible once the cue is moving at
+    /// 1200. Scaling by the shot the player actually took means a soft shot earns a soft bounce and a full
+    /// power break earns a full one, which is also what makes the mechanic feel like a property of the table
+    /// instead of a hidden constant.
+    ///
+    /// A negative value is the "inherit the global" sentinel, matching the rest of this table. Combined with
+    /// <see cref="MaxWallBoosts"/>, which is what stops a long rail from becoming an infinite energy farm.
+    /// </summary>
+    public double WallGainFrac = -1.0;
+
+    /// <summary>
     /// How many times this ball may be speed-boosted by a rail before the boost stops.
     /// The reflection itself (and its restitution) always continues; only the bonus is capped.
     /// 0 disables the bonus entirely; a negative value means unlimited.
@@ -147,11 +162,24 @@ public sealed class PhysicsConfig
     /// <summary>LOCKED. Rail speed gain for the CUE only, px/s per rail transform.</summary>
     public double CueWallGain = 120.0;
 
+    /// <summary>
+    /// Rail engine for the CUE: fraction of the launch speed returned per rail hit. 0 = flat gain only.
+    /// Levels turn this on through their abilities.railKick block; the default here is the global a type
+    /// inherits when it does not specify its own.
+    /// </summary>
+    public double CueWallGainFrac = 0.0;
+
+    /// <summary>Rail engine for OBJECT balls. Stays 0: the cue is the player's only energy source, and an
+    /// object ball that gained speed off a cushion would make a level's tolerance meaningless.</summary>
+    public double ObjectBallGainFrac = 0.0;
+
     /// <summary>LOCKED. Rail speed gain for object balls.</summary>
     public double ObjectBallGain = 0.0;
 
-    /// <summary>LOCKED. Hard speed cap for every ball, px/s.</summary>
-    public double SpeedCap = 2000.0;
+    /// <summary>
+    /// Hard speed cap for every ball, px/s. NOT LOCKED any more -- see the raised value below.
+    /// </summary>
+    public double SpeedCap = 5600.0;
 
     /// <summary>LOCKED. Arc-length history sampling interval, px.</summary>
     public double HistoryStepPx = 2.0;

@@ -52,7 +52,10 @@ const WHITE_HOLE = {
   note: '靠右库边的单个白洞。只影响白球，让目标球保持可预测。',
 };
 
-const RAIL_KICK = { wallGain: 120, maxBoosts: 4 };
+// THE RAIL ENGINE: a cushion returns 100% of the launch speed as momentum, for 3 boosts.
+// maxBoosts is what stops a long rail becoming an infinite energy farm, and 3 is chosen so the reachable
+// top speed stays under the raised speed cap: 1258 + 3*1258 = 5032 < 5600.
+const RAIL_KICK = { wallGain: 0, wallGainFrac: 1.0, maxBoosts: 3 };
 const REWIND_KICK = { minReleaseFrac: 0.35 };
 
 const R = 12.2;
@@ -159,6 +162,7 @@ for (const [id, count, shots, segs, dist, wantHole, wantRail, wantKick] of PLAN)
     // Written explicitly even when OFF: omitting it inherits the locked CueWallGain of 120 and would hand
     // levels 1-3 a mechanic they are supposed to introduce two levels later.
     wallGain: wantRail ? RAIL_KICK.wallGain : 0,
+    wallGainFrac: wantRail ? RAIL_KICK.wallGainFrac : 0,
     maxWallBoosts: wantRail ? RAIL_KICK.maxBoosts : 0,
   });
 

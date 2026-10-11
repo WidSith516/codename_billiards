@@ -1233,7 +1233,16 @@ public sealed class World
             // unless a type deliberately overrides them.
             var typeGain = p.WallGain;
             var baseGain = b.IsCue ? Config.CueWallGain : Config.ObjectBallGain;
-            var gain = boosted ? (typeGain < 0.0 ? baseGain : typeGain) : 0.0;
+            var flatGain = boosted ? (typeGain < 0.0 ? baseGain : typeGain) : 0.0;
+
+            // THE RAIL ENGINE: a cushion also returns a FRACTION OF THE LAUNCH SPEED as momentum. It is a
+            // fraction of the shot the player actually took rather than a constant, so a full-power break
+            // earns a full bounce and a tap earns a small one. Capped by MaxWallBoosts like the flat gain.
+            var typeFrac = p.WallGainFrac;
+            var baseFrac = b.IsCue ? Config.CueWallGainFrac : Config.ObjectBallGainFrac;
+            var fracGain = boosted ? (typeFrac < 0.0 ? baseFrac : typeFrac) * LaunchSpeed : 0.0;
+
+            var gain = flatGain + fracGain;
             var restitution = p.Restitution >= 0.0 ? p.Restitution : Config.WallRestitution;
             var next = Math.Min(speed * restitution + gain, Config.SpeedCap);
             b.Velocity = b.Velocity.WithLength(next);

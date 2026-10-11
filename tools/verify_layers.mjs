@@ -41,7 +41,10 @@ for (const id of IDS) {
   const objs = j.balls.filter(b => b.type !== 'cue').length;
   const hasHole = Array.isArray(j.whiteHoles) && j.whiteHoles.length > 0;
   const cue = (j.physics.types && j.physics.types.cue) || {};
-  const hasRail = (cue.wallGain || 0) > 0;
+  // Rail kick is on when EITHER channel is positive: wallGainFrac is the rail engine (a fraction of the
+  // launch speed) and wallGain is the older flat bonus. Testing only wallGain was a false negative once the
+  // engine moved to the fractional channel.
+  const hasRail = (cue.wallGainFrac || 0) > 0 || (cue.wallGain || 0) > 0;
   const hasKick = (j.physics.rewindMinReleaseFrac || 0) > 0;
 
   if (objs !== want.objs) errs.push(`objects ${objs} != ${want.objs}`);
