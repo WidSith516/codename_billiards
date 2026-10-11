@@ -96,7 +96,7 @@ public sealed class World
 
         Time = other.Time;
         Tick = other.Tick;
-        ShotUsed = other.ShotUsed;
+        ShotsUsed = other.ShotsUsed;
         Won = other.Won;
         Frozen = other.Frozen;
         Rewinding = other.Rewinding;
@@ -138,7 +138,24 @@ public sealed class World
     /// <summary>Number of completed fixed steps.</summary>
     public int Tick { get; private set; }
 
-    public bool ShotUsed { get; private set; }
+    /// <summary>
+    /// Strikes taken so far in this level.
+    ///
+    /// Added because the one-strike rule made more balls PHYSICALLY UNREACHABLE. Measured: with a single
+    /// strike plus rewinds, a level clears at most about two object balls -- adding one extra ball to the
+    /// corridor kept the level solvable but always finished 2/2, i.e. the extra ball was never potted, and a
+    /// full-circle three-rewind search over a three-ball layout found no solution at all. The extra balls
+    /// were not hard to pot, they were IMPOSSIBLE to reach, because after the one permitted strike the only
+    /// verb left is rewinding along a path that already exists.
+    ///
+    /// So the shot allowance became level data (<see cref="PhysicsConfig.MaxShots"/>), which keeps one-strike
+    /// as the default and the identity of the early levels, and lets later levels grow a ball count.
+    /// </summary>
+    public int ShotsUsed { get; private set; }
+
+    /// <summary>True once the level's strike allowance is spent. Existing view code keys off this, so the
+    /// one-shot levels behave exactly as before.</summary>
+    public bool ShotUsed => ShotsUsed >= Config.MaxShots;
 
     public bool Won { get; private set; }
 
@@ -289,7 +306,7 @@ public sealed class World
         BuildBalls();
         Time = 0.0;
         Tick = 0;
-        ShotUsed = false;
+        ShotsUsed = 0;
         Won = false;
         Frozen = false;
         Rewinding = false;
@@ -329,7 +346,7 @@ public sealed class World
     {
         Time = s.Time;
         Tick = s.Tick;
-        ShotUsed = s.ShotUsed;
+        ShotsUsed = s.ShotsUsed;
         Won = s.Won;
         Frozen = s.Frozen;
         Rewinding = s.Rewinding;
@@ -363,7 +380,7 @@ public sealed class World
         var speed = Math.Min(clamped * Config.SpeedPerPower, Config.SpeedCap);
         Cue.Velocity = Vec2.FromAngleDegrees(angleDegrees) * speed;
         Cue.Pocketed = false;
-        ShotUsed = true;
+        ShotsUsed++;
         LaunchSpeed = speed;         // basis for the pot bonus on rewind release
         Inputs.Add(new InputCommand { Tick = Tick, Kind = InputKind.Shot, A = angleDegrees, B = power });
         return true;

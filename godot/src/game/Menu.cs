@@ -51,9 +51,14 @@ public partial class Menu : Node2D
     private int _frames;
     private bool _captureQuit;
 
+    /// <summary>The autoloaded audio front end, or null when unavailable (headless runs). Every call site
+    /// tolerates null, so audio can never be the reason a headless gate or a capture fails.</summary>
+    private Audio _audio;
+
     public override void _Ready()
     {
         _font = LoadUiFont();
+        _audio = GetNodeOrNull<Audio>("/root/Audio");
         _levels = LevelCatalog.All();
         _selected = LevelCatalog.NextUnclearedIndex();
         LoadSettings();
@@ -199,6 +204,9 @@ public partial class Menu : Node2D
             if (hover != _hoverButton)
             {
                 _hoverButton = hover;
+                // Only on ENTERING a control, and only when that control is real: a hover blip on every
+                // mouse move (or over empty space) would be a machine-gun, not feedback.
+                if (hover >= 0) _audio?.Play(SoundBank.Cue.UiHover, 0.35f);
                 QueueRedraw();
             }
         }
@@ -231,6 +239,7 @@ public partial class Menu : Node2D
 
     private void ActivateCurrent()
     {
+        _audio?.Play(SoundBank.Cue.UiClick, 0.6f);
         if (_screen == Screen.Levels) StartLevel(_selected);
         else if (_screen == Screen.Title) _screen = Screen.Levels;
         QueueRedraw();
@@ -239,6 +248,11 @@ public partial class Menu : Node2D
     private void Activate(int index)
     {
         var id = _hitAreas[index].Id;
+
+        // The keyboard path and the mouse path must not sound different, so the click is emitted here for
+        // mouse activation and in ActivateCurrent for the keyboard path. A LOCKED level is deliberately
+        // given the plain click and simply does nothing, so the refusal is audible rather than silent.
+        _audio?.Play(SoundBank.Cue.UiClick, 0.6f);
 
         if (id == "quit") { GetTree().Quit(); return; }
         if (id == "back") { GoBack(); return; }

@@ -132,6 +132,17 @@ public sealed class PhysicsConfig
     /// <summary>LOCKED. Minimum drag that produces a shot, px.</summary>
     public double MinPower = 12.0;
 
+    /// <summary>
+    /// How many strikes a level allows. NOT LOCKED, and deliberately level data.
+    ///
+    /// Default 1 keeps the one-strike rule that defines the early levels. It exists because measurement
+    /// showed the one-strike rule makes more balls PHYSICALLY UNREACHABLE: with one strike plus rewinds a
+    /// level clears about two object balls, and adding an extra ball kept the corridor solvable but always
+    /// finished 2/2 -- the extra ball was never potted. A three-ball layout was not merely hard, it had no
+    /// solution at all. Later levels therefore raise this and grow their ball count together.
+    /// </summary>
+    public int MaxShots = 1;
+
     /// <summary>LOCKED. Constant rolling deceleration, px/s^2 (replaces exponential damping).</summary>
     public double FrictionDecel = 640.0;
 

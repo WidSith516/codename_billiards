@@ -31,7 +31,11 @@ public sealed class WorldState
     public string LevelId = string.Empty;
     public double Time;
     public int Tick;
-    public bool ShotUsed;
+
+    /// <summary>Strikes taken. Replaces the old bool so a level can allow more than one; Version 1 states
+    /// written before this existed leave it at 0, and a single-strike level reads it as 0 == not yet used.</summary>
+    public int ShotsUsed;
+
     public bool Won;
     public bool Frozen;
     public bool Rewinding;
@@ -88,7 +92,7 @@ public static class StateCodec
             LevelId = world.Level.Id,
             Time = world.Time,
             Tick = world.Tick,
-            ShotUsed = world.ShotUsed,
+            ShotsUsed = world.ShotsUsed,
             Won = world.Won,
             Frozen = world.Frozen,
             Rewinding = world.Rewinding,
@@ -173,7 +177,7 @@ public static class StateCodec
         root.Set("levelId", JsonValue.Of(s.LevelId));
         root.Set("time", JsonValue.Of(s.Time));
         root.Set("tick", JsonValue.Of((double)s.Tick));
-        root.Set("shotUsed", JsonValue.Of(s.ShotUsed));
+        root.Set("shotsUsed", JsonValue.Of(s.ShotsUsed));
         root.Set("won", JsonValue.Of(s.Won));
         root.Set("frozen", JsonValue.Of(s.Frozen));
         root.Set("rewinding", JsonValue.Of(s.Rewinding));
@@ -238,7 +242,7 @@ public static class StateCodec
             LevelId = root.Text("levelId", string.Empty),
             Time = root.Num("time", 0.0),
             Tick = root.Int("tick", 0),
-            ShotUsed = root.Flag("shotUsed", false),
+            ShotsUsed = (int)root.Num("shotsUsed", 0.0),
             Won = root.Flag("won", false),
             Frozen = root.Flag("frozen", false),
             Rewinding = root.Flag("rewinding", false),
@@ -382,7 +386,7 @@ public static class StateHash
         MixString(ref h, s.LevelId);
         MixDouble(ref h, s.Time);
         MixInt(ref h, s.Tick);
-        MixInt(ref h, s.ShotUsed ? 1 : 0);
+        MixInt(ref h, s.ShotsUsed);
         MixInt(ref h, s.Won ? 1 : 0);
         MixInt(ref h, s.Frozen ? 1 : 0);
         MixInt(ref h, s.Rewinding ? 1 : 0);

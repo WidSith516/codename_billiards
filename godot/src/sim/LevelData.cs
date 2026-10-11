@@ -380,6 +380,7 @@ public sealed class LevelData
                 case "powerMax": cfg.PowerMax = v; break;
                 case "speedPerPower": cfg.SpeedPerPower = v; break;
                 case "minPower": cfg.MinPower = v; break;
+                case "maxShots": cfg.MaxShots = (int)Math.Round(v); break;
                 case "frictionDecel": cfg.FrictionDecel = v; break;
                 case "wallRestitution": cfg.WallRestitution = v; break;
                 case "cueWallGain": cfg.CueWallGain = v; break;

@@ -147,6 +147,15 @@ public partial class TestMain : Node
             Run(runner, "S02", LevelSolvabilityTests.S02_ShippedLevelIsForgiving);
         }
 
+        if (suite == "queue") Run(runner, "B03", BallCountProbe.B03_QueueShape);
+        if (suite == "grow2") Run(runner, "B04", BallCountProbe.B04_WhichPositionsKeepItSolvable);
+        if (suite == "shots") Run(runner, "B05", BallCountProbe.B05_SecondShotUnlocksMoreBalls);
+
+        if (suite == "balls")
+        {
+            Run(runner, "B01", BallCountProbe.B01_HowManyBallsCanBeCleared);
+            Run(runner, "B02", BallCountProbe.B02_SegmentsNeededPerCount);
+        }
         if (suite == "solve" || suite == "all") Run(runner, "Z", SolverProbe.Z_SolveAll);
 
         if (suite == "grow")
