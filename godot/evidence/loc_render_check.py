@@ -99,8 +99,43 @@ def ink_extent(path, box):
     return (x0 + int(cols.min()), x0 + int(cols.max()), y0 + int(rows.min()), y0 + int(rows.max()))
 
 
+def nonblank(path, min_distinct=8, min_content=0.02, tolerance=6):
+    """The same two quantities src/ui/verify_png.gd computes, with the same thresholds.
+
+    verify_png.gd is a GDScript per-pixel loop over a 582,400-pixel image; a single 1040x560 frame
+    had not finished after 10 minutes on this machine, so the identical arithmetic is done here in
+    numpy.  Recorded because the deliverable asks for the non-blank evidence -- NOT because it says
+    anything about CJK: a screenshot full of tofu boxes is non-blank too.
+    """
+    img = Image.open(path).convert("RGB")
+    a = np.asarray(img, dtype=np.int32)  # int32, not uint16: (r << 16) overflows uint16
+    keys = (a[:, :, 0] << 16) | (a[:, :, 1] << 8) | a[:, :, 2]
+    vals, counts = np.unique(keys, return_counts=True)
+    distinct = len(vals)
+    top = int(np.argmax(counts))
+    bg_key, bg_count = int(vals[top]), int(counts[top])
+    bg = np.array([(bg_key >> 16) & 255, (bg_key >> 8) & 255, bg_key & 255], dtype=np.int32)
+    diff = np.abs(a - bg).max(axis=2)
+    content = int((diff > tolerance).sum())
+    total = a.shape[0] * a.shape[1]
+    ratio = content / total
+    blank = distinct < min_distinct or ratio < min_content
+    return dict(file=Path(path).name, distinct=distinct,
+                bg="#%02x%02x%02x" % ((bg_key >> 16) & 255, (bg_key >> 8) & 255, bg_key & 255),
+                bg_pct=100.0 * bg_count / total, content_px=content, content_pct=100.0 * ratio,
+                verdict="BLANK" if blank else "NONBLANK")
+
+
 def main():
     ev = Path(r"D:\codename\codename_billiards\godot\evidence")
+
+    print("non-blank check (same metrics + thresholds as src/ui/verify_png.gd):")
+    for f in sorted(ev.glob("loc_*.png")):
+        m = nonblank(f)
+        print(f"  {m['file']:24s} distinct_rgb={m['distinct']:<5d} bg={m['bg']} ({m['bg_pct']:.1f}%) "
+              f"content={m['content_px']}px ({m['content_pct']:.2f}%)  VERDICT={m['verdict']}")
+
+    print("\ntofu / glyph-distinctness check:")
     checks = [
         ("loc_aim.png", "top-bar right readout", (820, 4, 1040, 26)),
         ("loc_aim.png", "left panel STRIKE block", (14, 42, 250, 90)),

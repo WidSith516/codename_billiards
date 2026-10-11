@@ -1410,6 +1410,9 @@ public partial class Play : Node2D
             Message = _messageTimer > 0.0 ? _message : "",
             MessageColor = _messageColor,
             Debug = _debugOverlay,
+            WallBoostsRemaining = _world.Cue != null && _world.Cue.WallBoostsRemaining.HasValue
+                ? _world.Cue.WallBoostsRemaining.Value
+                : -1,
             World = _world,
             Trail = _trail,
             RewindVis = _rewindVis,

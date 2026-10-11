@@ -535,7 +535,11 @@ public static class InvariantTests
             "{\"id\":\"reserved\",\"balls\":[{\"id\":0,\"type\":\"cue\",\"x\":10,\"y\":10}," +
             "{\"id\":1,\"type\":\"bomb\",\"x\":100,\"y\":10}]}");
         t.Check("bomb type is preserved as declared data", reserved.Balls[1].DeclaredType == "bomb");
-        t.Check("bomb loads as an inert object ball in M1", reserved.Balls[1].Type == BallType.Object);
+        // The reserved vocabulary is no longer inert: each name now maps to a real BallType with its
+        // own tunables in PhysicsConfig.Types. A bomb still plays as an ordinary object ball
+        // physically (its table entry inherits the object defaults), but it IS a distinct type,
+        // which is what lets a level carry it and a designer tune it.
+        t.Check("bomb loads as its own type, not a plain object", reserved.Balls[1].Type == BallType.Bomb);
         t.Check("reserved types are visible to tools", reserved.Balls[1].IsReservedSpecialType);
 
         var unknownTypeRejected = false;

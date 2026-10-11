@@ -59,6 +59,9 @@ public static class Hud
         public Color MessageColor = Palette.TextMain;
         public bool Debug;
 
+        /// <summary>Remaining rail speed boosts for the cue ball; a negative value means unlimited.</summary>
+        public int WallBoostsRemaining = -1;
+
         public World World;
         public TimelineTrail Trail;
         public RewindVisualizer RewindVis;
@@ -178,26 +181,44 @@ public static class Hud
             m.RewindSegmentsMax > 0 && m.RewindSegmentsUsed >= m.RewindSegmentsMax ? Palette.Bad : Palette.TextMain);
         DrawBudgetBar(ci, font, x, 192, m);
 
-        // --- TRAIL --------------------------------------------------------- y 216 .. 285
-        Text(ci, font, x, 224, "轨迹", 12, Palette.TextDim);
-        var rows = new (string Key, string Value, Color C)[]
+        // --- TRAIL / numbers: DEBUG ONLY ----------------------------------- y 216 .. 300
+        // Hidden by default so a first-time player sees rules and controls, not counters. "采样点"
+        // and "折返" are diagnostic readings with no in-game meaning; the rewind budget and the
+        // transport hints above stay visible because they ARE the rules.
+        if (m.Debug)
         {
-            ("采样点", m.HistoryEntries.ToString(CultureInfo.InvariantCulture), Palette.TextMain),
-            ("回溯段", m.TrailSessions.ToString(CultureInfo.InvariantCulture), Palette.TextMain),
-            ("折返", m.TurnBacks.ToString(CultureInfo.InvariantCulture), Palette.TurnMarker),
-            ("回正", m.TurnForwards.ToString(CultureInfo.InvariantCulture), Palette.TurnForwardMarker),
-        };
-        var ry = 241.0f;
-        foreach (var row in rows)
-        {
-            Text(ci, font, x, ry, row.Key, 12, Palette.TextDim);
-            Text(ci, font, x + 108, ry, row.Value, 12, row.C);
-            ry += 15;
-        }
+            Text(ci, font, x, 224, "轨迹", 12, Palette.TextDim);
+            var rows = new (string Key, string Value, Color C)[]
+            {
+                ("采样点", m.HistoryEntries.ToString(CultureInfo.InvariantCulture), Palette.TextMain),
+                ("回溯段", m.TrailSessions.ToString(CultureInfo.InvariantCulture), Palette.TextMain),
+                ("折返", m.TurnBacks.ToString(CultureInfo.InvariantCulture), Palette.TurnMarker),
+                ("回正", m.TurnForwards.ToString(CultureInfo.InvariantCulture), Palette.TurnForwardMarker),
+            };
+            var ry = 241.0f;
+            foreach (var row in rows)
+            {
+                Text(ci, font, x, ry, row.Key, 12, Palette.TextDim);
+                Text(ci, font, x + 108, ry, row.Value, 12, row.C);
+                ry += 15;
+            }
 
-        if (m.ForecastContacts > 0)
+            // Per-ball rail-boost allowance: this is a real rule now (capped by count), so it is
+            // worth showing while tuning.
+            var boosts = m.WallBoostsRemaining;
+            var boostsText = boosts < 0 ? "无限" : boosts.ToString(CultureInfo.InvariantCulture);
+            Text(ci, font, x, ry + 5, "撞库加速", 12, Palette.TextDim);
+            Text(ci, font, x + 108, ry + 5, boostsText, 12,
+                boosts == 0 ? Palette.Bad : Palette.Good);
+
+            if (m.ForecastContacts > 0)
+            {
+                Text(ci, font, x, Math.Max(ry + 22, 291), $"待碰撞 {m.ForecastContacts}", 12, Palette.ContactSoon);
+            }
+        }
+        else
         {
-            Text(ci, font, x, Math.Max(ry + 2, 291), $"待碰撞 {m.ForecastContacts}", 12, Palette.ContactSoon);
+            Text(ci, font, x, 228, "F1  显示调试面板", 11, Palette.TextDim);
         }
 
         // --- transport hint ------------------------------------------------ y 306 .. 322

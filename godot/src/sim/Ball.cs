@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace Rewind.Sim;
@@ -9,6 +10,20 @@ public enum BallType
 
     /// <summary>Scoring ball. Pocketed permanently; never rewound.</summary>
     Object = 1,
+
+    /// <summary>
+    /// Reserved: heavy ball. Data-only for now -- it loads and plays, with its physical character
+    /// (mass, friction, rail bonus) taken from <see cref="PhysicsConfig.Types"/> rather than from
+    /// any special-case behaviour. It was previously a bare string in the level file with no
+    /// effect at all.
+    /// </summary>
+    Heavy = 2,
+
+    /// <summary>Reserved: bomb ball. Loads and plays; behaviour not yet implemented.</summary>
+    Bomb = 3,
+
+    /// <summary>Reserved: anchor ball. Loads and plays; behaviour not yet implemented.</summary>
+    Anchor = 4,
 }
 
 /// <summary>
@@ -217,6 +232,30 @@ public sealed class Ball
     public double Mass;
     public bool Pocketed;
 
+    /// <summary>
+    /// Per-ball physical character, resolved from <see cref="PhysicsConfig.Types"/> at build time
+    /// (a level may override individual fields). Kept on the ball so the hot loop never has to
+    /// re-index the table, and so a type change mid-run would take effect on the next rebuild.
+    /// </summary>
+    public BallTypeParams Params = new BallTypeParams();
+
+    /// <summary>
+    /// How many times this ball has already taken the rail speed bonus. Compared against
+    /// <see cref="BallTypeParams.MaxWallBoosts"/>; the reflection itself is never capped, only the
+    /// bonus. Exposed so the HUD can show remaining boosts and a level budget can use them.
+    /// </summary>
+    public int WallBoostsUsed;
+
+    /// <summary>
+    /// Remaining rail speed boosts, or null when unlimited. Null rather than a sentinel int so the
+    /// HUD can render "unlimited" without guessing a magic number.
+    /// </summary>
+    public int? WallBoostsRemaining =>
+        Params.MaxWallBoosts < 0 ? null : Math.Max(0, Params.MaxWallBoosts - WallBoostsUsed);
+
+    /// <summary>Whether a rail hit right now would grant the speed bonus.</summary>
+    public bool CanTakeWallBoost => Params.MaxWallBoosts < 0 || WallBoostsUsed < Params.MaxWallBoosts;
+
     /// <summary>Only the cue ball records in M1 (GDD §4.1: rewind applies to the cue alone).</summary>
     public bool RecordsHistory;
 
@@ -246,6 +285,8 @@ public sealed class Ball
         {
             Velocity = Velocity,
             Pocketed = Pocketed,
+            Params = Params,
+            WallBoostsUsed = WallBoostsUsed,
         };
         clone.History.LoadFrom(History.Samples, History.DistanceSinceSample);
         return clone;

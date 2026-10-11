@@ -323,11 +323,29 @@ Chinese was read back from every one of them, for example:
 * win banner: `清台成功` / `4/4 颗目标球 · 用时 0.01s` / `回溯 0 次  距离 0 px  轨迹 1 点`
 * on the felt: `速度 1258 px/s 接触 400 ms`, `起点 2.6s`, `命中 …`, `释放`, `第1段`, `回溯中`
 
-### 3.4 Non-blank check for the record — `godot/src/ui/verify_png.gd`
+### 3.4 Non-blank check for the record
 
-All seven captures were also run through the project's existing checker
-(`-- <png>` → `VERDICT=NONBLANK`, exit 0). This is recorded because the deliverable format asks for
-it, **not** because it proves anything about CJK — §3.1–§3.3 are the checks that do.
+`godot/src/ui/verify_png.gd` was read for its idiom (mode colour as the background, per-channel
+tolerance 6, `distinct_rgb >= 8`, `content >= 2%`). **It was launched but is impractically slow
+here** — a GDScript per-pixel loop over a 582,400-pixel image had not finished after 10 minutes for
+a *single* frame, so the runs were cancelled rather than left to block for over an hour. The
+identical arithmetic was therefore done in numpy inside `loc_render_check.py`, with the same two
+metrics and the same thresholds, and it reproduces the same modal background the checker documents
+(`#14402f` = `Palette.Felt`):
+
+| Capture | distinct_rgb | modal bg | content | verdict |
+|---|---|---|---|---|
+| `loc_aim.png` | 4180 | `#14402f` (56.8%) | 43.14% | NONBLANK |
+| `loc_strike.png` | 5756 | `#14402f` (55.8%) | 44.06% | NONBLANK |
+| `loc_rewind.png` | 7364 | `#14402f` (55.5%) | 44.39% | NONBLANK |
+| `loc_rewind-contact.png` | 6437 | `#14402f` (55.5%) | 44.42% | NONBLANK |
+| `loc_scrub.png` | 7653 | `#14402f` (55.4%) | 44.43% | NONBLANK |
+| `loc_debug.png` | 7306 | `#14402f` (34.6%) | 65.37% | NONBLANK |
+| `loc_win.png` | 3824 | `#14402f` (44.9%) | 55.08% | NONBLANK |
+
+Recorded because the deliverable format asks for it, **not** because it proves anything about CJK —
+§3.1–§3.3 are the checks that do. To be explicit about the limit: this table would read exactly the
+same if every string had rendered as `□`.
 
 ---
 
@@ -350,6 +368,15 @@ tools\godot\godot_console.exe --path godot --resolution 1040x560 --rendering-dri
 | `godot/evidence/loc_scrub.png` | `scrub` | `P  在标记处松开`, `释放` marker, `第…段` session label |
 | `godot/evidence/loc_debug.png` | `debug` | the whole F1 debug overlay in Chinese |
 | `godot/evidence/loc_win.png` | `win` | `清台成功` banner + both stat lines |
+
+### Verification provenance
+
+The captures above are from the **current** sources, not an earlier revision. `Play.cs` was changed
+under me twice by the Lead (the main-loop fixes at 14:45/14:47), so the whole battery — capture,
+clip measurement, tofu test — was re-run after those commits rather than reported from the earlier
+frames. Before each capture round the built assembly's timestamp was compared against the newest
+`.cs` in `godot/src/game/` to rule out the stale-assembly trap this project has hit repeatedly
+(final state: assembly 14:54:07 > newest source 14:45:13; build rc 0, 0 warnings, 0 errors).
 
 ---
 
@@ -437,7 +464,22 @@ Stated plainly rather than glossed:
    0 warnings, 0 errors**, with the built assembly confirmed newer than the last source edit so that
    the stale-assembly trap cannot apply. The kernel test suites were not executed.
 6. **One transient team-wide blocker, now cleared.** Mid-task, `godot/tests/InvariantTests.cs`
-   (another teammate's scope) failed to compile — 4 errors, missing `using System.Linq;` — which
+   (another teammate's scope) failed to compile — 4 errors around LINQ over `corridor.Balls` — which
    silently froze every teammate's assembly at the 14:10 build. It was reported to the Lead and to
-   `m2-levels` and has since been fixed; the build is green and all evidence above is from a build
-   containing every change in this document.
+   `m2-levels` with the raw compiler output and has since been fixed on their side (they replaced the
+   LINQ with explicit loops). The build is green and every piece of evidence above comes from an
+   assembly built from all the changes in this document — the assembly timestamp was checked against
+   the last source edit before each capture round, precisely because this project has hit the
+   stale-assembly trap repeatedly.
+7. **`src/ui/verify_png.gd` was not run to completion** (see §3.4) — it is too slow on this machine
+   to be usable per-screenshot. Its metric was replicated in numpy instead, with the same thresholds
+   and the same modal-background idiom read out of the checker's own source. If a maintainer wants
+   the original script's verdict on these files as well, it needs to run for roughly an hour per
+   image batch; nothing in this task's conclusions depends on it, since a tofu-filled frame would
+   also pass it.
+8. **Concurrent writers.** Two other teammates committed to this tree while this pass was running
+   (`m2-levels` on `godot/levels/**` and `godot/tests/**`, the Lead on `godot/src/game/Play.cs`).
+   Anything they changed in `godot/src/game/**` *after* the final capture round above would not be
+   reflected in these screenshots. The re-verification in §4 was run at the end of this task and was
+   clean; a later edit by someone else to a string in `Play.cs`/`Hud.cs` would need a fresh capture
+   to be covered by this evidence.

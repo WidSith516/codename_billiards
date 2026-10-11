@@ -243,11 +243,20 @@ public sealed class World
             var spawn = Level.Balls[i];
             var radius = spawn.Radius > 0.0 ? spawn.Radius : Config.BallRadius;
             var records = spawn.Type == BallType.Cue;
+
+            // Resolve this ball's physical character: the per-type table is the default, and an
+            // explicit value in the level file still wins. This is what makes "different ball types
+            // behave differently" real instead of the previous inert strings.
+            var typeParams = Config.For(spawn.Type).Clone();
+            if (spawn.Mass > 0.0) typeParams.Mass = spawn.Mass;
+            var mass = typeParams.Mass <= 0.0 ? 1.0 : typeParams.Mass;
+
             var ball = new Ball(spawn.Id, spawn.Type, new Vec2(spawn.X, spawn.Y), radius,
-                spawn.Mass <= 0.0 ? 1.0 : spawn.Mass, records, Config.HistoryStepPx)
+                mass, records, Config.HistoryStepPx)
             {
                 Velocity = new Vec2(spawn.Vx, spawn.Vy),
                 Pocketed = false,
+                Params = typeParams,
             };
             ball.History.Reset(ball.Position, Vec2.Zero, 0.0);
             Balls[i] = ball;
@@ -822,7 +831,10 @@ public sealed class World
             if (b.IsCue && Rewinding) continue;
             var speed = b.Speed;
             if (speed <= 0.0) continue;
-            var next = speed - Config.FrictionDecel * h;
+            // Per-type rolling deceleration: a heavy ball stops sooner than a light one. A negative
+            // value inherits the global, so the locked constant stays authoritative by default.
+            var decel = b.Params.FrictionDecel >= 0.0 ? b.Params.FrictionDecel : Config.FrictionDecel;
+            var next = speed - decel * h;
             if (next <= 0.0)
             {
                 // Velocity crossing zero stops the ball exactly (locked §3) and the history is
@@ -1071,10 +1083,24 @@ public sealed class World
         if (index >= 0 && _railTransformUsedThisStep[index] == 0)
         {
             _railTransformUsedThisStep[index] = 1;
-            var gain = b.IsCue ? Config.CueWallGain : Config.ObjectBallGain;
             var speed = b.Velocity.Length;
-            var next = Math.Min(speed * Config.WallRestitution + gain, Config.SpeedCap);
+            var p = b.Params;
+
+            // The bonus is per-ball and CAPPED BY COUNT. Once a ball has used its allowance the
+            // reflection and its restitution still apply exactly as before -- only the free energy
+            // stops. That keeps the rail useful without letting one ball farm speed forever.
+            var boosted = b.CanTakeWallBoost;
+            // Resolution order: the type's own value, else the locked global for its role. A
+            // negative value is the "inherit" sentinel, so the locked globals stay authoritative
+            // unless a type deliberately overrides them.
+            var typeGain = p.WallGain;
+            var baseGain = b.IsCue ? Config.CueWallGain : Config.ObjectBallGain;
+            var gain = boosted ? (typeGain < 0.0 ? baseGain : typeGain) : 0.0;
+            var restitution = p.Restitution >= 0.0 ? p.Restitution : Config.WallRestitution;
+            var next = Math.Min(speed * restitution + gain, Config.SpeedCap);
             b.Velocity = b.Velocity.WithLength(next);
+
+            if (boosted) b.WallBoostsUsed++;
             Stats.RailTransforms++;
         }
 
@@ -1121,9 +1147,32 @@ public sealed class World
         var vAlong = Vec2.Dot(b.Velocity - a.Velocity, n);
         if (vAlong >= 0.0) return true;
 
-        var j = -(1.0 + Config.BallRestitution) * vAlong / invSum;
+        // Restitution comes from the two types involved (mean of the pair), so a "bouncier" ball
+        // type really does leave a collision faster. A negative value inherits the locked global.
+        var restA = a.Params.Restitution >= 0.0 ? a.Params.Restitution : Config.BallRestitution;
+        var restB = b.Params.Restitution >= 0.0 ? b.Params.Restitution : Config.BallRestitution;
+        var restitution = 0.5 * (restA + restB);
+
+        var j = -(1.0 + restitution) * vAlong / invSum;
         a.Velocity -= n * (j * invA);
         b.Velocity += n * (j * invB);
+
+        // Optional per-type collision boost. 1.0 (the shipped default) is a plain energy-conserving
+        // collision. Values above 1.0 deliberately inject energy, which the user asked for; because
+        // that silently changes every level's tolerance window, it is OFF by default and must be
+        // measured before it is turned on. Only the ball that GAINED speed is scaled, so a boost on
+        // one type does not amplify the other.
+        var boostA = a.Params.CollisionBoost > 0.0 ? a.Params.CollisionBoost : 1.0;
+        var boostB = b.Params.CollisionBoost > 0.0 ? b.Params.CollisionBoost : 1.0;
+        if (boostA != 1.0 && b.Speed > a.Speed) a.Velocity = a.Velocity * boostA;
+        if (boostB != 1.0 && a.Speed > b.Speed) b.Velocity = b.Velocity * boostB;
+
+        if (Config.SpeedCap > 0.0)
+        {
+            if (a.Speed > Config.SpeedCap) a.Velocity = a.Velocity.WithLength(Config.SpeedCap);
+            if (b.Speed > Config.SpeedCap) b.Velocity = b.Velocity.WithLength(Config.SpeedCap);
+        }
+
         return true;
     }
 

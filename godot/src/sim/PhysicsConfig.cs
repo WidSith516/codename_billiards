@@ -3,6 +3,57 @@ using System;
 namespace Rewind.Sim;
 
 /// <summary>
+/// Per-ball-type physical parameters. One entry per <see cref="BallType"/>.
+///
+/// Why a table instead of globals: the game needs "different ball types behave differently", and
+/// the previous design had a single global set of constants with a two-value BallType enum, so
+/// the reserved level-file vocabulary (bomb / anchor / heavy) loaded as ordinary balls. Every
+/// value here is data, so a level can override them and a designer can tune them without a
+/// rebuild.
+///
+/// DEFAULTS ARE CHOSEN SO THAT "OBJECT" EXACTLY REPRODUCES THE PREVIOUS BEHAVIOUR. Changing the
+/// shipped defaults would invalidate the tolerance verification of every authored level
+/// (godot/LEVELS.md), so any change here must be re-verified with tools/author.
+/// </summary>
+public sealed class BallTypeParams
+{
+    /// <summary>Relative mass. Drives how a collision splits momentum; heavier moves less.</summary>
+    public double Mass = 1.0;
+
+    /// <summary>Rolling deceleration, px/s^2. A negative value inherits Config.FrictionDecel.</summary>
+    public double FrictionDecel = -1.0;
+
+    /// <summary>Ball-ball restitution for collisions involving this type.
+    /// A negative value means "inherit Config.BallRestitution".</summary>
+    public double Restitution = -1.0;
+
+    /// <summary>Speed ADDED on a rail hit (before <see cref="MaxWallBoosts"/> runs out).
+    /// A negative value means "inherit the global default for this ball's role", so the locked
+    /// globals stay authoritative unless a type deliberately overrides them.</summary>
+    public double WallGain = -1.0;
+
+    /// <summary>
+    /// How many times this ball may be speed-boosted by a rail before the boost stops.
+    /// The reflection itself (and its restitution) always continues; only the bonus is capped.
+    /// 0 disables the bonus entirely; a negative value means unlimited.
+    /// </summary>
+    public int MaxWallBoosts = -1;
+    /// <summary>
+    /// Multiplier applied to the speed a ball GAINS from a ball-ball collision. 1.0 = the collision
+    /// is energy-conserving (normal billiards). Values above 1 deliberately inject energy.
+    ///
+    /// DEFAULT IS 1.0 ON PURPOSE. The user asked for "a collision accelerates the ball according to
+    /// its type", which is energy non-conserving by construction. Shipping a default above 1.0
+    /// would silently invalidate every level's tolerance window and could make authored levels
+    /// unsolvable, so the MECHANISM is available and tunable but OFF until it is measured.
+    /// See godot/PHYSICS_TUNING.md.
+    /// </summary>
+    public double CollisionBoost = 1.0;
+
+    public BallTypeParams Clone() => (BallTypeParams)MemberwiseClone();
+}
+
+/// <summary>
 /// Simulation tuning. Every value marked LOCKED is copied verbatim from
 /// <c>策划案/REWIND_core_params_v1.md</c> (v1.1) and must not be changed here without
 /// updating that file and <c>godot/DIFFERENCES.md</c>. The solver (m1-solver) uses the
@@ -19,6 +70,40 @@ public sealed class PhysicsConfig
 
     /// <summary>LOCKED. Ball radius, px.</summary>
     public double BallRadius = 12.2;
+
+    // ------------------------------------------------- per-type physical params
+    /// <summary>
+    /// Indexed by <see cref="BallType"/>. Object defaults reproduce the previous global behaviour
+    /// exactly, so shipping levels stay valid. Levels and the HUD may override any field.
+    /// </summary>
+    public BallTypeParams[] Types =
+    {
+        //  Cue: the player's ball. All values inherit the locked globals (restitution 0.92, gain
+        //  120), so shipping behaviour is unchanged; the allowance is unlimited.
+        new BallTypeParams { Mass = 1.0, FrictionDecel = -1.0, Restitution = -1.0, WallGain = -1.0, MaxWallBoosts = -1 },
+
+        //  Object: the plain target ball. No rail bonus, exactly as before.
+        new BallTypeParams { Mass = 1.0, FrictionDecel = -1.0, Restitution = -1.0, WallGain = 0.0, MaxWallBoosts = 0 },
+
+        //  Heavy (new type, previously an inert string): hard to move, stops sooner, no rail bonus.
+        new BallTypeParams { Mass = 3.0, FrictionDecel = 900.0, Restitution = -1.0, WallGain = 0.0, MaxWallBoosts = 0 },
+
+        //  Bomb: currently plays as an ordinary object ball; the type exists so tunables and future
+        //  behaviour have somewhere to live.
+        new BallTypeParams { Mass = 1.0, FrictionDecel = -1.0, Restitution = -1.0, WallGain = 0.0, MaxWallBoosts = 0 },
+
+        //  Anchor: currently ordinary; intended to become immovable.
+        new BallTypeParams { Mass = 1.0, FrictionDecel = -1.0, Restitution = -1.0, WallGain = 0.0, MaxWallBoosts = 0 },
+    };
+
+    /// <summary>Params for a type, falling back to the object entry if the table is short.</summary>
+    public BallTypeParams For(BallType type)
+    {
+        var i = (int)type;
+        if (Types == null || Types.Length == 0) return new BallTypeParams();
+        if (i < 0 || i >= Types.Length) i = (int)BallType.Object;
+        return Types[i] ?? Types[(int)BallType.Object] ?? new BallTypeParams();
+    }
 
     /// <summary>LOCKED. Rail inner box.</summary>
     public double TableLeft = 65.0;

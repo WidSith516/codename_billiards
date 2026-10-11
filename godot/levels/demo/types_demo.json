@@ -1,0 +1,37 @@
+{
+  "id": "types_demo",
+  "name": "球种与库边加速演示（可调参数）",
+  "table": { "left": 65, "right": 975, "top": 63, "bottom": 497 },
+  "ballRadius": 12.2,
+  "pocketRadius": 24,
+  "pockets": [
+    { "x": 65,  "y": 63  },
+    { "x": 520, "y": 63  },
+    { "x": 975, "y": 63  },
+    { "x": 65,  "y": 497 },
+    { "x": 520, "y": 497 },
+    { "x": 975, "y": 497 }
+  ],
+  "balls": [
+    { "id": 0, "type": "cue",    "x": 300, "y": 280 },
+    { "id": 1, "type": "object", "x": 520, "y": 280 },
+    { "id": 2, "type": "heavy",  "x": 700, "y": 280 },
+    { "id": 3, "type": "bomb",   "x": 700, "y": 180 }
+  ],
+  "budget": { "maxSegments": 8, "maxDistance": 2400 },
+
+  "physics": {
+    "types": {
+      "object": { "mass": 1.0, "frictionDecel": -1, "wallGain": 0,   "maxWallBoosts": 0 },
+      "heavy":  { "mass": 3.0, "frictionDecel": 900, "wallGain": 0,   "maxWallBoosts": 0 },
+      "bomb":   { "mass": 1.0, "frictionDecel": -1,  "wallGain": 0,   "maxWallBoosts": 0 },
+      "cue":    { "mass": 1.0, "frictionDecel": -1,  "wallGain": 120, "maxWallBoosts": 6 }
+    }
+  },
+
+  "authoring": {
+    "tool": "hand-authored demo, NOT tolerance-verified",
+    "purpose": "展示三件事：①重球被撞后位移明显更小（mass 3.0）；②白球撞库加速有次数上限（maxWallBoosts 6）；③所有数值都从本文件的 physics.types 读取，改完即生效，无需重建。",
+    "note": "这不是出货关卡，只是球种与参数的实验场。它没有经过 tools/author 的容差验证，因此不保证可清台。"
+  }
+}

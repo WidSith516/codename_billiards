@@ -111,6 +111,14 @@ public partial class TestMain : Node
             Run(runner, "F04", FrameLoopTests.F04_LivePlayIsNotFrozen);
         }
 
+        if (suite == "all" || suite == "types")
+        {
+            Run(runner, "P01", BallTypeTests.P01_DefaultsMatchLockedGlobals);
+            Run(runner, "P02", BallTypeTests.P02_MassChangesCollisionResponse);
+            Run(runner, "P03", BallTypeTests.P03_WallBoostIsCappedByCount);
+            Run(runner, "P04", BallTypeTests.P04_TypeOverridesComeFromLevelData);
+        }
+
         if (negative)
         {
             // An acceptance gate that cannot fail is worse than no gate.

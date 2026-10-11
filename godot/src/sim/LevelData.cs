@@ -15,7 +15,12 @@ public sealed class BallSpawn
     public double Vx;
     public double Vy;
     public double Radius = -1.0; // <0 -> use config.BallRadius
-    public double Mass = 1.0;
+    /// <summary>Relative mass. A NON-POSITIVE value is the "not specified" sentinel so the per-type
+    /// table (<see cref="PhysicsConfig.Types"/>) supplies the default. Do not default this to 1.0:
+    /// that silently overrode every type's own mass, which made a "heavy" ball weigh exactly as
+    /// much as an ordinary one.</summary>
+    public double Mass = -1.0;
+
 
     /// <summary>
     /// The type string exactly as written in the level file. M1 reserves the special-ball
@@ -169,10 +174,21 @@ public sealed class LevelData
                     type = BallType.Cue;
                     break;
                 case "object":
-                case "bomb":     // reserved: data only in M1 (behaves as an object ball)
-                case "anchor":   // reserved: data only in M1
-                case "heavy":    // reserved: data only in M1
                     type = BallType.Object;
+                    break;
+                // No longer inert strings. Each maps to a real type whose physical character
+                // (mass, friction, restitution, rail gain, rail-boost allowance) comes from
+                // PhysicsConfig.Types. Behaviour beyond physics is still unimplemented, so a
+                // bomb/anchor currently plays as its configured mass and friction rather than as
+                // a special mechanic -- but it is a distinct type with distinct tunables.
+                case "heavy":
+                    type = BallType.Heavy;
+                    break;
+                case "bomb":
+                    type = BallType.Bomb;
+                    break;
+                case "anchor":
+                    type = BallType.Anchor;
                     break;
                 default:
                     throw new JsonException("unknown ball type '" + declared + "'");
@@ -189,7 +205,10 @@ public sealed class LevelData
                 Vx = b.Num("vx", 0.0),
                 Vy = b.Num("vy", 0.0),
                 Radius = b.Num("radius", -1.0),
-                Mass = b.Num("mass", 1.0),
+                // -1 = "not specified", so the per-type table decides. Defaulting this to 1.0 here
+                // (as it used to) overrode every type's own mass at parse time, which is why a
+                // "heavy" ball weighed exactly as much as an ordinary one.
+                Mass = b.Num("mass", -1.0),
             };
             level.Balls.Add(spawn);
         }
@@ -250,7 +269,8 @@ public sealed class LevelData
             if (b.Vx != 0.0) o.Set("vx", JsonValue.Of(b.Vx));
             if (b.Vy != 0.0) o.Set("vy", JsonValue.Of(b.Vy));
             if (b.Radius > 0.0) o.Set("radius", JsonValue.Of(b.Radius));
-            if (b.Mass != 1.0) o.Set("mass", JsonValue.Of(b.Mass));
+            // Only emit an explicit mass when the caller actually set one (the sentinel is <= 0).
+            if (b.Mass > 0.0 && b.Mass != 1.0) o.Set("mass", JsonValue.Of(b.Mass));
             balls.Add(o);
         }
 
@@ -275,6 +295,13 @@ public sealed class LevelData
 
         foreach (var kv in physics.Members)
         {
+            // "types" carries per-ball-type physics; everything else is a scalar global.
+            if (kv.Key == "types")
+            {
+                ApplyTypeOverrides(cfg, kv.Value);
+                continue;
+            }
+
             var v = kv.Value.AsDouble(double.NaN);
             switch (kv.Key)
             {
@@ -308,6 +335,64 @@ public sealed class LevelData
         }
 
         return cfg;
+    }
+
+    /// <summary>
+    /// Merge the optional <c>physics.types</c> object: a map from type name to that type's physical
+    /// parameters. This is how a designer tunes mass / friction / restitution / rail gain and the
+    /// rail-boost allowance without a rebuild, e.g.
+    /// <code>
+    /// "physics": { "types": { "heavy": { "mass": 3, "frictionDecel": 900, "maxWallBoosts": 0 } } }
+    /// </code>
+    /// A negative value is the inherit sentinel (use the locked global); <c>maxWallBoosts</c>
+    /// negative means unlimited.
+    /// </summary>
+    public static void ApplyTypeOverrides(PhysicsConfig cfg, JsonValue types)
+    {
+        if (types == null) return;
+        if (types.Kind != JsonKind.Object) throw new JsonException("'physics.types' must be an object");
+
+        foreach (var entry in types.Members)
+        {
+            var type = ParseTypeName(entry.Key);
+            if (type == null)
+                throw new JsonException("unknown ball type '" + entry.Key + "' in physics.types");
+            if (entry.Value.Kind != JsonKind.Object)
+                throw new JsonException("physics.types." + entry.Key + " must be an object");
+
+            var p = cfg.For(type.Value).Clone();
+            foreach (var f in entry.Value.Members)
+            {
+                var v = f.Value.AsDouble(double.NaN);
+                switch (f.Key)
+                {
+                    case "mass": p.Mass = v; break;
+                    case "frictionDecel": p.FrictionDecel = v; break;
+                    case "restitution": p.Restitution = v; break;
+                    case "wallGain": p.WallGain = v; break;
+                    case "maxWallBoosts": p.MaxWallBoosts = (int)Math.Round(v); break;
+                    case "collisionBoost": p.CollisionBoost = v; break;
+                    default:
+                        throw new JsonException("unknown type override '" + f.Key + "'");
+                }
+            }
+
+            cfg.Types[(int)type.Value] = p;
+        }
+    }
+
+    /// <summary>Type name to enum, or null when the name is unknown.</summary>
+    private static BallType? ParseTypeName(string name)
+    {
+        switch (name)
+        {
+            case "cue": return BallType.Cue;
+            case "object": return BallType.Object;
+            case "heavy": return BallType.Heavy;
+            case "bomb": return BallType.Bomb;
+            case "anchor": return BallType.Anchor;
+            default: return null;
+        }
     }
 
     public void Validate()
