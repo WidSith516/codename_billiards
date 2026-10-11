@@ -147,6 +147,23 @@ public partial class TestMain : Node
             Run(runner, "S02", LevelSolvabilityTests.S02_ShippedLevelIsForgiving);
         }
 
+        if (suite == "solve" || suite == "all") Run(runner, "Z", SolverProbe.Z_SolveAll);
+
+        if (suite == "grow")
+        {
+            // Candidate extra balls for corridor: spread across the table, mixed types, avoiding the
+            // cue/object column so the existing corridor is not blocked outright.
+            var cands = new (double X, double Y, string Type)[]
+            {
+                (300, 200, "object"), (740, 200, "object"),
+                (300, 400, "object"), (740, 400, "object"),
+                (420, 150, "heavy"), (620, 150, "heavy"),
+                (420, 420, "anchor"), (620, 420, "anchor"),
+                (200, 280, "bomb"), (840, 150, "bomb"),
+            };
+            SolverProbe.Z_Grow(runner, "corridor", cands);
+        }
+
         if (suite == "all" || suite == "pot")
         {
             Run(runner, "P01", PotBonusTests.P01_NoPotMeansNoBonus);
