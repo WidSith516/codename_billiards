@@ -68,6 +68,53 @@ foreach ($r in $results) {
 }
 
 Write-Host ""
-if ($fail -eq 0) { Write-Host "ALL CAPTURES NON-BLANK ($($results.Count)/$($results.Count))" -ForegroundColor Green; exit 0 }
-Write-Host "CAPTURE VERIFICATION FAILED ($fail)" -ForegroundColor Red
+if ($fail -eq 0) { Write-Host "ALL CAPTURES NON-BLANK ($($results.Count)/$($results.Count))" -ForegroundColor Green }
+else { Write-Host "CAPTURE VERIFICATION FAILED ($fail)" -ForegroundColor Red }
+
+# --- self tests + benchmarks ---------------------------------------------------
+Write-Host ""
+Write-Host "=== M2 self tests (headless, real exit codes) ===" -ForegroundColor Cyan
+$suites = @(
+    @{ Name = 'logic';    Args = @('--selftest=all') },
+    @{ Name = 'input';    Args = @('--selftest=input') },
+    @{ Name = 'gradient'; Args = @('--selftest=gradient'); Render = $true }
+)
+foreach ($s in $suites) {
+    $log = Join-Path $root ("godot/.tmp/selftest_$($s.Name).log")
+    if ($s.Render) {
+        & $godot --path (Join-Path $root 'godot') --resolution 1040x560 --rendering-driver d3d12 res://scenes/play.tscn -- @($s.Args) *> $log
+    } else {
+        & $godot --headless --path (Join-Path $root 'godot') res://scenes/play.tscn -- @($s.Args) *> $log
+    }
+
+    $rc = $LASTEXITCODE
+    if ($rc -ne 0) { $fail++ }
+    $summary = (Select-String -Path $log -Pattern 'M2 selftest summary' -Encoding UTF8).Line
+    $verdict = (Select-String -Path $log -Pattern '^M2 SELFTEST' -Encoding UTF8).Line
+    Write-Host "  $($s.Name): rc=$rc   $summary   $verdict"
+    if ($s.Name -eq 'input') { Select-String -Path $log -Pattern '^\s+(PASS|FAIL)' -Encoding UTF8 | ForEach-Object { Write-Host "     $($_.Line.Trim())" } }
+}
+
+Write-Host ""
+Write-Host "=== frame timing: trail size sweep (d3d12, 1040x560) ===" -ForegroundColor Cyan
+$gdir = Join-Path $root 'godot'
+$benchPng = Join-Path $root 'godot/.tmp/bench_bench.png'
+foreach ($n in @(500, 2000, 5000)) {
+    $log = Join-Path $root "godot/.tmp/bench_$n.log"
+    & $godot --path $gdir --resolution 1040x560 --rendering-driver d3d12 res://scenes/play.tscn -- --level=corridor --bench=trail50k --points=$n --min-frames=180 --capture-frames=180 "--out=$($benchPng -replace '\\','/')" *> $log
+    $ft = (Select-String -Path $log -Pattern 'FRAME_TIMING' -Encoding UTF8).Line
+    Write-Host "  vertices=$n : $ft"
+    if ($LASTEXITCODE -ne 0) { $fail++ }
+}
+
+$log = Join-Path $root 'godot/.tmp/bench_50k.log'
+& $godot --path $gdir --resolution 1040x560 --rendering-driver d3d12 res://scenes/play.tscn -- --level=corridor --bench=trail50k --points=50000 --min-frames=180 --capture-frames=180 --trace-draw "--out=$((Join-Path $abs 'm2_8_trail_50k.png') -replace '\\','/')" *> $log
+Write-Host "  vertices=50000 (plan target): $((Select-String -Path $log -Pattern 'FRAME_TIMING' -Encoding UTF8).Line)"
+Write-Host "     $((Select-String -Path $log -Pattern 'bench targetVertices' -Encoding UTF8).Line)"
+Write-Host "     $((Select-String -Path $log -Pattern 'authored=' -Encoding UTF8 | Select-Object -First 1).Line)"
+if ($LASTEXITCODE -ne 0) { $fail++ }
+
+Write-Host ""
+if ($fail -eq 0) { Write-Host "M2 EVIDENCE COMPLETE: captures + self tests + benchmarks all clean" -ForegroundColor Green; exit 0 }
+Write-Host "M2 EVIDENCE INCOMPLETE ($fail failures)" -ForegroundColor Red
 exit 1

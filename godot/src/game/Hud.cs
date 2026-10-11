@@ -159,7 +159,7 @@ public static class Hud
         DrawBudgetBar(ci, font, x, 192, m);
 
         // --- TRAIL --------------------------------------------------------- y 216 .. 285
-        Text(ci, font, x, 230, "TRAIL", 12, Palette.TextDim);
+        Text(ci, font, x, 224, "TRAIL", 12, Palette.TextDim);
         var rows = new (string Key, string Value, Color C)[]
         {
             ("points", m.HistoryEntries.ToString(CultureInfo.InvariantCulture), Palette.TextMain),
@@ -167,7 +167,7 @@ public static class Hud
             ("turn-backs", m.TurnBacks.ToString(CultureInfo.InvariantCulture), Palette.TurnMarker),
             ("turn-forwards", m.TurnForwards.ToString(CultureInfo.InvariantCulture), Palette.TurnForwardMarker),
         };
-        var ry = 247.0f;
+        var ry = 241.0f;
         foreach (var row in rows)
         {
             Text(ci, font, x, ry, row.Key, 12, Palette.TextDim);
@@ -177,15 +177,15 @@ public static class Hud
 
         if (m.ForecastContacts > 0)
         {
-            Text(ci, font, x, ry + 3, $"hits pending {m.ForecastContacts}", 12, Palette.ContactSoon);
+            Text(ci, font, x, Math.Max(ry + 2, 291), $"hits pending {m.ForecastContacts}", 12, Palette.ContactSoon);
         }
 
         // --- transport hint ------------------------------------------------ y 306 .. 322
         if (m.ShotUsed && !m.Won)
         {
-            Text(ci, font, x, 312, m.Rewinding ? (m.Scrubbing ? "P  release at marker" : "P  pause + scrub") : "hold R  rewind",
+            Text(ci, font, x, 342, m.Rewinding ? (m.Scrubbing ? "P  release at marker" : "P  pause + scrub") : "hold R  rewind",
                 12, Palette.RewindCue);
-            Text(ci, font, x, 328, m.Rewinding ? "release R  resume" : "release R  keep stored v", 12, Palette.TextDim);
+            Text(ci, font, x, 358, m.Rewinding ? "release R  resume" : "release R  keep stored v", 12, Palette.TextDim);
         }
 
         // --- CONTROLS, pinned to the panel bottom --------------------------- y 436 .. 540
@@ -230,8 +230,8 @@ public static class Hud
             ("strike", 50, 81),
             ("power", 104, 154),
             ("budget", 168, 214),
-            ("trail", 230, 299),
-            ("transport", 312, 328),
+            ("trail", 224, 293),
+            ("transport", 342, 358),
             ("controls", 34 + 476 - 108 - 10, 34 + 476 - 108 + 21 + 5 * 14),
             ("message", 494, 544),
         };

@@ -1,11 +1,11 @@
-using Godot;
+﻿using Godot;
 
 namespace Rewind.Game;
 
 /// <summary>
 /// M2 presentation palette. Deliberately NOT the prototype's felt+gold scheme: the old
 /// prototype was unreadable because ball identity was carried by colour alone and one ball was
-/// near-black on dark green (port plan §4.5 "colour-blind friendly palette").
+/// near-black on dark green (port plan 搂4.5 "colour-blind friendly palette").
 ///
 /// Rules encoded here:
 ///  * object-ball colours are the Okabe-Ito colour-blind-safe set (8 colours, distinguishable
@@ -48,7 +48,7 @@ public static class Palette
 
     // ---------------------------------------------------------------- trail
     /// <summary>Oldest end of the time gradient (desaturated, cold).</summary>
-    public static readonly Color TrailOld = new Color("#5b7f86");
+    public static readonly Color TrailOld = new Color("#22343a");
     /// <summary>Newest end of the time gradient (bright, saturated).</summary>
     public static readonly Color TrailNew = new Color("#ffd166");
     /// <summary>Rewind session boundary stripe.</summary>

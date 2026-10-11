@@ -149,6 +149,13 @@ public partial class Play : Node2D
             return;
         }
 
+        if (_selfTestMode == "input")
+        {
+            RunInputSelfTest();
+            GetTree().Quit(_checksFailed == 0 ? 0 : 1);
+            return;
+        }
+
         if (_selfTestMode != null)
         {
             RunSelfTests(_selfTestMode);
@@ -1233,6 +1240,115 @@ public partial class Play : Node2D
         };
         return m;
     }
+
+    /// <summary>
+    /// Drive the REAL input handlers with synthetic events, so the strike path is exercised the way
+    /// a player exercises it: press on the cue ball, drag away, release = one strike, and the second
+    /// attempt must be refused. Scripted captures set the aim directly, which would leave this path
+    /// untested - this closes that gap without a human.
+    /// </summary>
+    private void RunInputSelfTest()
+    {
+        GD.Print("[input] driving Play._UnhandledInput with synthetic mouse/keyboard events");
+        var cue = CueScreen();
+
+        // 1. Press on the cue ball. A press on empty felt must NOT start an aim.
+        var offBall = cue + new Vector2(120, 60);
+        _UnhandledInput(Press(offBall, true));
+        _UnhandledInput(Press(offBall, false));
+        Check("pressing away from the cue ball does not strike", !_world.ShotUsed, $"shotUsed={_world.ShotUsed}");
+
+        // 2. Real drag: down on the cue, move, release. Pull back along +x => the cue must go +x.
+        var pullBack = new Vector2(160f, 0f);
+        _UnhandledInput(Press(cue, true));
+        _UnhandledInput(MouseMotion(cue + pullBack * 0.5f));
+        _UnhandledInput(MouseMotion(cue + pullBack));
+        _UnhandledInput(Press(cue + pullBack, false));
+
+        var expectedPower = Math.Min((double)pullBack.Length(), _world.Config.PowerMax);
+        Check("a drag from the cue ball produces exactly one strike", _world.ShotUsed,
+            $"shotUsed={_world.ShotUsed} angle={_aimAngle:F3} power={_aimPower:F3}");
+        Check("the drag angle is the pull direction reversed", Math.Abs(_aimAngle) < 1e-3,
+            $"angle={_aimAngle:F3} deg (expected 0.0 for a pull along +x)");
+        Check("the drag distance is the shot power", Math.Abs(_aimPower - expectedPower) < 1e-6,
+            $"power={_aimPower:F3} drag={expectedPower:F3}");
+        Check("the launch speed is power x SpeedPerPower",
+            Math.Abs(_world.Cue.Speed - _aimPower * _world.Config.SpeedPerPower) < 1e-6,
+            $"speed={_world.Cue.Speed:F3} expected={_aimPower * _world.Config.SpeedPerPower:F3}");
+        Check("the input sequence recorded exactly one shot", _world.Inputs.Count == 1,
+            $"inputs={_world.Inputs.Count} kind={(_world.Inputs.Count > 0 ? _world.Inputs[0].Kind.ToString() : "none")}");
+
+        // 3. A second drag must be refused: one strike per level.
+        Settle();
+        var beforeSpeed = _world.Cue.Speed;
+        _UnhandledInput(Press(cue, true));
+        _UnhandledInput(Press(cue + pullBack, false));
+        Check("a second drag cannot strike again", _world.Inputs.Count == 1,
+            $"inputs={_world.Inputs.Count} speedBefore={beforeSpeed:F3} speedNow={_world.Cue.Speed:F3}");
+
+        // 4. Hold R = rewind, release R = release (the verb path through the real key handler).
+        _UnhandledInput(KeyEvent(Key.R, true));
+        Check("holding R starts a rewind", _world.Rewinding, $"rewinding={_world.Rewinding} segments={_world.RewindSegmentsUsed}");
+        var guard = 0;
+        while (_world.Rewinding && guard++ < 4000) StepOnceForInputTest();
+        _UnhandledInput(KeyEvent(Key.R, false));
+        Check("releasing R ends the rewind", !_world.Rewinding, $"rewinding={_world.Rewinding}");
+
+        // 5. P pauses for scrubbing, arrows move the marker, Enter releases at it.
+        _UnhandledInput(KeyEvent(Key.R, true));
+        for (var i = 0; i < 90; i++) StepOnceForInputTest();
+        _UnhandledInput(KeyEvent(Key.P, true));
+        var markerBefore = _rewindVis.PlannedReleaseIndex;
+        _UnhandledInput(KeyEvent(Key.Left, true));
+        _UnhandledInput(KeyEvent(Key.Right, true));
+        var markerAfter = _rewindVis.PlannedReleaseIndex;
+        Check("P pauses the rewind and arms the scrub marker",
+            _rewindVis.Scrubbing && _rewindVis.PlannedReleaseIndex >= 0,
+            $"scrubbing={_rewindVis.Scrubbing} marker={markerBefore} -> {markerAfter} " +
+            $"span={_rewindVis.MinReleaseIndex}..{_rewindVis.MaxReleaseIndex}");
+        _UnhandledInput(KeyEvent(Key.Enter, true));
+        Check("Enter releases at the scrubbed point", !_world.Rewinding && !_rewindVis.Scrubbing,
+            $"rewinding={_world.Rewinding} scrubbing={_rewindVis.Scrubbing} speed={_world.Cue.Speed:F1}");
+
+        // 6. F1 toggles the debug overlay through the real key handler.
+        _UnhandledInput(KeyEvent(Key.F1, true));
+        Check("F1 toggles the debug overlay", _debugOverlay, $"debugOverlay={_debugOverlay}");
+        _UnhandledInput(KeyEvent(Key.F1, true));
+        Check("F1 toggles it back", !_debugOverlay, $"debugOverlay={_debugOverlay}");
+
+        GD.Print($"=== M2 selftest summary: {_checksRun - _checksFailed}/{_checksRun} checks passed ===");
+        GD.Print(_checksFailed == 0 ? "M2 SELFTEST PASS" : $"M2 SELFTEST FAIL: {_checksFailed} check(s) failed");
+    }
+
+    private void StepOnceForInputTest()
+    {
+        _world.Step();
+        _trail.Sync(_world);
+        _rewindVis.ArcWalked = _world.Rewinding ? ArcWalked() : 0.0;
+        if (_world.Rewinding) _rewindVis.EnsureForecast(_world, _trail.TraversedRange.From, _trail.TraversedRange.To);
+    }
+
+    private static InputEventMouseButton Press(Vector2 at, bool pressed) => new InputEventMouseButton
+    {
+        ButtonIndex = MouseButton.Left,
+        Pressed = pressed,
+        Position = at,
+        ButtonMask = pressed ? MouseButtonMask.Left : 0,
+    };
+
+    private static InputEventMouseMotion MouseMotion(Vector2 at) => new InputEventMouseMotion
+    {
+        Position = at,
+        ButtonMask = MouseButtonMask.Left,
+    };
+
+    private static InputEventKey KeyEvent(Key key, bool pressed) => new InputEventKey
+    {
+        Keycode = key,
+        PhysicalKeycode = key,
+        Pressed = pressed,
+        Echo = false,
+    };
 
     // ================================================================ self test
 
