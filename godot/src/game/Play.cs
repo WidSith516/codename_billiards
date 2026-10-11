@@ -642,6 +642,12 @@ public partial class Play : Node2D
                 // for. One Update() call advances it to the point where the wave has travelled.
                 _effects.Update(0.35);
 
+                // --no-fx renders the identical frozen state with the effects suppressed, so the two
+                // captures can be differenced to prove exactly which pixels the effect owns. Without this
+                // the only available comparison is between two different game states, which differ
+                // everywhere and proves nothing.
+                if (HasArg("--no-fx")) _effects.Clear();
+
                 GD.Print($"[play] rail state: railTransforms={_world.Stats.RailTransforms} " +
                          $"effects={_effects.Count} cue=({_world.Cue.Position.X:F0},{_world.Cue.Position.Y:F0}) " +
                          $"r={_world.Cue.Radius:F1} v=({_world.Cue.Velocity.X:F0},{_world.Cue.Velocity.Y:F0}) " +
