@@ -1376,13 +1376,31 @@ public sealed class World
                 if (Time - _whiteHoleLastFired[i, h] < hole.Cooldown) continue;
 
                 var speed = b.Speed;
+
+                // Direction: push the ball radially OUT from the hole centre. Chosen over "keep the
+                // incoming direction" because it makes the exit predictable for a ball that has come
+                // to rest INSIDE the hole -- which is the whole point of a rescue mechanic -- and
+                // because it gives a stationary cue a deterministic direction instead of one derived
+                // from a history heading that may not exist.
+                var outward = b.Position - hole.Center;
+                Vec2 dir;
+                if (outward.LengthSquared > 1e-12)
+                {
+                    dir = outward.Normalized();
+                }
+                else if (speed > 1e-6)
+                {
+                    dir = b.Velocity / speed;          // dead centre but still moving: keep heading
+                }
+                else
+                {
+                    dir = new Vec2(0.0, 1.0);           // dead centre and stopped: eject downward
+                }
+
                 var next = Math.Max(speed * hole.Gain, hole.ExitSpeed);
                 next = Math.Min(next, Math.Min(hole.MaxSpeed, Config.SpeedCap));
-                if (next <= speed) continue;
+                if (next <= 0.0) continue;
 
-                // Keep the direction of travel; if the ball was stationary, give it a nudge along
-                // its last known heading so a stopped cue is not simply teleported sideways.
-                var dir = speed > 1e-6 ? b.Velocity / speed : LastHeading(b);
                 b.Velocity = dir * next;
                 _whiteHoleLastFired[i, h] = Time;
                 Stats.WhiteHoleActivations++;

@@ -81,6 +81,24 @@ public partial class Play : Node2D
     /// <summary>Whether the whole left HUD panel is drawn. F1 toggles it so a recording sees a
     /// clean table; the top bar is always drawn.</summary>
     private bool _showHud = true;
+
+    /// <summary>Guards the one-time progress write when the level is cleared.</summary>
+    private bool _resultRecorded;
+    private int _earnedStars;
+
+    /// <summary>
+    /// On-level coaching, shown only the first time a player opens a level.
+    ///
+    /// Deliberately bubbles pinned to the thing being taught rather than a modal tutorial: the user
+    /// asked for the teaching to happen inside the existing level, and a step is marked done by the
+    /// player ACTUALLY performing the action, not by pressing "next". Reading is skippable; doing is
+    /// not.
+    /// </summary>
+    private int _tutorialStep;
+    private bool _tutorialActive;
+    private double _tutorialStepStartTime;
+
+    private bool TutorialVisible => _tutorialActive;
     private bool _verbose;
     private double _messageTimer;
     private string _message = "";
@@ -166,7 +184,9 @@ public partial class Play : Node2D
         // panels were resized for this scale.
         Scale = new Vector2(ViewScale, ViewScale);
 
-        var levelId = Arg("--level=") ?? LevelIds.Corridor;
+        // The front end sets SelectedLevelId when the player picks a level; the CLI argument still
+        // wins so every existing capture/bench invocation keeps working unchanged.
+        var levelId = Arg("--level=") ?? Menu.SelectedLevelId ?? LevelIds.Corridor;
         _outPath = Arg("--out=");
         // Only a scripted capture prepares a frozen state. Defaulting this to "aim" (as it did)
         // meant PrepareState ran on EVERY launch, and PrepareState ends by setting _freezeWorld,
@@ -262,6 +282,25 @@ public partial class Play : Node2D
         }
 
         if (_stateName != null) PrepareState(_stateName);
+
+        // The audio autoload, if it is up. Null in a headless run, and every call site tolerates
+        // that, so audio can never be the reason a gate or a capture fails.
+        _audio = GetNodeOrNull<Audio>("/root/Audio");
+        _prevStats = _world.Stats.Clone();
+
+        // Coaching runs only in real play, never during a scripted capture: an evidence screenshot
+        // must show the game, not a tutorial bubble.
+        if (_stateName == null && Menu.TutorialPending) ResetTutorial();
+
+        // ...unless a capture explicitly asks for a coaching step, so the bubbles can be verified
+        // without a human performing the actions.
+        var tutorialArg = Arg("--tutorial=");
+        if (tutorialArg != null && int.TryParse(tutorialArg, out var tutorialStep))
+        {
+            _tutorialActive = true;
+            _tutorialStep = Math.Clamp(tutorialStep, 0, 3);
+            _tutorialStepStartTime = -10.0;
+        }
 
         // Live-play invariant: unless the caller asked for a scripted capture, the world must be
         // free to step. This is asserted here (and covered by F04) because a frozen world is
@@ -759,6 +798,9 @@ public partial class Play : Node2D
             // keep running during the frames that precede the screenshot and capture another moment.
             if (!_rewindVis.Paused && !_freezeWorld) _world.Step();
         }
+
+        UpdateTutorial();
+        PlayEventSounds();
         _simMs = (Time.GetTicksUsec() - t0) / 1000.0;
 
         // Live telemetry. Absence of this was half of why two dead-main-loop bugs survived: in live
@@ -942,6 +984,18 @@ public partial class Play : Node2D
 
                 break;
 
+            case Key.Escape:
+                // Back to the front end. Deliberately always available: the level select is the only
+                // way to reach the other levels, so being unable to leave a level would strand the
+                // player in level 1.
+                if (key.Pressed)
+                {
+                    if (_world.Rewinding) ReleaseRewind();
+                    GetTree().ChangeSceneToFile("res://scenes/menu.tscn");
+                }
+
+                break;
+
             case Key.Enter:
                 if (key.Pressed && _rewindVis.Scrubbing)
                 {
@@ -988,10 +1042,6 @@ public partial class Play : Node2D
                     Notify($"历史轨迹：{(_trail.ShowTrail ? "开" : "关")}", Palette.TextDim);
                 }
 
-                break;
-
-            case Key.Escape:
-                if (key.Pressed) GetTree().Quit(0);
                 break;
         }
     }
@@ -1158,7 +1208,224 @@ public partial class Play : Node2D
         _aimCache.Invalidate();
         _dragging = false;
         _hasAim = false;
+        _resultRecorded = false;
+        _earnedStars = 0;
+        // Replay the coaching on an explicit reset: the player asked to try again, so re-prompting
+        // the step they were on is useful rather than annoying.
+        if (Menu.TutorialPending) ResetTutorial();
         Notify("关卡已重置 · 击球重新可用（调试键，不是规则）", Palette.TextDim);
+    }
+
+    // ---------------------------------------------------------------- audio
+
+    /// <summary>Counters from the previous frame, so events are found by difference.</summary>
+    private Rewind.Sim.SimStats _prevStats;
+
+    /// <summary>
+    /// Turns physics events into sound.
+    ///
+    /// Events are detected by DIFFERENCING the kernel's counters rather than by the kernel calling
+    /// into audio: the kernel stays free of engine dependencies (that is what lets the headless gate
+    /// and the solvability solver link it), and one place decides what a given event sounds like.
+    ///
+    /// Pitch is jittered per event so a rack break does not sound like one sound repeated twenty
+    /// times, and hit volume scales with impact speed so a soft touch is audibly soft.
+    /// </summary>
+    private void PlayEventSounds()
+    {
+        var s = _world.Stats;
+
+        // Ball-ball contacts: fire once per event, but cap the count per frame so a big break does
+        // not spawn twenty overlapping players and clip the master bus.
+        var contacts = s.BallBallContacts - _prevStats.BallBallContacts;
+        if (contacts > 0)
+        {
+            var cue = contacts >= 4 ? SoundBank.Cue.BallHitHard : SoundBank.Cue.BallHitSoft;
+            var n = Math.Min(contacts, 3);
+            for (var i = 0; i < n; i++)
+            {
+                var speed = _world.Balls.Length > 0 ? _world.Cue.Speed : 0.0;
+                var loud = Mathf.Clamp((float)(speed / 1258.0) + 0.18f, 0.18f, 1.0f);
+                _audio?.Play(cue, loud, 0.92f + (float)GD.Randf() * 0.20f);
+            }
+        }
+
+        var rails = s.RailTransforms - _prevStats.RailTransforms;
+        if (rails > 0)
+        {
+            // Rail pitch rises with how many boosts the cue has already taken: the player can HEAR
+            // that the rail is still paying out.
+            var used = _world.Cue != null ? _world.Cue.WallBoostsUsed : 0;
+            var pitch = 0.95f + Math.Min(used, 6) * 0.06f;
+            _audio?.Play(SoundBank.Cue.RailBounce, 0.75f, pitch);
+        }
+
+        var pockets = s.PocketCaptures - _prevStats.PocketCaptures;
+        if (pockets > 0) _audio?.Play(SoundBank.Cue.Pocket, 0.95f, 0.96f + (float)GD.Randf() * 0.12f);
+
+        var holes = s.WhiteHoleActivations - _prevStats.WhiteHoleActivations;
+        if (holes > 0) _audio?.Play(SoundBank.Cue.WhiteHole, 0.95f);
+
+        var rewindContacts = s.RewindContacts - _prevStats.RewindContacts;
+        if (rewindContacts > 0) _audio?.Play(SoundBank.Cue.RewindContact, 0.8f, 1.0f + rewindContacts * 0.05f);
+
+        // Rewind enter/leave is a state change, not a counter.
+        if (_world.Rewinding != _wasRewinding)
+        {
+            _audio?.Play(_world.Rewinding ? SoundBank.Cue.RewindStart : SoundBank.Cue.RewindRelease, 0.9f);
+            _wasRewinding = _world.Rewinding;
+        }
+
+        if (_world.Won && !_playedWinSound)
+        {
+            _playedWinSound = true;
+            _audio?.Play(SoundBank.Cue.Win, 1.0f);
+        }
+
+        _prevStats = s.Clone();
+    }
+
+    private bool _wasRewinding;
+    private bool _playedWinSound;
+
+    /// <summary>The autoloaded audio front end, or null when it is unavailable (headless runs).</summary>
+    private Audio _audio;
+
+    // ---------------------------------------------------------------- tutorial
+    private void ResetTutorial()
+    {
+        _tutorialActive = true;
+        _tutorialStep = 0;
+        _tutorialStepStartTime = 0.0;
+    }
+
+    /// <summary>
+    /// Advances the coaching when the player actually performs the taught action. Called from the
+    /// frame loop rather than from the input handlers so a step can depend on world state that the
+    /// input handlers do not see (e.g. an object ball actually being struck).
+    /// </summary>
+    private void UpdateTutorial()
+    {
+        if (!TutorialVisible) return;
+        if (_world.Time < _tutorialStepStartTime + 0.35) return;   // let the step be read
+
+        switch (_tutorialStep)
+        {
+            case 0:
+                // Step 1: make a strike. The prompt is the drag itself.
+                if (_world.ShotUsed) AdvanceTutorial();
+                break;
+
+            case 1:
+                // Step 2: rewind, and release. Both halves must happen.
+                if (_world.Stats.Rewinds > 0 && !_world.Rewinding && _world.ShotUsed) AdvanceTutorial();
+                break;
+
+            case 2:
+                // Step 3: use the white hole at least once (or finish, whichever comes first).
+                if (_world.Stats.WhiteHoleActivations > 0 || _world.Won) AdvanceTutorial();
+                break;
+
+            case 3:
+                // Closing note, dismissed by the player clearing the level or pressing Space.
+                if (_world.Won) _tutorialActive = false;
+                break;
+        }
+    }
+
+    private void AdvanceTutorial()
+    {
+        _tutorialStep++;
+        _tutorialStepStartTime = _world.Time;
+        if (_tutorialStep >= 4) _tutorialActive = false;
+        QueueRedraw();
+    }
+
+    /// <summary>
+    /// The bubbles. Each is pinned to the thing it talks about rather than parked in a corner, so
+    /// the lesson and the object are read together.
+    /// </summary>
+    private void DrawTutorial()
+    {
+        if (!TutorialVisible) return;
+
+        var hasHole = _level.WhiteHoles.Count > 0;
+
+        switch (_tutorialStep)
+        {
+            case 0:
+                BubbleAt(CueScreen() + new Vector2(0, -58),
+                    "按住白球往后拖，松手击球",
+                    "这是本关唯一的一杆 —— 打完就不能再补杆了");
+                break;
+
+            case 1:
+                BubbleAt(new Vector2(56, 96),
+                    "现在按住 R，让白球原路倒回来",
+                    "松手时它会保留当时的逆向速度，冲出一条新路线");
+                break;
+
+            case 2:
+                if (hasHole)
+                {
+                    var h = _level.WhiteHoles[0];
+                    BubbleAt(new Vector2((float)h.Center.X, (float)h.Center.Y),
+                        "青色光环是白洞：白球穿过它会被加速",
+                        "白球没速度了这关就结束 —— 白洞就是把它救回来的地方");
+                }
+                else
+                {
+                    BubbleAt(new Vector2(520, 120),
+                        "把剩下的球都打进袋就通关",
+                        "没有白洞的关卡要靠回溯与撞库来维持白球的速度");
+                }
+
+                break;
+
+            case 3:
+                BubbleAt(new Vector2(520, 110), "放开手试试看", "Esc 返回首页选关，空格重玩本关");
+                break;
+        }
+    }
+
+    /// <summary>One coaching bubble, anchored at a world position with a pointer down to it.</summary>
+    private void BubbleAt(Vector2 anchor, string title, string body)
+    {
+        const float w = 430.0f;
+        const float h = 76.0f;
+
+        // Keep the bubble inside the canvas. The HUD panel occupies x < 260, so a bubble that wants
+        // to be further left would be hidden behind it.
+        const float minX = 268.0f;
+        const float maxX = 1032.0f - w;                 // 602
+        // NOTE: minX (268) < maxX (602) must hold. An earlier version passed a lower bound larger
+        // than its upper bound to Math.Clamp, which silently returns the lower bound and pinned
+        // every bubble to the left edge.
+        var x = Math.Clamp(anchor.X - w * 0.5f, minX, maxX);
+
+        // Prefer above the anchor, but drop below when that would collide with the top HUD band.
+        var y = anchor.Y - h - 26.0f;
+        if (y < 96.0f) y = Math.Min(anchor.Y + 26.0f, 470.0f);
+        y = Math.Clamp(y, 96.0f, 470.0f);
+
+        var rect = new Rect2(x, y, w, h);
+        DrawRect(rect, new Color(0.02f, 0.09f, 0.10f, 0.94f));
+        DrawRect(rect, Palette.SessionStripe, false, 2.0f);
+
+        // Pointer from the bubble down to the anchor: makes clear what is being talked about.
+        var tipX = Math.Clamp(anchor.X, x + 24, x + w - 24);
+        var tipY = y + h;
+        var target = new Vector2(anchor.X, Math.Min(anchor.Y - 14.0f, tipY + 30.0f));
+        DrawLine(new Vector2(tipX, tipY), target, Palette.SessionStripe, 1.6f, true);
+        DrawCircle(target, 3.0f, Palette.SessionStripe);
+
+        DrawString(_font, new Vector2(x + 14, y + 28), title, HorizontalAlignment.Left, w - 28, 15, Palette.TextMain);
+        DrawString(_font, new Vector2(x + 14, y + 52), body, HorizontalAlignment.Left, w - 28, 12, Palette.TextDim);
+        DrawString(_font, new Vector2(x + 14, y + 69), $"引导 {_tutorialStep + 1} / 4", HorizontalAlignment.Left, -1, 10,
+            new Color(0.45f, 0.62f, 0.58f, 1f));
+
+        if (HasArg("--trace-bubble"))
+            GD.Print($"[bubble] step={_tutorialStep} anchor=({anchor.X:F0},{anchor.Y:F0}) rect=({x:F0},{y:F0},{w:F0},{h:F0}) right={x + w:F0}");
     }
 
     private void Notify(string message, Color color)
@@ -1200,8 +1467,21 @@ public partial class Play : Node2D
 
         if (_world.Won) DrawWinBanner();
 
+        // ---- UI space, not playfield space ------------------------------------------------
+        // The node itself is scaled by ViewScale (1.045) so the table overscans and fills the
+        // canvas. That is right for the PLAYFIELD but wrong for the interface: design-space
+        // x = 1032 renders at 1078 and is silently clipped by the 1040-wide canvas. (Measured: a
+        // tutorial bubble anchored at x=840 came out with its right edge cut off, and the earlier
+        // HUD readout clipped for the same reason.)
+        //
+        // So the interface is drawn under an inverse scale, which makes UI coordinates equal real
+        // canvas pixels and removes the whole class of bug. Anything added here afterwards is
+        // automatically safe.
+        DrawSetTransform(Vector2.Zero, 0.0f, new Vector2(1.0f / ViewScale, 1.0f / ViewScale));
         Hud.Draw(this, _font, BuildHudModel());
         if (_debugOverlay) Hud.DrawDebug(this, _font, BuildHudModel());
+        DrawTutorial();
+        DrawSetTransform(Vector2.Zero, 0.0f, Vector2.One);
 
         _drawMs = (Time.GetTicksUsec() - t0) / 1000.0;
         if (HasArg("--trace-draw") && _frames % 60 == 0)
@@ -1427,16 +1707,35 @@ public partial class Play : Node2D
 
     private void DrawWinBanner()
     {
-        var rect = new Rect2(300, 190, 440, 150);
+        // Record the clear exactly once. Doing it here (rather than in the physics) keeps the kernel
+        // free of file IO, and the guard keeps it idempotent because _Draw runs every frame.
+        if (!_resultRecorded)
+        {
+            _resultRecorded = true;
+            _earnedStars = LevelCatalog.RecordResult(
+                _level.Id, _world.Stats.Rewinds, _world.Stats.WhiteHoleActivations);
+        }
+
+        var rect = new Rect2(300, 178, 440, 186);
         DrawRect(rect, new Color(0.03f, 0.08f, 0.05f, 0.92f));
         DrawRect(rect, Palette.Good, false, 3.0f);
-        DrawString(_font, new Vector2(rect.Position.X, rect.Position.Y + 52), "清台成功", HorizontalAlignment.Center, rect.Size.X, 34, Palette.Good);
-        DrawString(_font, new Vector2(rect.Position.X, rect.Position.Y + 88),
-            $"{_world.PocketedObjectCount}/{_world.ObjectBallCount} 颗目标球 · 用时 {_world.Time:F2}s",
-            HorizontalAlignment.Center, rect.Size.X, 16, Palette.TextMain);
-        DrawString(_font, new Vector2(rect.Position.X, rect.Position.Y + 116),
-            $"回溯 {_world.Stats.Rewinds} 次   距离 {_world.RewindDistanceUsed:F0} px   轨迹 {_world.Cue.History.Count} 点",
-            HorizontalAlignment.Center, rect.Size.X, 14, Palette.TextDim);
+        DrawString(_font, new Vector2(rect.Position.X, rect.Position.Y + 50), "清台成功", HorizontalAlignment.Center, rect.Size.X, 32, Palette.Good);
+
+        // Stars earned, drawn large: this is the reward the front end records.
+        for (var i = 0; i < 3; i++)
+        {
+            var on = i < _earnedStars;
+            DrawString(_font, new Vector2(rect.Position.X + 150 + i * 46, rect.Position.Y + 92),
+                on ? "★" : "☆", HorizontalAlignment.Left, -1, 30,
+                on ? Palette.Accent : new Color(0.32f, 0.36f, 0.34f, 1f));
+        }
+
+        DrawString(_font, new Vector2(rect.Position.X, rect.Position.Y + 128),
+            $"{_world.PocketedObjectCount}/{_world.ObjectBallCount} 颗 · 用时 {_world.Time:F2}s · 回溯 {_world.Stats.Rewinds} 次",
+            HorizontalAlignment.Center, rect.Size.X, 15, Palette.TextMain);
+        DrawString(_font, new Vector2(rect.Position.X, rect.Position.Y + 154),
+            "Esc 返回首页 · 空格 重玩本关",
+            HorizontalAlignment.Center, rect.Size.X, 13, Palette.TextDim);
     }
 
     // =============================================================== hud model

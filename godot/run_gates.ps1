@@ -87,7 +87,13 @@ $bootRc = $LASTEXITCODE
 $bootDiag = @(Select-String -Path "$logs\03_boot.log" -Pattern 'ERROR|WARNING' -Encoding UTF8)
 Step 'boot exits 0' ($bootRc -eq 0) "rc=$bootRc"
 Step 'boot prints no ERROR/WARNING' ($bootDiag.Count -eq 0) "matches=$($bootDiag.Count)"
-Step 'boot loaded the kernel' ($null -ne (Select-String -Path "$logs\03_boot.log" -Pattern 'KERNEL_VIEW_READY' -Encoding UTF8)) ''
+# The main scene is now the FRONT END (scenes/menu.tscn), which hands off to the play scene.
+# The boot contract is therefore "the front end constructed and found its levels", asserted on the
+# menu's own marker. Play's KERNEL_VIEW_READY is still accepted so a direct play-scene boot passes.
+Step 'boot loaded the front end' (
+    ($null -ne (Select-String -Path "$logs\03_boot.log" -Pattern 'MENU_READY' -Encoding UTF8)) -or
+    ($null -ne (Select-String -Path "$logs\03_boot.log" -Pattern 'KERNEL_VIEW_READY' -Encoding UTF8))
+) ''
 
 # --- 4. gate -------------------------------------------------------------------
 Write-Host ""

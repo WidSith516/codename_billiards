@@ -67,7 +67,7 @@
   "physics": {
     "types": {
       "cue": {
-        "mass": 2.0,
+        "mass": 1.4,
         "restitution": 0.92
       },
       "object": {
@@ -77,13 +77,15 @@
   },
   "whiteHoles": [
     {
-      "x": 520,
-      "y": 430,
-      "r": 34,
-      "gain": 1.4,
-      "exitSpeed": 520,
+      "x": 840,
+      "y": 280,
+      "r": 38,
+      "gain": 1.6,
+      "exitSpeed": 700,
       "maxSpeed": 1500,
-      "affectsObjectBalls": 1
+      "cooldown": 0.5,
+      "affectsObjectBalls": 0,
+      "note": "靠右库边单洞；affectsObjectBalls=0 让目标球保持可预测"
     }
   ],
   "authoring": {

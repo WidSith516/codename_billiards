@@ -133,6 +133,14 @@ public partial class TestMain : Node
             Run(runner, "W04", WhiteHoleTests.W04_ShippedLevelHasAWhiteHole);
         }
 
+        if (suite == "all" || suite == "menu")
+        {
+            Run(runner, "M01", MenuTests.M01_CatalogDiscoversPlayableLevels);
+            Run(runner, "M02", MenuTests.M02_UnlockProgressionIsConsistent);
+            Run(runner, "M03", MenuTests.M03_StarRuleIsBounded);
+            Run(runner, "M04", MenuTests.M04_ProgressRoundTrips);
+        }
+
         if (negative)
         {
             // An acceptance gate that cannot fail is worse than no gate.

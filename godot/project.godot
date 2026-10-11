@@ -10,11 +10,11 @@ config_version=5
 [application]
 
 config/name="REWIND"
-config/description="One-shot time-rewind billiards — M2 playable presentation layer."
-; The main scene is the playable view (M2). A headless run must still exit 0
-; (`--headless --path godot --quit`), which any Node-based main scene satisfies;
-; scenes/kernel.tscn (the M1 minimal view) is kept and still runnable.
-run/main_scene="res://scenes/play.tscn"
+config/description="One-shot time-rewind billiards — playable demo slice."
+; The main scene is the FRONT END (title / level select / theme / settings), which hands off to
+; scenes/play.tscn for the selected level. A headless run must still exit 0
+; (`--headless --path godot --quit`), which any Node-based main scene satisfies.
+run/main_scene="res://scenes/menu.tscn"
 config/features=PackedStringArray("4.7", "C#", "GL Compatibility")
 ; Harmless safety net for captured-to-file stdout (measured as not required in 4.7.2 here).
 run/flush_stdout_on_print=true
@@ -22,6 +22,12 @@ run/flush_stdout_on_print=true
 [dotnet]
 
 project/assembly_name="RewindKernel"
+
+[autoload]
+
+; Audio front end, shared by the front end and the play scene. Registered as an autoload so a sound
+; started in a level is not cut off by a scene change and so there is exactly one volume.
+Audio="*res://src/game/Audio.cs"
 
 [display]
 
