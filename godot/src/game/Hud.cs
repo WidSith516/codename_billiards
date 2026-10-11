@@ -74,6 +74,10 @@ public static class Hud
         public RewindVisualizer RewindVis;
         public AimPredictor.Prediction Aim;
 
+        /// <summary>The decorative sine bands (top + bottom), for the debug overlay only. Null when
+        /// disabled.</summary>
+        public ReplayBand[] Bands;
+
         public double FrameMs;
         public double MaxFrameMs;
         public double DrawMs;
@@ -361,6 +365,24 @@ public static class Hud
 
     // --------------------------------------------------------- debug overlay
 
+    /// <summary>
+    /// The debug overlay's line for the decorative bands. Both instances are reported on one row
+    /// because they are one effect: if the two ever disagree, that is the bug this line exists to
+    /// make visible.
+    /// </summary>
+    private static (string Text, Color Color, int Size) BandRow(Model m)
+    {
+        if (m.Bands == null || m.Bands.Length == 0) return ("底带    关闭", Palette.TextDim, 11);
+        var sb = new System.Text.StringBuilder("底带    ");
+        for (var i = 0; i < m.Bands.Length; i++)
+        {
+            if (i > 0) sb.Append(" | ");
+            sb.Append(m.Bands[i].BandName).Append(' ').Append(m.Bands[i].Stats());
+        }
+
+        return (sb.ToString(), Palette.TextDim, 11);
+    }
+
     public static void DrawDebug(CanvasItem ci, Font font, Model m)
     {
         var rect = new Rect2(696, 34, 268, 476);
@@ -428,6 +450,7 @@ public static class Hud
             ($"折返    {m.TurnBacks} 次  回正 {m.TurnForwards} 次", Palette.TextDim, 11),
             ($"残影    {(m.Trail == null ? 0 : GhostLength(m.Trail))} 点  段数 {m.RewindSegmentsUsed}/{m.RewindSegmentsMax}", Palette.TextDim, 11),
             ($"预测    {m.ForecastContacts} 次碰撞  {m.ForecastUs} us", Palette.TextDim, 11),
+            BandRow(m),
             ($"已走过  {m.Trail?.TraversedRange.From}..{m.Trail?.TraversedRange.To}", Palette.TextDim, 11),
         };
         foreach (var row in rows2)
