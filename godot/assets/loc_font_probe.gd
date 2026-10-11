@@ -25,6 +25,7 @@ const Alternates := [
 	"C:/Windows/Fonts/Deng.ttf",
 	"C:/Windows/Fonts/msyh.ttc",
 	"C:/Windows/Fonts/simsun.ttc",
+	"C:/Program Files/Epic Games/Launcher/Portal/Content/Font/NotoSansTC-Regular.otf",
 ]
 
 

@@ -36,6 +36,9 @@ public partial class Play : Node2D
     // ------------------------------------------------------------------ config
     private const int MaxStepsPerFrame = 8;
 
+    /// <summary>Longest real frame we will simulate. Guards the spiral of death after a stall.</summary>
+    private const double MaxFrameDelta = 0.25;
+
     /// <summary>Playfield scale: the table geometry comes from the level, this only fills the canvas.</summary>
     private const float ViewScale = 1.045f;
 
@@ -613,24 +616,47 @@ public partial class Play : Node2D
 
     // =================================================================== step
 
+    /// <summary>
+    /// Decide how many simulation steps a real frame of length <paramref name="frameDelta"/>
+    /// should advance, updating <paramref name="accumulator"/> in place.
+    ///
+    /// Extracted as a pure static so it can be tested at exactly the layer that broke. The
+    /// original inline bug was `_accumulator += dt` -- adding the step size instead of the frame
+    /// time -- which made this return 0 forever. That is invisible to any test that calls
+    /// <c>World.Step()</c> directly, which is what every scripted capture and the whole test
+    /// suite did, so the game shipped with a dead main loop while 344 assertions passed.
+    /// Callers must keep accumulator bookkeeping inside this method.
+    /// </summary>
+    public static int PlanFrameSteps(ref double accumulator, double frameDelta, double dt,
+        int maxStepsPerFrame = MaxStepsPerFrame, double maxFrameDelta = MaxFrameDelta)
+    {
+        accumulator += System.Math.Min(frameDelta, maxFrameDelta);
+        var steps = 0;
+        while (accumulator >= dt - 1e-12 && steps < maxStepsPerFrame)
+        {
+            accumulator -= dt;
+            steps++;
+        }
+
+        // Real time has outrun simulated time; drop the backlog instead of accruing a debt.
+        if (steps >= maxStepsPerFrame || accumulator > dt) accumulator = 0.0;
+        return steps;
+    }
+
     public override void _PhysicsProcess(double delta)
     {
         if (_world == null) return;
 
         var dt = _world.Config.SimulationStep;
         var t0 = Time.GetTicksUsec();
-        _accumulator += dt;
-        var steps = 0;
-        while (_accumulator >= dt - 1e-12 && steps < MaxStepsPerFrame)
+
+        var steps = PlanFrameSteps(ref _accumulator, delta, dt);
+        for (var i = 0; i < steps; i++)
         {
             // A scripted capture freezes the world at the prepared state: the crawl would otherwise
             // keep running during the frames that precede the screenshot and capture another moment.
             if (!_rewindVis.Paused && !_freezeWorld) _world.Step();
-            _accumulator -= dt;
-            steps++;
         }
-
-        if (_accumulator > dt) _accumulator = 0.0;
         _simMs = (Time.GetTicksUsec() - t0) / 1000.0;
 
         // The trail is the view's own cache of the kernel's append-only history: it must be kept in

@@ -88,7 +88,11 @@ public static class Hud
         ci.DrawLine(new Vector2(0, 28), new Vector2(1040, 28), Palette.PanelEdge, 1.0f);
 
         var x = 8.0f;
-        x = Text(ci, font, x, 19, $"回溯  |  {m.LevelId}", 15, Palette.TextMain);
+        // The friendly level name (Chinese, from level data) instead of the raw id, which stays
+        // visible in the F1 panel. Ellipsized because the name is data: a long one must never push
+        // the chips into the right-aligned readout.
+        var title = string.IsNullOrWhiteSpace(m.LevelName) ? m.LevelId : m.LevelName;
+        x = Text(ci, font, x, 19, $"回溯  |  {Ellipsize(font, title, 15, 300.0f)}", 15, Palette.TextMain);
         x += 10;
 
         var ballsLeft = m.ObjectBallCount - m.PocketedObjectCount;
@@ -112,7 +116,23 @@ public static class Hud
         }
 
         var t = $"t={m.Time:F2}s   步={m.Tick}   回溯={m.Rewinds}   轨迹={m.HistoryEntries}";
-        Text(ci, font, 1040 - Pad - Measure(font, t, 12), 19, t, 12, Palette.TextDim);
+        // Anchored to the VISIBLE right edge, not to 1040: the Play view scales the node by
+        // ViewScale while the canvas stays 1040 px wide, so a readout right-aligned at local
+        // x=1030 is rasterised at 1076 and silently drops its last field off-screen. (The English
+        // build had the same bug: "trail=1" rendered as "tra".)
+        var rightLocal = VisibleWidth(ci) - Pad;
+        Text(ci, font, rightLocal - Measure(font, t, 12), 19, t, 12, Palette.TextDim);
+    }
+
+    /// <summary>
+    /// Canvas width expressed in the coordinates this CanvasItem actually draws in. The HUD lives on
+    /// a scaled Node2D, so a physical edge must be divided back through that scale before anything
+    /// is anchored to it.
+    /// </summary>
+    private static float VisibleWidth(CanvasItem ci)
+    {
+        var sx = ci.GetGlobalTransform().Scale.X;
+        return sx > 0.001f ? 1040.0f / sx : 1040.0f;
     }
 
     private static float Chip(CanvasItem ci, Font font, float x, string key, string value, Color color)
@@ -443,6 +463,22 @@ public static class Hud
     private static float Measure(Font font, string text, int size)
     {
         return font.GetStringSize(text, HorizontalAlignment.Left, -1, size).X;
+    }
+
+    /// <summary>
+    /// Trim to a pixel budget, appending an ellipsis. Level names are data, so the top bar cannot
+    /// assume they are short: without this a 40-glyph name would run into the stat chips.
+    /// </summary>
+    private static string Ellipsize(Font font, string text, int size, float maxWidth)
+    {
+        if (Measure(font, text, size) <= maxWidth) return text;
+        var trimmed = text;
+        while (trimmed.Length > 1 && Measure(font, trimmed + "…", size) > maxWidth)
+        {
+            trimmed = trimmed[..^1];
+        }
+
+        return trimmed + "…";
     }
 
     /// <summary>

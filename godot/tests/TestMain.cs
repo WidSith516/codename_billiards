@@ -100,6 +100,16 @@ public partial class TestMain : Node
             Run(runner, "L01", LevelToleranceTests.L01_AuthoredLevelTolerance);
         }
 
+        // The shipping frame loop is its own layer, and it is the one a human actually touches.
+        // It gets its own suite because the bug it guards against is invisible to every test that
+        // drives World.Step() directly -- which is all of the above.
+        if (suite == "all" || suite == "loop")
+        {
+            Run(runner, "F01", FrameLoopTests.F01_FrameAccumulatorAdvancesSimulation);
+            Run(runner, "F02", FrameLoopTests.F02_StrikeMovesTheCueBallInRealTime);
+            Run(runner, "F03", FrameLoopTests.F03_ShippedLevelIsClosedLoopSolvable);
+        }
+
         if (negative)
         {
             // An acceptance gate that cannot fail is worse than no gate.

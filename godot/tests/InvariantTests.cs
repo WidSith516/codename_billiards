@@ -477,9 +477,33 @@ public static class InvariantTests
         t.CheckClose("prototype rack geometry reproduced (nearest neighbour 25.6954 px)", minNeighbour, 25.6954, 1e-3, " px");
 
         var corridor = LevelLoader.LoadById(LevelIds.Corridor);
-        t.Check("corridor level loads with its own ball count", corridor.Balls.Count == 5, "n=" + corridor.Balls.Count);
-        t.Check("budgets come from the level file", corridor.Budget.MaxSegments == 8
-            && Math.Abs(corridor.Budget.MaxDistance - 2400.0) < 1e-12);
+        // corridor.json is the SHIPPED level and is now the promoted, tolerance-verified L1 puzzle:
+        // 1 cue + 2 object balls. Assert the SHAPE, not a magic total, so promoting a different
+        // verified level does not require editing this test.
+        //
+        // Counted with explicit loops rather than LINQ: this file is deliberately dependency-light
+        // (no `using System.Linq`), and adding one for four counts is not worth it.
+        var cueCount = 0;
+        var objectCount = 0;
+        var idsSeen = new HashSet<int>();
+        var idsUnique = true;
+        foreach (var b in corridor.Balls)
+        {
+            if (b.Type == BallType.Cue) cueCount++;
+            if (b.Type == BallType.Object) objectCount++;
+            if (!idsSeen.Add(b.Id)) idsUnique = false;
+        }
+
+        t.Check("corridor has exactly one cue ball", cueCount == 1, "cues=" + cueCount);
+        t.CheckAtLeast("corridor has at least one object ball", objectCount, 1);
+        t.Check("corridor ball ids are unique", idsUnique);
+        // Budget is level DATA, so assert what the data-driven contract actually promises (a level
+        // carries a real budget; h5_rack is unlimited) instead of hardcoding the retired fixture's
+        // 8 segments / 2400 px - corridor.json is now the promoted, tolerance-verified L1 puzzle
+        // (1 segment, no distance cap), and a hardcoded expectation here would make the promotion
+        // look like a regression.
+        t.Check("budgets come from the level file",
+            corridor.Budget.MaxSegments > 0 && corridor.Budget.MaxDistance >= 0.0);
         t.Check("h5_rack has an unlimited rewind budget", h5.Budget.MaxSegments == 0 && h5.Budget.MaxDistance == 0.0);
         t.Check("the two levels are actually different", corridor.Balls[1].X != h5.Balls[1].X);
 

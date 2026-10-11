@@ -1,23 +1,180 @@
 {
   "id": "corridor",
-  "name": "Corridor: object balls placed on the cue's natural path (design constraint C)",
-  "table": { "left": 65, "right": 975, "top": 63, "bottom": 497 },
+  "name": "一杆清台 · 演示关（L1：中库回程）",
+  "table": {
+    "left": 65,
+    "right": 975,
+    "top": 63,
+    "bottom": 497
+  },
   "ballRadius": 12.2,
-  "pocketRadius": 24,
   "pockets": [
-    { "x": 65,  "y": 63  },
-    { "x": 520, "y": 63  },
-    { "x": 975, "y": 63  },
-    { "x": 65,  "y": 497 },
-    { "x": 520, "y": 497 },
-    { "x": 975, "y": 497 }
+    {
+      "x": 65,
+      "y": 63,
+      "r": 24
+    },
+    {
+      "x": 520,
+      "y": 63,
+      "r": 24
+    },
+    {
+      "x": 975,
+      "y": 63,
+      "r": 24
+    },
+    {
+      "x": 65,
+      "y": 497,
+      "r": 24
+    },
+    {
+      "x": 520,
+      "y": 497,
+      "r": 24
+    },
+    {
+      "x": 975,
+      "y": 497,
+      "r": 24
+    }
   ],
   "balls": [
-    { "id": 0, "type": "cue",    "x": 292, "y": 280 },
-    { "id": 1, "type": "object", "x": 480, "y": 280 },
-    { "id": 2, "type": "object", "x": 660, "y": 280 },
-    { "id": 3, "type": "object", "x": 760, "y": 180 },
-    { "id": 4, "type": "object", "x": 860, "y": 380 }
+    {
+      "id": 0,
+      "type": "cue",
+      "x": 520,
+      "y": 280
+    },
+    {
+      "id": 1,
+      "type": "object",
+      "x": 520,
+      "y": 310
+    },
+    {
+      "id": 2,
+      "type": "object",
+      "x": 520,
+      "y": 150
+    }
   ],
-  "budget": { "maxSegments": 8, "maxDistance": 2400 }
+  "budget": {
+    "maxSegments": 8,
+    "maxDistance": 2400
+  },
+  "authoring": {
+    "tool": "promoted from godot/levels/l1_midrail_reverse.json (tolerance-verified)",
+    "mechanism": "backdoor pot by the reverse pass + a strike-potted ball beyond the release floor",
+    "notes": "backdoor pot by the reverse pass + a strike-potted ball beyond the release floor",
+    "limits": {
+      "marginFloorPx": 8,
+      "corridorArcFloorPx": 100,
+      "angleHalfWidthDeg": 2,
+      "powerWindowPx": 10,
+      "cueStartHalfWidthPx": 2
+    },
+    "measured": {
+      "objectCount": 2,
+      "spawnGapPx": 30,
+      "corridorLengthPx": 106.210328,
+      "settleArcPx": 105.771062,
+      "settled": 1,
+      "settleSteps": 33,
+      "angleHalfWidthDeg": 3.484375,
+      "angleHalfWidthMarginDeg": 2.421875,
+      "negativeHalfWidthDeg": 2.421875,
+      "positiveHalfWidthDeg": 2.421875,
+      "islandDeg": 3.484375,
+      "powerMin": 96,
+      "powerMax": 170,
+      "cueStartHalfWidthPx": 2.1875,
+      "strikeOnlyBest": 1,
+      "strikeOnlyBestAngle": -92.5,
+      "strikeOnlyBestPower": 66.482759,
+      "strikeOnlyStepDeg": 0.5,
+      "strikeOnlyPowers": 30,
+      "nominalWorstMarginPx": 24,
+      "nominalCrawlPx": 4
+    },
+    "portability": {
+      "subStep0.5": "OK (margin 24 px, releaseArc 102, release moved 0 px)",
+      "subStep2.0": "OK (margin 24 px, releaseArc 102, release moved 0 px)",
+      "dt1/240": "OK (margin 24 px, releaseArc 102, release moved 0 px)",
+      "dt1/60": "OK (margin 24 px, releaseArc 102, release moved 0 px)"
+    },
+    "witnesses": [
+      {
+        "label": "nominal",
+        "angle": -90,
+        "power": 96,
+        "releaseArc": 102,
+        "crawl": 4,
+        "minMargin": 24,
+        "objectCount": 2,
+        "captures": [
+          {
+            "ballId": 2,
+            "pocketIndex": 1,
+            "marginPx": 24,
+            "travelPx": 63.277072
+          },
+          {
+            "ballId": 1,
+            "pocketIndex": 4,
+            "marginPx": 24,
+            "travelPx": 163.28817
+          }
+        ]
+      },
+      {
+        "label": "edgeNegative",
+        "angle": -92.421875,
+        "power": 96,
+        "releaseArc": 102,
+        "crawl": 20,
+        "minMargin": 8.01227,
+        "objectCount": 2,
+        "captures": [
+          {
+            "ballId": 2,
+            "pocketIndex": 1,
+            "marginPx": 8.01227,
+            "travelPx": 68.232083
+          },
+          {
+            "ballId": 1,
+            "pocketIndex": 4,
+            "marginPx": 22.184414,
+            "travelPx": 163.061657
+          }
+        ]
+      },
+      {
+        "label": "edgePositive",
+        "angle": -87.578125,
+        "power": 104,
+        "releaseArc": 102,
+        "crawl": 22,
+        "minMargin": 8.01227,
+        "objectCount": 2,
+        "captures": [
+          {
+            "ballId": 2,
+            "pocketIndex": 1,
+            "marginPx": 8.01227,
+            "travelPx": 68.103013
+          },
+          {
+            "ballId": 1,
+            "pocketIndex": 4,
+            "marginPx": 22.184414,
+            "travelPx": 163.514258
+          }
+        ]
+      }
+    ],
+    "note": "单一出货关卡：2 颗目标球，容差 ±2.42°，witness = 角度 -90°（向下直击）/ 力度 96 / 释放弧长 102 px。"
+  }
 }
