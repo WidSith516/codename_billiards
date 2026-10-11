@@ -49,6 +49,7 @@ public partial class Menu : Node2D
     private string _outPath;
     private string _screenArg;
     private int _frames;
+    private bool _captureQuit;
 
     public override void _Ready()
     {
@@ -323,13 +324,44 @@ public partial class Menu : Node2D
         if (_outPath != null) CaptureIfReady();
     }
 
+    /// <summary>
+    /// Frame tick, and the capture driver.
+    ///
+    /// The capture is driven from here as well as from `_Draw`, because the draw-only version hung the
+    /// process: reading the viewport's own texture while the viewport is mid-draw is not safe every
+    /// frame, and the run produced no PNG at all. Calling it from the frame tick as well means the frame
+    /// has been submitted by the time the image is taken -- which is why the play scene's capture has
+    /// always been reliable. `CaptureIfReady` is guarded so whichever call gets there first wins and the
+    /// second is a no-op.
+    /// </summary>
+    public override void _Process(double delta)
+    {
+        if (_outPath != null) CaptureIfReady();
+    }
+
     /// <summary>Saves one frame to <c>--out=</c> then quits, so the front end has real evidence.</summary>
     private void CaptureIfReady()
     {
         _frames++;
         if (_frames < 3) return;
 
+        // Load-bearing guard. `_Draw` runs again before the quit takes effect, and without this the
+        // capture block re-enters on every subsequent frame: it saved the PNG repeatedly and called
+        // GetTree().Quit() again and again, which wedged the shutdown so the process never exited (the
+        // capture hung with no PNG at all). The play scene has always had this guard; the menu did not,
+        // and it only started hanging once the space-theme scenery made frames slow enough for the
+        // re-entry to happen. Mirrors Play.CaptureIfReady.
+        if (_captureQuit) return;
+        _captureQuit = true;
+
         var image = GetViewport().GetTexture().GetImage();
+        if (image == null)
+        {
+            GD.Print("[menu] CAPTURE FAIL no viewport image");
+            GetTree().Quit(2);
+            return;
+        }
+
         var err = image.SavePng(_outPath);
         GD.Print($"[menu] CAPTURE file={_outPath} err={err} screen={_screen} size={image.GetWidth()}x{image.GetHeight()}");
         GetTree().Quit(err == Error.Ok ? 0 : 1);
@@ -353,36 +385,124 @@ public partial class Menu : Node2D
         }
     }
 
+    /// <summary>
+    /// The title screen: a COVER, anchored to the LEFT of the screen.
+    ///
+    /// The previous layout centred everything in a 1040-wide canvas on a 1040 canvas, which left the
+    /// cover looking like a form and wasted the whole right half. The user asked for the cover to sit on
+    /// the left, so the text block and the menu column are left-anchored and the right half is used for
+    /// scenery that says what the game is: a starfield with a white hole and a black hole pulling on
+    /// each other, i.e. the two mechanics, drawn as the two forces they are.
+    ///
+    /// Horizontal budget: the panel spans x 70..970. The text column starts at 110 and the menu column
+    /// at 110..464, so the scenery gets 500..960 with clearance on both sides.
+    /// </summary>
     private void DrawTitle()
     {
-        var cx = W * 0.5f;
+        const float left = 110.0f;
 
-        Text(cx, 126, "REWIND", 58, Palette.TextMain, HorizontalAlignment.Center);
-        Text(cx, 172, "一 杆 清 台", 24, Palette.Accent, HorizontalAlignment.Center);
-        Text(cx, 206, "你只能打一杆 —— 但可以让白球沿它走过的路倒回来", 15,
-            Palette.TextDim, HorizontalAlignment.Center);
+        DrawTitleScenery();
 
-        // Vertical budget: the exit button must clear the two info lines at the bottom, and the
-        // info lines must clear the panel edge. The first version put them on top of each other.
-        var y = 244.0f;
-        Button(new Rect2(cx - 150, y, 300, 42), "start", "▶  开始游戏");
-        y += 52;
-        Button(new Rect2(cx - 150, y, 300, 42), "levels", "关卡选择");
-        y += 52;
-        Button(new Rect2(cx - 150, y, 146, 40), "theme", "个性化");
-        Button(new Rect2(cx + 4, y, 146, 40), "settings", "设置");
-        y += 50;
-        Button(new Rect2(cx - 150, y, 300, 38), "quit", "退出");
+        Text(left, 132, "REWIND", 62, Palette.TextMain);
+        Text(left, 176, "一 杆 清 台", 26, Palette.Accent);
 
+        // A short rule under the title, so the cover reads as a cover rather than a form.
+        DrawRect(new Rect2(left, 194, 300, 2.0f), Palette.Accent);
+
+        Text(left, 226, "你只能打一杆", 16, Palette.TextMain);
+        Text(left, 250, "但可以让白球沿它走过的路倒回来", 14, Palette.TextDim);
+
+        // Menu column, left-anchored and narrower than before so it does not fight the scenery.
+        //
+        // VERTICAL BUDGET, with the arithmetic written out because this is the second time the info line
+        // has collided with the exit button: buttons are h=46 with a 54 px pitch, so four rows end at
+        // 462. The info line sits at 488, and the panel's bottom edge is 514. The line is 12 pt, so its
+        // glyphs occupy roughly 470..494 -- clear of the button above and clear of the panel below.
+        const float btnW = 354.0f;
+        const float btnH = 46.0f;
+        var y = 284.0f;
+        Button(new Rect2(left, y, btnW, btnH), "start", "▶  开始游戏");
+        y += 54;
+        Button(new Rect2(left, y, btnW, btnH), "levels", "关卡选择");
+        y += 54;
+        Button(new Rect2(left, y, 172, 42), "theme", "个性化");
+        Button(new Rect2(left + 182, y, 172, 42), "settings", "设置");
+        y += 54;
+        Button(new Rect2(left, y, btnW, 40), "quit", "退出");
+
+        // The exit button occupies x 110..464 at y 444..484, so there is no vertical room left for the
+        // status text BELOW it -- which is why it kept overlapping. The space to the RIGHT of that
+        // button (x 470..860) is empty, so the hints go there, stacked, with vertical centring on the
+        // button row. No overlap is possible because the two do not share a column.
         var all = _levels.Count;
         var cleared = 0;
         foreach (var e in _levels) if (e.Stars > 0) cleared++;
 
-        // Below the last button, above the panel's bottom edge (panel spans y 46..514).
-        Text(cx, 466, $"已通关 {cleared} / {all}     星星 {LevelCatalog.TotalStars()} / {LevelCatalog.MaxStars()}",
-            13, Palette.TextDim, HorizontalAlignment.Center);
-        Text(cx, 490, "← →  选择      Enter  确定      Esc  返回", 12,
-            Palette.TextDim, HorizontalAlignment.Center);
+        Text(478, 462, $"已通关 {cleared} / {all}", 13, Palette.TextDim);
+        Text(478, 482, $"星星 {LevelCatalog.TotalStars()} / {LevelCatalog.MaxStars()}", 12, Palette.Accent);
+        Text(478, 502, "← → 选择   Enter 确定   Esc 返回", 11, Palette.TextDim);
+    }
+
+    /// <summary>
+    /// Right-hand scenery: the universe, a white hole emitting, and a black hole devouring.
+    ///
+    /// Deterministic (fixed-seed LCG) for the same reason as the play-field starfield: two captures of
+    /// the same moment must be identical, and a random sky would break that.
+    /// </summary>
+    private void DrawTitleScenery()
+    {
+        var cx = 728.0f;
+        var cy = 268.0f;
+
+        // A soft nebula behind everything, so the black is not flat.
+        DrawCircle(new Vector2(cx - 40, cy - 30), 196.0f, new Color("#1b1440", 0.55f), true, -1.0f, true);
+        DrawCircle(new Vector2(cx + 70, cy + 60), 150.0f, new Color("#0d2440", 0.50f), true, -1.0f, true);
+
+        long seed = 777001;
+        double NextUnit()
+        {
+            seed = (seed * 48271) % 2147483647;
+            return seed / 2147483647.0;
+        }
+
+        var star = new Color("#dfe8ff");
+        var warm = new Color("#ffe9c9");
+        for (var i = 0; i < 150; i++)
+        {
+            var x = 500.0f + (float)(NextUnit() * 460.0);
+            var y = 60.0f + (float)(NextUnit() * 420.0);
+            var r = NextUnit() < 0.14 ? 1.6f : 1.0f;
+            var a = 0.25f + (float)NextUnit() * 0.7f;
+            var col = NextUnit() < 0.12 ? warm : star;
+            DrawCircle(new Vector2(x, y), r, new Color(col.R, col.G, col.B, a), true, -1.0f, true);
+        }
+
+        // The two mechanics as two forces.
+        // Black hole: dark core, accretion rim, nothing escapes.
+        var bh = new Vector2(cx + 96, cy + 74);
+        DrawCircle(bh, 46.0f, new Color(Palette.PocketRim.R, Palette.PocketRim.G, Palette.PocketRim.B, 0.18f), true, -1.0f, true);
+        DrawCircle(bh, 34.0f, new Color(Palette.PocketRim.R, Palette.PocketRim.G, Palette.PocketRim.B, 0.45f), false, 2.0f, true);
+        DrawCircle(bh, 26.0f, new Color(0, 0, 0, 0.95f), true, -1.0f, true);
+
+        // White hole: bright, emitting, with an outward halo.
+        var wh = new Vector2(cx - 74, cy - 62);
+        DrawCircle(wh, 44.0f, new Color(0.62f, 0.90f, 1.0f, 0.14f), true, -1.0f, true);
+        DrawCircle(wh, 30.0f, new Color(0.62f, 0.90f, 1.0f, 0.30f), false, 2.0f, true);
+        DrawCircle(wh, 18.0f, new Color("#9ff2ff"), true, -1.0f, true);
+        DrawCircle(wh, 7.0f, Colors.White, true, -1.0f, true);
+
+        // The cue ball's path between them: a faint arc, so the cover hints at the mechanic.
+        var pts = new Vector2[40];
+        for (var i = 0; i < pts.Length; i++)
+        {
+            var t = i / (float)(pts.Length - 1);
+            var p = wh.Lerp(bh, t);
+            // Bow the line, then let it fall into the black hole.
+            p += new Vector2(Mathf.Sin(t * Mathf.Pi) * 46.0f, -Mathf.Sin(t * Mathf.Pi) * 30.0f);
+            pts[i] = p;
+        }
+
+        DrawPolyline(pts, new Color(1.0f, 1.0f, 1.0f, 0.55f), 1.4f, true);
     }
 
     private void DrawLevels()
