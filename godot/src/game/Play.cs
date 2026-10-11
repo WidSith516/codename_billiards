@@ -42,11 +42,33 @@ public partial class Play : Node2D
     /// <summary>Playfield scale: the table geometry comes from the level, this only fills the canvas.</summary>
     private const float ViewScale = 1.0f;
 
+    /// <summary>The design canvas width, in the same units as <see cref="ViewScale"/>. Used to turn the
+    /// real viewport size into a device-pixel scale for the decorative bands.</summary>
+    private const float DesignCanvasWidth = 1040.0f;
+
     private World _world;
     private LevelData _level;
     private readonly AimPredictor.Cache _aimCache = new AimPredictor.Cache();
     private TimelineTrail _trail;
     private readonly RewindVisualizer _rewindVis = new RewindVisualizer();
+
+    // The decorative sine bands. Two of them, mirrored at the top and bottom of the page; see
+    // godot/src/game/ReplayBand.cs. Decoration with no game state, driven by the rewind distance the
+    // HUD already measures.
+    private ReplayBand[] _bands;
+    private bool _showBand = true;
+    private double _bandArc;
+    private double _bandHoldAge;
+    private double _bandHoldSeconds = 0.055;
+
+    /// <summary>Set by <c>--band-phase=</c>: pin the wave phase so two capture states can be compared
+    /// at the same phase. NaN means "not pinned".</summary>
+    private double _bandPhase = double.NaN;
+
+    /// <summary>Seconds before a pinned band (<c>--band-mode</c>) hands control back to live play.
+    /// Long by default so a capture never sees it; short enough to interactively inspect a state.</summary>
+    private double _bandReleaseCountdown = 600.0;
+    private string _bandForceMode;
 
     private Font _font;
     private Texture2D _tableTexture;
@@ -170,6 +192,11 @@ public partial class Play : Node2D
     public override void _Ready()
     {
         _font = LoadUiFont();
+
+        // Apply the saved presentation theme BEFORE anything is loaded or drawn, so the table texture,
+        // pocket style and ball colours all agree. Themes are colours only -- no physics, no geometry.
+        Palette.ApplyTheme(Menu.ThemeIndex);
+
         _tableTexture = GD.Load<Texture2D>("res://assets/h5/table.svg");
         TextureFilter = TextureFilterEnum.Linear;
 
@@ -201,9 +228,76 @@ public partial class Play : Node2D
         _verbose = HasArg("--verbose");
         _debugOverlay = HasArg("--debug") || _stateName == "debug";
 
+        // ---- decorative sine bands, mirrored top and bottom (see ReplayBand.cs) ---------------
+        // A band failure must never take the game down with it: the effect is decoration, so the
+        // nodes are built defensively and a missing shader leaves the table exactly as it was.
+        _showBand = !HasArg("--no-band");
+        _bandForceMode = Arg("--band-mode=");
+        _bandHoldAge = DoubleArg("--band-hold=", -1.0);
+        try
+        {
+            var specs = new[] { ReplayBand.BottomSpec, ReplayBand.TopSpec };
+            _bands = new ReplayBand[specs.Length];
+            for (var i = 0; i < specs.Length; i++)
+            {
+                var band = new ReplayBand { Name = $"ReplayBand_{specs[i].Name}" };
+                AddChild(band);
+                band.Build(specs[i]);
+                band.SetHidden(!_showBand);
+                _bands[i] = band;
+            }
+        }
+        catch (Exception ex)
+        {
+            GD.Print($"[play] bands disabled: {ex.GetType().Name} {ex.Message}");
+            _bands = null;
+        }
+
+        _bandHoldSeconds = DoubleArg("--band-hold-sec=", 0.055);
+        _bandReleaseCountdown = DoubleArg("--band-release-sec=", 600.0);
+        if (_bands != null && _bandForceMode != null)
+        {
+            // A scripted capture freezes the world immediately after PrepareState, so a live ramp
+            // would never be photographed. Placing BOTH bands explicitly makes the captured state a
+            // decision rather than a frame-count coincidence - and they must be placed together, or a
+            // capture would show one band steady and the other rewinding.
+            var phaseArg = Arg("--band-phase=");
+            if (phaseArg != null && double.TryParse(phaseArg, System.Globalization.NumberStyles.Float,
+                    System.Globalization.CultureInfo.InvariantCulture, out var pinned)) _bandPhase = pinned;
+            if (_bandForceMode == "rewind")
+            {
+                foreach (var b in _bands)
+                {
+                    b.SetActive(true);
+                    b.PlaceCapture(ReplayBand.CaptureHighlight,
+                        (float)(_bandHoldAge >= 0.0 ? _bandHoldAge : _bandHoldSeconds));
+                }
+            }
+            else if (_bandForceMode == "steady")
+            {
+                foreach (var b in _bands)
+                {
+                    b.SetActive(false);
+                    b.PlaceCapture(0.0f, 0.0f);
+                }
+            }
+            else
+            {
+                GD.Print($"[play] unknown --band-mode='{_bandForceMode}', expected steady|rewind");
+            }
+        }
+
         var levelPath = levelId.StartsWith("res://") ? levelId : $"res://levels/{levelId}.json";
         _level = LevelLoader.Load(levelPath);
         _world = new World(_level);
+
+        // The event-sound differencing baseline. It MUST be set here, the moment the world exists,
+        // and not down with the audio setup: every --selftest / --trace-shot branch below returns
+        // before that point, and PlayEventSounds then ran with a null baseline and threw a
+        // NullReferenceException from the frame loop. That was invisible while the only headless
+        // self tests were ones that quit before a rewind state change, and it is exactly the kind of
+        // latent null a new self test is supposed to surface.
+        _prevStats = _world.Stats.Clone();
         _trail = new TimelineTrail(this)
         {
             LabelFont = _font,
@@ -237,6 +331,13 @@ public partial class Play : Node2D
         if (_selfTestMode == "input")
         {
             RunInputSelfTest();
+            GetTree().Quit(_checksFailed == 0 ? 0 : 1);
+            return;
+        }
+
+        if (_selfTestMode == "band")
+        {
+            RunBandSelfTest();
             GetTree().Quit(_checksFailed == 0 ? 0 : 1);
             return;
         }
@@ -285,7 +386,6 @@ public partial class Play : Node2D
         // The audio autoload, if it is up. Null in a headless run, and every call site tolerates
         // that, so audio can never be the reason a gate or a capture fails.
         _audio = GetNodeOrNull<Audio>("/root/Audio");
-        _prevStats = _world.Stats.Clone();
 
         // Coaching runs only in real play, never during a scripted capture: an evidence screenshot
         // must show the game, not a tutorial bubble.
@@ -474,6 +574,10 @@ public partial class Play : Node2D
         GD.Print($"[play] state={state} ticks={_world.Tick} time={_world.Time:F3} shotUsed={_world.ShotUsed} " +
                  $"rewinding={_world.Rewinding} won={_world.Won} pocketed={_world.PocketedObjectCount}/{_world.ObjectBallCount} " +
                  $"history={_world.Cue.History.Count}");
+        if (_bands != null)
+        {
+            foreach (var b in _bands) GD.Print($"[play] band {b.BandName} {b.Stats()}");
+        }
     }
 
     private void SetAim(double angleDeg, double power)
@@ -567,6 +671,152 @@ public partial class Play : Node2D
                && track.Length > 1
             ? RewindVisualizer.ArcAt(track, track.Length - 1, 1.0) - total
             : 0.0;
+    }
+
+    /// <summary>The band's wave phase, wrapped to one lattice period, expressed as the SHORTEST SIGNED
+    /// displacement. 1/1.9 is the field's period, so this is exact, not an approximation.</summary>
+    private static double ShortestSignedPhase(double delta)
+    {
+        const double lattice = 1.0 / 1.9;
+        delta -= Math.Floor(delta / lattice + 0.5) * lattice;
+        return delta;
+    }
+
+    /// <summary>
+    /// Test the decorative band's MOTION, which no screenshot can show: a captured frame proves what
+    /// the band looks like, not which way it travels.
+    ///
+    /// What is asserted:
+    ///  1. the band builds and is visible;
+    ///  2. while the cue ball is rewinding, 60 sim frames of real crawl DECREASE the wave phase;
+    ///  3. while the game runs forward, 60 idle frames INCREASE it;
+    ///  4. the highlight rises during the rewind and decays after it;
+    ///  5. the phase gain equals the rewound distance, in px, scaled by ReplayBand.RewindPhasePerPixel.
+    ///     That last one is the design intent - the band is a readout of distance rewound, not a
+    ///     wall-clock animation - so it is checked as arithmetic rather than described in a comment.
+    /// </summary>
+    private void RunBandSelfTest()
+    {
+        GD.Print("[band] decorative sine bands (top + bottom), driven by real kernel steps");
+        if (_bands == null || _bands.Length == 0) { Check("both bands build", false, "_bands is empty"); return; }
+        Check("both bands build", _bands.Length == 2,
+            $"{_bands.Length} band(s): " + string.Join(", ", System.Array.ConvertAll(_bands,
+                b => $"{b.BandName}@{b.BandTopForTest} at {b.BandSizeForTest}")));
+
+        SetAim(7.0, 170.0);
+        FireShot();
+        Settle();
+        BeginRewind();
+
+        // Both instances are driven from the same numbers, so they are asserted separately rather
+        // than assumed to agree: the whole point of the pair is that they move as one effect.
+        var phase0 = new float[_bands.Length];
+        var phase1 = new float[_bands.Length];
+        var phase2 = new float[_bands.Length];
+        var phase3 = new float[_bands.Length];
+        for (var i = 0; i < _bands.Length; i++) phase0[i] = _bands[i].Phase;
+
+        var arc0 = ArcWalked();
+        for (var i = 0; i < 60; i++) { _world.Step(); UpdateBand(_world.Config.SimulationStep); }
+        var arc1 = ArcWalked();
+        for (var i = 0; i < _bands.Length; i++) phase1[i] = _bands[i].Phase;
+
+        // The phase is wrapped to the lattice period (Play.ReplayBand does that on purpose: it keeps
+        // u_time bounded and comparable between runs), so every comparison here has to use the
+        // SHORTEST SIGNED delta. Comparing raw values made a 0.070 backwards step read as +0.456
+        // forwards, which is how this check first failed.
+        var expected = ShortestSignedPhase((arc1 - arc0) * ReplayBand.RewindPhasePerPixel);
+        for (var i = 0; i < _bands.Length; i++)
+        {
+            var b = _bands[i];
+            var signed = ShortestSignedPhase(phase1[i] - phase0[i]);
+            Check($"[{b.BandName}] holding R moves the wave BACKWARDS", signed < 0.0,
+                $"phase {phase0[i]:F4} -> {phase1[i]:F4} shortest delta {signed:F4}");
+            Check($"[{b.BandName}] rewind raises the highlight", b.Highlight > 0.9f,
+                $"highlight={b.Highlight:F3}");
+            Check($"[{b.BandName}] phase gain equals the distance rewound", Math.Abs(signed - expected) < 1e-4,
+                $"rewound={(arc1 - arc0):F2}px expected={expected:F5} actual={signed:F5} " +
+                $"err={Math.Abs(signed - expected):E2}");
+        }
+
+        // The pair must be ONE effect shown twice, not two animations that happen to look alike.
+        var drift = ShortestSignedPhase(phase1[0] - phase1[_bands.Length - 1]);
+        Check("the two bands hold the same phase", _bands.Length < 2 || Math.Abs(drift) < 1e-6,
+            $"phase delta top-vs-bottom={drift:E2}");
+
+        ReleaseRewind();
+        for (var i = 0; i < _bands.Length; i++) phase2[i] = _bands[i].Phase;
+        for (var i = 0; i < 60; i++) { _world.Step(); UpdateBand(_world.Config.SimulationStep); }
+        for (var i = 0; i < _bands.Length; i++) phase3[i] = _bands[i].Phase;
+
+        for (var i = 0; i < _bands.Length; i++)
+        {
+            var b = _bands[i];
+            var forward = ShortestSignedPhase(phase3[i] - phase2[i]);
+            Check($"[{b.BandName}] running forward moves the wave FORWARD", forward > 0.0,
+                $"phase {phase2[i]:F4} -> {phase3[i]:F4} shortest delta {forward:F4}");
+            Check($"[{b.BandName}] the highlight decays after the rewind", b.Highlight < 0.5f,
+                $"highlight={b.Highlight:F3}");
+        }
+
+        // Geometry as arithmetic: the two strips must sit in the free bands at each edge and must not
+        // overlap each other. Both were found by measuring the HUD, and both are load-bearing.
+        Check("the two strips do not overlap and stay on the canvas",
+            ReplayBand.TopBandTop + ReplayBand.BandHeight <= ReplayBand.BottomBandTop
+            && ReplayBand.TopBandTop >= 0
+            && ReplayBand.BottomBandTop + ReplayBand.BandHeight <= 560,
+            $"top y={ReplayBand.TopBandTop}..{ReplayBand.TopBandTop + ReplayBand.BandHeight} " +
+            $"bottom y={ReplayBand.BottomBandTop}..{ReplayBand.BottomBandTop + ReplayBand.BandHeight}");
+
+        GD.Print($"=== M2 selftest summary: {_checksRun - _checksFailed}/{_checksRun} checks passed ===");
+        GD.Print(_checksFailed == 0 ? "M2 SELFTEST PASS" : $"M2 SELFTEST FAIL: {_checksFailed} check(s) failed");
+    }
+
+    /// <summary>
+    /// Advance the decorative sine bands. Decoration only: nothing here is read by the kernel, the
+    /// HUD or a test, and a band that fails to build leaves the game exactly as it was.
+    ///
+    /// The phase source is the REWOUND DISTANCE, not wall-clock time, which is the design intent:
+    /// while the player holds R the wave travels backwards in proportion to the ground the cue ball
+    /// has actually given up, so the band is a second, non-textual readout of the same number the
+    /// HUD prints as "distance N / 2400 px". Both instances are handed the SAME numbers in the same
+    /// frame, so the pair is one effect shown twice rather than two drifting animations.
+    /// </summary>
+    private void UpdateBand(double delta)
+    {
+        if (_bands == null || !_showBand) return;
+
+        // --band-mode=steady|rewind pins the state. It exists so a headless capture of "the band
+        // while rewinding" is reproducible instead of depending on which frame the crawl reached.
+        var forced = _bandForceMode != null && _bandForceMode != "off";
+        if (forced)
+        {
+            // A held band still tracks the live arc so it cannot jump when it is handed back.
+            _bandArc = _world.Rewinding ? ArcWalked() : 0.0;
+            _bandReleaseCountdown -= delta;
+            foreach (var b in _bands)
+            {
+                if (!double.IsNaN(_bandPhase)) b.SetPhase((float)_bandPhase);
+                if (_bandReleaseCountdown <= 0.0) b.ReleaseCapture();
+            }
+
+            return;
+        }
+
+        var rewinding = _world.Rewinding;
+        var arc = rewinding ? ArcWalked() : 0.0;
+
+        // Size the render targets to the window BEFORE pushing this frame's uniforms: a resize must not
+        // leave a frame upscaled. SyncToViewport is a no-op when the scale has not changed, so the
+        // steady-state cost of this is one comparison per band per frame.
+        var scale = (float)GetViewport().GetVisibleRect().Size.X / DesignCanvasWidth;
+        foreach (var b in _bands) b.SyncToViewport(scale);
+
+        // Scripted captures freeze the world, so the live 9/s attack would never be photographed:
+        // while frozen the bands are allowed to reach the capture strength instead.
+        var rise = _freezeWorld ? ReplayBand.CaptureRisePerSecond : 9.0f;
+        foreach (var b in _bands) b.Update(rewinding, arc, delta, rise);
+        _bandArc = arc;
     }
 
     /// <summary>
@@ -833,6 +1083,10 @@ public partial class Play : Node2D
         _wallClock += delta;
         if (_messageTimer > 0.0) _messageTimer -= delta;
         _rewindVis.ArcWalked = _world.Rewinding ? ArcWalked() : 0.0;
+
+        // The band must be advanced AFTER the steps above, so the phase delta it reads is this
+        // frame's real rewind and not the previous frame's remainder.
+        UpdateBand(delta);
     }
 
     public override void _Process(double delta)
@@ -1475,6 +1729,14 @@ public partial class Play : Node2D
         DrawTutorial();
         DrawSetTransform(Vector2.Zero, 0.0f, Vector2.One);
 
+        // The decorative bands are drawn last, in UI space and OUTSIDE the inverse-view-scale block,
+        // so they sit on top of the table and the HUD at the exact canvas coordinates they declare.
+        // The top one and the bottom one are separate instances, drawn in build order.
+        if (_bands != null && _showBand)
+        {
+            foreach (var b in _bands) b.DrawBand(this, Palette.TextMain);
+        }
+
         _drawMs = (Time.GetTicksUsec() - t0) / 1000.0;
         if (HasArg("--trace-draw") && _frames % 60 == 0)
         {
@@ -1517,6 +1779,19 @@ public partial class Play : Node2D
         var inner = new Rect2(
             (float)_level.TableLeft, (float)_level.TableTop,
             (float)_level.TableWidth, (float)_level.TableHeight);
+
+        // The SPACE theme does NOT use the H5 table artwork. That artwork is painted cloth -- a picture
+        // of a real table -- and its green felt covers the physics box exactly, so every space colour
+        // underneath would be hidden. The theme draws its own table instead, which is also where its
+        // character comes from.
+        if (Palette.ActiveTheme == 0)
+        {
+            DrawSpaceTable(inner);
+            DrawPockets();
+            DrawWhiteHoles();
+            return;
+        }
+
         if (_tableTexture != null)
         {
             // The H5 artwork is authored for the 1040x560 design canvas: its felt occupies
@@ -1570,6 +1845,94 @@ public partial class Play : Node2D
     }
 
     /// <summary>
+    /// The universe table.
+    ///
+    /// A starfield written deterministically from a fixed seed, so the sky is IDENTICAL in every run and
+    /// every capture -- a random sky would make two screenshots of the same moment differ, which breaks
+    /// the pixel evidence the rest of this project relies on.
+    ///
+    /// Layout, inside out:
+    ///   * deep void cloth, with a faint nebula wash for depth;
+    ///   * three star layers (dim, mid, bright) at different densities and sizes -- one uniform layer
+    ///     reads as noise, whereas layered sizes read as distance;
+    ///   * a subtle brighter core in the middle so the play area does not look flat;
+    ///   * rails as dark metal banding with a cool inner bevel.
+    /// The physics box is the CLOTH rectangle: the rail band is drawn strictly outside it, so the visible
+    /// cushion edge is the same line the kernel bounces off.
+    /// </summary>
+    private void DrawSpaceTable(Rect2 inner)
+    {
+        // ---- rails, outside the physics box
+        const float railThick = 26.0f;
+        var outer = inner.Grow(railThick);
+        DrawRect(outer, Palette.RailShadow);
+        DrawRect(outer.Grow(-3.0f), Palette.RailWood);
+        DrawRect(outer.Grow(-3.0f), Palette.RailLight, false, 1.0f);
+
+        // ---- cloth
+        DrawRect(inner, Palette.Felt);
+
+        // Nebula wash: a few large, very faint discs so the void is not a flat fill. Fixed positions.
+        var nebula = new[]
+        {
+            (0.24f, 0.28f, 0.42f, new Color("#2b1a5e", 0.30f)),
+            (0.74f, 0.62f, 0.50f, new Color("#123a63", 0.28f)),
+            (0.52f, 0.86f, 0.34f, new Color("#4a1d4e", 0.22f)),
+        };
+        foreach (var (nx, ny, nr, col) in nebula)
+        {
+            DrawCircle(new Vector2(inner.Position.X + inner.Size.X * nx, inner.Position.Y + inner.Size.Y * ny),
+                inner.Size.X * nr, col, true, -1.0f, true);
+        }
+
+        // Starfield, deterministic. Park-Miller LCG seeded with a constant: no RNG state to leak, and
+        // identical across processes.
+        long seed = 20261011;
+        double NextUnit()
+        {
+            seed = (seed * 48271) % 2147483647;
+            return seed / 2147483647.0;
+        }
+
+        // (count, radius, alpha) per layer: sparse bright, mid, dense dim.
+        var layers = new[]
+        {
+            (34, 1.7f, 0.95f),
+            (95, 1.15f, 0.62f),
+            (230, 0.75f, 0.34f),
+        };
+        var star = new Color("#dfe8ff");
+        var warm = new Color("#ffe9c9");
+
+        foreach (var (count, radius, alpha) in layers)
+        {
+            for (var i = 0; i < count; i++)
+            {
+                var x = inner.Position.X + (float)(NextUnit() * inner.Size.X);
+                var y = inner.Position.Y + (float)(NextUnit() * inner.Size.Y);
+                // A few stars are warm, so the field is not one flat colour.
+                var col = NextUnit() < 0.12 ? warm : star;
+                DrawCircle(new Vector2(x, y), radius, new Color(col.R, col.G, col.B, alpha), true, -1.0f, true);
+            }
+        }
+
+        // ---- cushion bevel, inside the rail band but outside the cloth
+        DrawRect(inner.Grow(8.0f), Palette.CushionLight, false, 3.0f);
+        DrawRect(inner, Palette.CushionInner, false, 2.0f);
+
+        // ---- faint quarter markers, so angles can still be judged
+        for (var i = 1; i < 4; i++)
+        {
+            var x = inner.Position.X + inner.Size.X * i / 4.0f;
+            DrawLine(new Vector2(x, inner.Position.Y), new Vector2(x, inner.Position.Y + 10.0f), Palette.FeltGrid, 1.0f);
+            DrawLine(new Vector2(x, inner.End.Y - 10.0f), new Vector2(x, inner.End.Y), Palette.FeltGrid, 1.0f);
+            var y = inner.Position.Y + inner.Size.Y * i / 4.0f;
+            DrawLine(new Vector2(inner.Position.X, y), new Vector2(inner.Position.X + 10.0f, y), Palette.FeltGrid, 1.0f);
+            DrawLine(new Vector2(inner.End.X - 10.0f, y), new Vector2(inner.End.X, y), Palette.FeltGrid, 1.0f);
+        }
+    }
+
+    /// <summary>
     /// Fallback table when the H5 artwork is unavailable: a rail frame outside the physics box plus a
     /// three-band cushion bevel. Kept so a missing texture degrades to a plain but correct table
     /// rather than a bare canvas.
@@ -1600,6 +1963,22 @@ public partial class Play : Node2D
         {
             var c = new Vector2((float)pocket.Center.X, (float)pocket.Center.Y);
             var r = (float)pocket.Radius;
+
+            if (Palette.ActiveTheme == 0)
+            {
+                // BLACK HOLE. It must read as something that DEVOURS, and as the visual opposite of the
+                // white hole that gives energy back. Three cues do that: an accretion rim (light bent
+                // around the mouth), a hard event-horizon ring, and a core darker than the cloth, so the
+                // eye reads a hole rather than a disc sitting on the table.
+                var rim = Palette.PocketRim;
+                DrawCircle(c, r + 6.0f, new Color(rim.R, rim.G, rim.B, 0.30f), true, -1.0f, true);
+                DrawCircle(c, r + 3.0f, new Color(rim.R, rim.G, rim.B, 0.55f), false, 1.6f, true);
+                DrawCircle(c, r, Palette.PocketMouth, true, -1.0f, true);
+                DrawCircle(c, r, rim, false, 1.2f, true);
+                DrawCircle(c, r * 0.82f, Palette.PocketLiner, true, -1.0f, true);
+                DrawCircle(c, r * 0.34f, new Color(0, 0, 0, 0.95f), true, -1.0f, true);
+                continue;
+            }
 
             DrawCircle(c, r + 5.0f, Palette.PocketMouth, true, -1.0f, true);   // cut through the rail
             DrawCircle(c, r + 1.5f, Palette.PocketLiner, true, -1.0f, true);   // liner highlight
@@ -1861,6 +2240,7 @@ public partial class Play : Node2D
             DrawMs = _drawMs,
             SimMs = _simMs,
             TrailVertices = _trail.CachedVertexCount,
+            Bands = _bands,
         };
         return m;
     }

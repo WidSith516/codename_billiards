@@ -16,22 +16,34 @@ namespace Rewind.Game;
 /// </summary>
 public static class Palette
 {
+    // ---------------------------------------------------------------- theme state
+    //
+    // Every table and ball colour below is a MUTABLE static rather than `readonly`, because the
+    // personalisation screen switches themes at runtime while the class is already loaded. The values
+    // here are the DEFAULTS (deep teal felt, Okabe-Ito balls), and ApplyTheme replaces them.
+    //
+    // Colours that must NOT move with the theme (ball identity, the white hole, warning and meter
+    // colours) stay fixed on purpose: the palette rules at the top of this file require that ball
+    // identity is never carried by the felt colour, and a white hole must stay the opposite of a
+    // pocket in every theme.
+    public static int ActiveTheme { get; private set; }
+
     // ---------------------------------------------------------------- table
-    public static readonly Color RoomBg = new Color("#101418");
-    public static readonly Color RailWood = new Color("#5a3a22");
-    public static readonly Color RailInner = new Color("#3d322c");
-    public static readonly Color Felt = new Color("#14402f");
-    public static readonly Color FeltEdge = new Color("#0c2a1e");
-    public static readonly Color FeltGrid = new Color("#194a36");
-    public static readonly Color Pocket = new Color("#070b0a");
-    public static readonly Color PocketRim = new Color("#5a6b62");
+    public static Color RoomBg = new Color("#101418");
+    public static Color RailWood = new Color("#5a3a22");
+    public static Color RailInner = new Color("#3d322c");
+    public static Color Felt = new Color("#14402f");
+    public static Color FeltEdge = new Color("#0c2a1e");
+    public static Color FeltGrid = new Color("#194a36");
+    public static Color Pocket = new Color("#070b0a");
+    public static Color PocketRim = new Color("#5a6b62");
 
     // ---------------------------------------------------------------- balls
     /// <summary>Cue ball: ivory, never used for an object ball.</summary>
-    public static readonly Color Cue = new Color("#f2efe3");
+    public static Color Cue = new Color("#f2efe3");
 
     /// <summary>Okabe-Ito colour-blind-safe set, assigned by ball id.</summary>
-    public static readonly Color[] ObjectFills =
+    public static Color[] ObjectFills =
     {
         new Color("#e69f00"), // orange
         new Color("#56b4e9"), // sky blue
@@ -43,8 +55,134 @@ public static class Palette
         new Color("#b8b8b8"), // grey
     };
 
-    public static readonly Color BallRingDark = new Color("#0a0f0d");
-    public static readonly Color BallLabelLight = new Color("#0b1410");
+    public static Color BallRingDark = new Color("#0a0f0d");
+    public static Color BallLabelLight = new Color("#0b1410");
+
+    // ---------------------------------------------------------------- themes
+
+    /// <summary>Human-readable theme names, indexed to match <see cref="ApplyTheme"/>.</summary>
+    public static readonly string[] ThemeNames =
+    {
+        "深空星野（默认）",
+        "经典墨绿",
+        "午夜蓝",
+        "沙岩",
+    };
+
+    /// <summary>Swatch colour shown for each theme in the personalisation screen.</summary>
+    public static readonly Color[] ThemeSwatches =
+    {
+        new Color("#0a0a1a"),
+        new Color("#14402f"),
+        new Color("#12233f"),
+        new Color("#4a3b2a"),
+    };
+
+    /// <summary>
+    /// Switch the whole presentation palette. Colours only -- no physics, no geometry, no gameplay.
+    ///
+    /// Theme 0 is the SPACE theme the user asked for: the cloth is deep starfield navy, the pockets are
+    /// BLACK HOLES (near-void, with an accretion rim so they read as devouring rather than as holes in
+    /// a table), and the balls are planets rendered from the Okabe-Ito set so identity survives.
+    /// The white hole stays cyan-white in every theme -- it must always be the visual opposite of a
+    /// black hole.
+    /// </summary>
+    public static void ApplyTheme(int index)
+    {
+        ActiveTheme = index < 0 || index >= ThemeNames.Length ? 0 : index;
+
+        switch (ActiveTheme)
+        {
+            case 0: // 深空星野 -- space
+                RoomBg = new Color("#050510");
+                RailWood = new Color("#1a1f3a");
+                RailInner = new Color("#11142a");
+                Felt = new Color("#0b1030");
+                FeltEdge = new Color("#060818");
+                FeltGrid = new Color("#1a2450");
+                // Black holes: not pure black, so they remain distinguishable from the void behind.
+                Pocket = new Color("#01010a");
+                PocketRim = new Color("#8a6bd6");
+                Cue = new Color("#fdfdff");
+                BallRingDark = new Color("#04040c");
+                BallLabelLight = new Color("#04040c");
+                RailShadow = new Color("#02030a");
+                RailLight = new Color("#3b477e");
+                CushionLight = new Color("#1b2554");
+                CushionMid = new Color("#131a3c");
+                CushionInner = new Color("#0a0f28");
+                FeltShade = new Color("#060a1e");
+                PocketMouth = new Color("#101433");
+                PocketLiner = new Color("#000004");
+                break;
+
+            case 1: // 经典墨绿 -- the original felt
+                RoomBg = new Color("#101418");
+                RailWood = new Color("#5a3a22");
+                RailInner = new Color("#3d322c");
+                Felt = new Color("#14402f");
+                FeltEdge = new Color("#0c2a1e");
+                FeltGrid = new Color("#194a36");
+                Pocket = new Color("#070b0a");
+                PocketRim = new Color("#5a6b62");
+                Cue = new Color("#f2efe3");
+                BallRingDark = new Color("#0a0f0d");
+                BallLabelLight = new Color("#0b1410");
+                RailShadow = new Color("#0d0906");
+                RailLight = new Color("#7a5233");
+                CushionLight = new Color("#2f6b4c");
+                CushionMid = new Color("#1d4c36");
+                CushionInner = new Color("#123425");
+                FeltShade = new Color("#0c2a1e");
+                PocketMouth = new Color("#241a12");
+                PocketLiner = new Color("#0b0806");
+                break;
+
+            case 2: // 午夜蓝
+                RoomBg = new Color("#0b1220");
+                RailWood = new Color("#1b2438");
+                RailInner = new Color("#141a28");
+                Felt = new Color("#12233f");
+                FeltEdge = new Color("#0a1526");
+                FeltGrid = new Color("#1b3357");
+                Pocket = new Color("#04060c");
+                PocketRim = new Color("#6f86a8");
+                Cue = new Color("#f4f7fb");
+                BallRingDark = new Color("#060a12");
+                BallLabelLight = new Color("#05090f");
+                RailShadow = new Color("#05080f");
+                RailLight = new Color("#3f5578");
+                CushionLight = new Color("#1e3a63");
+                CushionMid = new Color("#152a49");
+                CushionInner = new Color("#0c1a30");
+                FeltShade = new Color("#0a1729");
+                PocketMouth = new Color("#131b2b");
+                PocketLiner = new Color("#020408");
+                break;
+
+            default: // 3 -- 沙岩
+                RoomBg = new Color("#1a1610");
+                RailWood = new Color("#6b5334");
+                RailInner = new Color("#463a28");
+                Felt = new Color("#4a3b2a");
+                FeltEdge = new Color("#33291d");
+                FeltGrid = new Color("#5c4a34");
+                Pocket = new Color("#0d0a06");
+                PocketRim = new Color("#8a7a5c");
+                Cue = new Color("#fbf6ea");
+                BallRingDark = new Color("#12100a");
+                BallLabelLight = new Color("#12100a");
+                RailShadow = new Color("#100d08");
+                RailLight = new Color("#a3835a");
+                CushionLight = new Color("#6b5540");
+                CushionMid = new Color("#54422f");
+                CushionInner = new Color("#3a2d1f");
+                FeltShade = new Color("#3a2d1f");
+                PocketMouth = new Color("#2b2217");
+                PocketLiner = new Color("#080603");
+                break;
+        }
+    }
 
     // ---------------------------------------------------------------- trail
     /// <summary>Oldest end of the time gradient (desaturated, cold).</summary>
@@ -79,14 +217,14 @@ public static class Palette
     // The table used to be a single flat felt rectangle plus a border, which read as a diagram
     // rather than a physical object. These give it a rail frame and a cushion bevel drawn OUTSIDE
     // the physics box, so the visible cushion edge and the rail collision boundary are the same line.
-    public static readonly Color RailShadow = new Color("#0d0906");
-    public static readonly Color RailLight = new Color("#7a5233");
-    public static readonly Color CushionLight = new Color("#2f6b4c");
-    public static readonly Color CushionMid = new Color("#1d4c36");
-    public static readonly Color CushionInner = new Color("#123425");
-    public static readonly Color FeltShade = new Color("#0c2a1e");
-    public static readonly Color PocketMouth = new Color("#241a12");
-    public static readonly Color PocketLiner = new Color("#0b0806");
+    public static Color RailShadow = new Color("#0d0906");
+    public static Color RailLight = new Color("#7a5233");
+    public static Color CushionLight = new Color("#2f6b4c");
+    public static Color CushionMid = new Color("#1d4c36");
+    public static Color CushionInner = new Color("#123425");
+    public static Color FeltShade = new Color("#0c2a1e");
+    public static Color PocketMouth = new Color("#241a12");
+    public static Color PocketLiner = new Color("#0b0806");
 
     // ---------------------------------------------------------------- aim
     public static readonly Color AimLine = new Color("#f8f4e6");

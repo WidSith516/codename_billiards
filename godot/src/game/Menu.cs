@@ -470,11 +470,11 @@ public partial class Menu : Node2D
         Text(90, 86, "个性化", 26, Palette.TextMain);
         Text(90, 110, "只更换配色与表现，不影响任何物理数值。Esc 返回", 12, Palette.TextDim);
 
-        string[] names = { "经典深青（默认）", "午夜蓝", "沙岩", "霓虹" };
-        var swatches = new[]
-        {
-            new Color("#14402f"), new Color("#12233f"), new Color("#4a3b2a"), new Color("#0d1b2a"),
-        };
+        // Names and swatches live in Palette so the screen and the actual theme cannot drift apart:
+        // they were hard-coded here and disagreed with the palettes (this screen offered a "霓虹" theme
+        // that no longer existed, and did not mention the space theme that is the default).
+        var names = Palette.ThemeNames;
+        var swatches = Palette.ThemeSwatches;
 
         var y = 156.0f;
         for (var i = 0; i < names.Length; i++)
