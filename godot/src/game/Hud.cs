@@ -66,6 +66,11 @@ public static class Hud
         /// </summary>
         public bool ShowPanel = true;
 
+        /// <summary>True when the on-screen buttons are active, which suppresses the keyboard legend:
+        /// the buttons are drawn into the same block, and the legend describes keys a touch device does
+        /// not have. Set from Play.</summary>
+        public bool TouchControls;
+
         /// <summary>Remaining rail speed boosts for the cue ball; a negative value means unlimited.</summary>
         public int WallBoostsRemaining = -1;
 
@@ -313,6 +318,14 @@ public static class Hud
         }
 
         // --- CONTROLS, pinned to the panel bottom --------------------------- y 436 .. 540
+        //
+        // ON A TOUCH DEVICE THIS BLOCK IS REPLACED BY THE ON-SCREEN BUTTONS (TouchControls), which are
+        // drawn into exactly this space. The keyboard legend lists R / P / Space / F1 -- keys a phone
+        // does not have -- so printing it there would both crowd out the buttons and describe controls
+        // the player cannot use. The two are mutually exclusive by construction: TouchControls draws
+        // only when a touchscreen is present, and this legend only when it is not.
+        if (m.TouchControls) return;
+
         var cy = rect.Position.Y + rect.Size.Y - 108;
         ci.DrawLine(new Vector2(x, cy - 10), new Vector2(x + 226, cy - 10), Palette.PanelEdge, 1.0f);
         Text(ci, font, x, cy + 4, "操作", 12, Palette.TextDim);

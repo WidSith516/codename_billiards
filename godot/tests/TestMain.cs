@@ -215,6 +215,15 @@ public partial class TestMain : Node
             Run(runner, "E10", RailEffectTests.E10_ClearingEffectsAlsoIdlesTheWarp);
         }
 
+        if (suite == "all" || suite == "touch")
+        {
+            Run(runner, "T01", TouchTests.T01_GridFitsThePanel);
+            Run(runner, "T02", TouchTests.T02_HitTestMatchesTheDrawnRect);
+            Run(runner, "T03", TouchTests.T03_ButtonsDoNotOverlap);
+            Run(runner, "T04", TouchTests.T04_AvailabilityFollowsState);
+            Run(runner, "T05", TouchTests.T05_EveryActionIsLabelled);
+        }
+
         if (negative)
         {
             // An acceptance gate that cannot fail is worse than no gate.

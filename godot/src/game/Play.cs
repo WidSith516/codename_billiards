@@ -92,6 +92,20 @@ public partial class Play : Node2D
     /// effect list. Needed so a "no effects" baseline is genuinely free of the distortion.</summary>
     private bool _suppressWarp;
 
+    /// <summary>Whether the on-screen transport is available. True on any device with a touchscreen,
+    /// or when <c>--touch-controls</c> forces it so the layout can be reviewed from a desktop.</summary>
+    private bool _touchControls;
+
+    /// <summary>The button currently held by a finger, if any. Tracked so a button can show a pressed
+    /// state AND so the release can be routed to the action that was PRESSED even if the finger has
+    /// slid off the rect -- which is how a hold-to-rewind control has to behave, since the finger
+    /// rolls while it is held.</summary>
+    private TouchControls.Action? _touchHeld;
+
+    /// <summary>The button the current mouse/touch press started on. Null when the press began on the
+    /// table, which is how a drag-aim is distinguished from a button press.</summary>
+    private TouchControls.Action? _touchPressed;
+
     /// <summary>The impact currently fed to the warp shader, cached so the idle transition can be
     /// detected without rebuilding the vector every frame.</summary>
     private bool _warpActive;
@@ -298,6 +312,11 @@ public partial class Play : Node2D
         _script = Arg("--script=");
         _verbose = HasArg("--verbose");
         _debugOverlay = HasArg("--debug") || _stateName == "debug";
+
+        // The on-screen transport appears on any device with a touchscreen, or when forced with
+        // --touch-controls so the touch layout can be captured and reviewed from a desktop.
+        _touchControls = TouchControls.ShouldShow();
+        if (_touchControls) GD.Print("[play] touch controls enabled");
 
         // ---- decorative sine bands, mirrored top and bottom (see ReplayBand.cs) ---------------
         // A band failure must never take the game down with it: the effect is decoration, so the
@@ -1607,6 +1626,46 @@ public partial class Play : Node2D
             return;
         }
 
+        // On-screen transport, BEFORE everything else: a press that lands on a button must never fall
+        // through to the table code below it. Without this ordering, tapping "重置" would also be read
+        // as a click on the table (harmless), but tapping near the cue ball's screen position while a
+        // button is drawn over it would start a drag-aim behind the button the player actually pressed.
+        //
+        // The positions are used directly, matching how CardIndexAt treats hit-testing: the buttons are
+        // laid out in design-canvas pixels and ViewScale is 1.0, so the two spaces coincide. (If
+        // ViewScale ever changes, this and the card hit test must both be routed through it together.)
+        if (_touchControls && !CardChoiceOpen)
+        {
+            if (button.Pressed)
+            {
+                var action = TouchControls.Hit(button.Position);
+                if (action.HasValue
+                    && TouchControls.Enabled(action.Value, _world.ShotUsed, _world.Rewinding,
+                        false, _world.Won, _world.Lost))
+                {
+                    _touchPressed = action;
+                    _touchHeld = action;
+                    OnTouchPress(action.Value);
+                    return;
+                }
+
+                // A press on a DISABLED button is swallowed rather than passed to the table: the
+                // player aimed at a control, and having that tap also start an aim drag is the kind
+                // of double-action that makes a touch interface feel broken.
+                if (action.HasValue) return;
+            }
+            else if (_touchPressed.HasValue)
+            {
+                // Release goes to the button that was PRESSED, not to whatever is under the finger
+                // now: a held finger rolls, and a rewind must end when the player lifts, not when
+                // their thumb drifts off the rect.
+                OnTouchRelease(_touchPressed.Value);
+                _touchPressed = null;
+                _touchHeld = null;
+                return;
+            }
+        }
+
         if (button.Pressed)
         {
             // 1. Grab the scrub marker.
@@ -1672,6 +1731,83 @@ public partial class Play : Node2D
     }
 
     private bool _scrubGrabbed;
+
+    // ================================================================ touch transport
+
+    /// <summary>
+    /// Act on an on-screen button press.
+    ///
+    /// Each branch calls the SAME method the equivalent key calls, deliberately. The alternative --
+    /// reimplementing the behaviour here -- is how a touch build drifts from the keyboard build: the
+    /// rapid-tap cluster logic, the death-throe arming and the rewind budget all live inside
+    /// BeginRewind/ReleaseRewind, and a second code path would have to reproduce them exactly or
+    /// silently not have them.
+    /// </summary>
+    private void OnTouchPress(TouchControls.Action a)
+    {
+        switch (a)
+        {
+            case TouchControls.Action.Rewind:
+                // Mirrors Key.R's press branch, including the resume-from-scrub case. Direct entry into
+                // BeginRewind also keeps the rapid-tap rule working on touch: a second tap inside the
+                // 10 px cluster arms the death-throe boost exactly as two R presses would.
+                if (_rewindVis.Scrubbing)
+                {
+                    _rewindVis.EndScrub(keepPaused: false);
+                    Notify("继续回溯", Palette.RewindCue);
+                }
+                else if (_world.Rewinding)
+                {
+                    ReleaseRewind();
+                }
+                else
+                {
+                    BeginRewind();
+                }
+
+                break;
+
+            case TouchControls.Action.PauseScrub:
+                if (_world.Rewinding)
+                {
+                    if (_rewindVis.Scrubbing) _rewindVis.EndScrub(keepPaused: false);
+                    else _rewindVis.BeginScrub();
+                    Notify(_rewindVis.Scrubbing
+                        ? "已暂停 · 拖动或用 ◀ ▶ 把释放点向后移，按回溯在该点松开"
+                        : "继续回溯", Palette.RewindTarget);
+                }
+                else
+                {
+                    Notify("还没有可回溯的历史（先击球，再按住回溯）", Palette.TextDim);
+                }
+
+                break;
+
+            case TouchControls.Action.Reset:
+                ResetLevel();
+                break;
+
+            case TouchControls.Action.Back:
+                // Same guard as Key.Escape: leaving mid-rewind would strand the rewind session.
+                if (_world.Rewinding) ReleaseRewind();
+                GetTree().ChangeSceneToFile("res://scenes/menu.tscn");
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Act on an on-screen button release. Only the rewind button has release semantics -- releasing it
+    /// is what commits the rewind and keeps the velocity of that moment, which is the entire mechanic.
+    /// A release of any other button is a no-op, because the others act on press and the player should
+    /// not be able to trigger them twice by pressing and lifting.
+    /// </summary>
+    private void OnTouchRelease(TouchControls.Action a)
+    {
+        if (a == TouchControls.Action.Rewind && _world.Rewinding && !_rewindVis.Scrubbing)
+        {
+            ReleaseRewind();
+        }
+    }
 
     /// <summary>Project the mouse onto the recorded path and move the release marker there.</summary>
     private void ScrubTo(Vector2 screen)
@@ -2254,6 +2390,17 @@ public partial class Play : Node2D
         Hud.Draw(this, _font, BuildHudModel());
         if (_debugOverlay) Hud.DrawDebug(this, _font, BuildHudModel());
         DrawTutorial();
+
+        // On-screen transport, in the same UI space as the HUD it sits among. Drawn BEFORE the card
+        // panel: a pending draw owns the screen and its scrim must cover these buttons, otherwise a
+        // player could tap "reset" through the card choice and desynchronise the hand from the state
+        // it was drawn for.
+        if (_touchControls && !CardChoiceOpen)
+        {
+            TouchControls.Draw(this, _font, _touchHeld,
+                _world.ShotUsed, _world.Rewinding, _world.Won, _world.Lost);
+        }
+
         DrawCardPanel();
         DrawSetTransform(Vector2.Zero, 0.0f, Vector2.One);
 
@@ -2968,6 +3115,7 @@ public partial class Play : Node2D
             MessageColor = _messageColor,
             Debug = _debugOverlay,
             ShowPanel = _showHud,
+            TouchControls = _touchControls,
             WallBoostsRemaining = _world.Cue != null && _world.Cue.WallBoostsRemaining.HasValue
                 ? _world.Cue.WallBoostsRemaining.Value
                 : -1,
