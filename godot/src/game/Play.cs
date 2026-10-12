@@ -88,6 +88,10 @@ public partial class Play : Node2D
     /// is empty" can be told apart from "the shader output is wrong".</summary>
     private string _dumpWarpPath;
 
+    /// <summary>Set by <c>--no-fx</c>: force the warp to its idle pass-through as well as clearing the
+    /// effect list. Needed so a "no effects" baseline is genuinely free of the distortion.</summary>
+    private bool _suppressWarp;
+
     /// <summary>The impact currently fed to the warp shader, cached so the idle transition can be
     /// detected without rebuilding the vector every frame.</summary>
     private bool _warpActive;
@@ -680,7 +684,17 @@ public partial class Play : Node2D
                 }
 
                 _freezeWorld = true;
-                _captureHoldEffects = _outPath != null;
+
+                // Hold the effect at the chosen age. This is normally implied by --out=, because a
+                // scripted capture waits N frames before saving while effects age in REAL time, so a
+                // 0.55 s impact would be gone by the time the shutter opens.
+                //
+                // --hold-fx forces the HOLD without --out=, for captures that take the picture some
+                // other way. (An earlier version of this comment claimed the exported build cannot use
+                // --out= at all because res:// is a read-only PCK. That is true of a res:// path and
+                // FALSE in general: SavePng takes an OS path, so an ABSOLUTE --out= writes fine from the
+                // packed build and the exported .exe can screenshot itself. Verified both ways.)
+                _captureHoldEffects = _outPath != null || HasArg("--hold-fx");
 
                 // Hold the impact at its PEAK, not at an arbitrary age. The elastic envelope is
                 // cos-based, so it passes through zero on the way back: capturing at t=0.35 s (which the
@@ -700,7 +714,11 @@ public partial class Play : Node2D
                 // captures can be differenced to prove exactly which pixels the effect owns. Without this
                 // the only available comparison is between two different game states, which differ
                 // everywhere and proves nothing.
-                if (HasArg("--no-fx")) _effects.Clear();
+                //
+                // It must suppress the WARP as well as the geometry. Clearing the effect list alone left
+                // the shader running with its last uniforms, so the "no effects" frame still carried the
+                // distortion -- which would have silently inflated every measured footprint.
+                if (HasArg("--no-fx")) { _effects.Clear(); _suppressWarp = true; }
                 UpdateWarp();
 
                 GD.Print($"[play] rail state: railTransforms={_world.Stats.RailTransforms} " +
@@ -1145,6 +1163,20 @@ public partial class Play : Node2D
 
             case "long-session":
                 RunLongSession();
+                break;
+
+            case "live-strike":
+                // Fire WITHOUT settling, so the real frame loop advances the world.
+                //
+                // Every other scripted state settles inside PrepareState (during _Ready), which consumes
+                // the simulation's stat counters before _Process ever runs. PlayEventSounds drives the
+                // effects by DIFFERENCING those counters once per frame, so in a settled state it sees
+                // no delta and spawns nothing -- which is exactly why the live effect path could not be
+                // verified by any existing capture. This mode leaves the shot in flight so the same code
+                // path that runs in normal play is exercised, and --trace-fx can then show it firing.
+                SetAim(DoubleArg("--angle=", 7.0), DoubleArg("--power=", 170.0));
+                FireShot();
+                GD.Print("[play] live-strike: fired, NOT settled; frames will advance the world");
                 break;
 
             default:
@@ -2180,13 +2212,15 @@ public partial class Play : Node2D
         // straight over the table.
         DrawTable();
 
-        // ---- rail effects, in TABLE space ----------------------------------------------------
-        // Drawn after the table but before the balls, so a ball is never hidden by the wave it caused.
-        // The ripple lives in the cushion band; the streak starts at the contact point.
+        // ---- rail impact, in TABLE space -----------------------------------------------------
+        // Drawn after the table but before the balls, so a ball is never hidden by the material it
+        // disturbed. The bent cushion edge and the contact flash live here; the SURFACE displacement is
+        // not drawn at all -- it is the warp shader, applied to the table layer underneath.
         if (HasArg("--trace-fx") && _frames % 30 == 0)
         {
             GD.Print($"[fx] frame={_frames} effects={_effects.Count} hold={_captureHoldEffects} " +
-                     $"tableBox={TableBox()}");
+                     $"warp={_warpActive} push={_impactPush:F1} age={_impactAge:F3} " +
+                     $"contact=({_impactContact.X:F0},{_impactContact.Y:F0}) tableBox={TableBox()}");
         }
 
         _effects.DrawRailImpacts(this, TableBox());
@@ -2468,7 +2502,7 @@ public partial class Play : Node2D
     {
         if (_warpMaterial == null) return;
 
-        if (_world == null || !_effects.TryGetImpact(out var impact))
+        if (_suppressWarp || _world == null || !_effects.TryGetImpact(out var impact))
         {
             if (_warpActive) { PushWarpUniforms(idle: true); _warpActive = false; }
             return;

@@ -95,6 +95,28 @@ public partial class Menu : Node2D
             };
         }
 
+        // --level=<id> jumps straight into that level, skipping the menu entirely.
+        //
+        // WHY THE EXPORTED BUILD NEEDS THIS: the dev build can be driven into the play scene directly by
+        // launching play.tscn, and every scripted capture relies on that. The EXPORTED build always boots
+        // menu.tscn -- that is run/main_scene -- so a window grab of the shipped .exe photographed the
+        // MENU, not the game. An earlier round concluded from such a grab that the exported build showed
+        // the rail impact; it was looking at the title screen. Without this flag there is no way to put
+        // the shipped artifact into the state being claimed about it.
+        //
+        // Deliberately NOT routed through StartLevel: that refuses locked levels, so a capture of a level
+        // the local save has not unlocked yet would silently land back on the menu -- the same failure
+        // this flag exists to remove.
+        var levelArg = ArgValue("--level=");
+        if (levelArg != null)
+        {
+            SelectedLevelId = levelArg;
+            TutorialPending = false;
+            GD.Print($"[menu] direct entry into level '{levelArg}'");
+            CallDeferred(nameof(EnterSelectedLevelDeferred));
+            return;
+        }
+
         QueueRedraw();
 
         // Boot marker, mirroring the play scene's KERNEL_VIEW_READY. The gate asserts on this so a
@@ -318,6 +340,13 @@ public partial class Menu : Node2D
         TutorialPending = false;
         GetTree().ChangeSceneToFile("res://scenes/play.tscn");
     }
+
+    /// <summary>
+    /// Enter the level named by --level=, deferred so the scene change happens after _Ready finishes.
+    /// Changing the scene from inside _Ready destroys the node mid-initialisation.
+    /// </summary>
+    private void EnterSelectedLevelDeferred()
+        => GetTree().ChangeSceneToFile("res://scenes/play.tscn");
 
     // ---------------------------------------------------------------- draw
 

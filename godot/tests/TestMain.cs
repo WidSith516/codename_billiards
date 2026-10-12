@@ -211,6 +211,8 @@ public partial class TestMain : Node
             Run(runner, "E06", RailEffectTests.E06_ElasticReboundOvershootsRest);
             Run(runner, "E07", RailEffectTests.E07_DentIsLocalAndConnected);
             Run(runner, "E08", RailEffectTests.E08_BoostedAndSpentDiffer);
+            Run(runner, "E09", RailEffectTests.E09_KernelCountsRailPayouts);
+            Run(runner, "E10", RailEffectTests.E10_ClearingEffectsAlsoIdlesTheWarp);
         }
 
         if (negative)

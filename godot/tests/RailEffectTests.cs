@@ -298,4 +298,102 @@ public static class RailEffectTests
         t.Check("the spent impact is gone well before the paying one",
             spent.Count == 0 && paid.Count == 1, $"spent={spent.Count} paid={paid.Count}");
     }
+
+    /// <summary>
+    /// E09: the kernel's RailBoosts counter is what the LIVE view reads, and it must count payouts only.
+    ///
+    /// This exists because the live path was the one thing no test and no capture covered. Every scripted
+    /// state settles the world inside PrepareState (during _Ready), which burns the stat deltas before
+    /// _Process ever runs -- so PlayEventSounds, which drives the effect by DIFFERENCING those counters
+    /// once per frame, saw zero delta and spawned nothing. The feature looked correct in every screenshot
+    /// and was unverified in the only path a player actually uses.
+    ///
+    /// The bug this pins down: the view used to infer the payout from the ball's own CanTakeWallBoost
+    /// AFTER stepping, but the kernel consumes that allowance in the same call that pays it out. Every
+    /// hit therefore read as spent, so the strong impact was unreachable in play while all the effect
+    /// arithmetic passed. Measured then: push=11.0 (the spent value) on a hit that demonstrably returned
+    /// energy. RailBoosts is incremented inside the kernel, where `boosted` is still in scope.
+    /// </summary>
+    public static void E09_KernelCountsRailPayouts(TestRunner t)
+    {
+        t.Section("E09 - the kernel counts rail payouts where the allowance is still in scope");
+
+        // The cue's allowance is UNLIMITED in the shipped table (MaxWallBoosts = -1), so with the default
+        // config every rail hit pays out and RailBoosts == RailTransforms. That equality is the contract
+        // for the cue, and the interesting case -- a ball whose allowance RUNS OUT -- has to be configured
+        // explicitly. An earlier version of this test asserted transforms > boosts on the default table
+        // and failed, because that premise is simply false for the cue; the counter is fine.
+        var level = TestSupport.Table();
+        level.AddCue(292, 280);
+        level.AddObject(700, 120);
+        var world = new World(level);
+
+        t.Check("no payouts before anything happens", world.Stats.RailBoosts == 0,
+            "boosts=" + world.Stats.RailBoosts);
+
+        t.Check("the shot is accepted", world.Shot(7.0, 170.0), "shot refused");
+        for (var i = 0; i < 4000 && !world.AtRest(); i++) world.Step();
+
+        t.Check("the ball did reach the rails", world.Stats.RailTransforms > 0,
+            "transforms=" + world.Stats.RailTransforms);
+        t.Check("with an unlimited allowance every transform pays out",
+            world.Stats.RailBoosts == world.Stats.RailTransforms,
+            $"boosts={world.Stats.RailBoosts} transforms={world.Stats.RailTransforms}");
+
+        // Now the case the view actually depends on: a FINITE allowance, where the two counts diverge and
+        // a player can see that the cushion has stopped giving energy back. If RailBoosts and RailTransforms
+        // were ever the same counter, the strong impact would be indistinguishable from the spent one and
+        // the whole "is the rail still paying?" readout would be dead.
+        //
+        // Friction is lowered for this case so the ball actually reaches several rails. On the shipping
+        // table a single 170-power shot dies after about one cushion (measured: transforms=1), so a rally
+        // long enough to outlast the allowance has to be arranged rather than assumed -- the first two
+        // versions of this test asserted it and failed for exactly that reason.
+        var finite = TestSupport.Table(configure: c =>
+        {
+            c.FrictionDecel = 60.0;
+            c.For(BallType.Cue).MaxWallBoosts = 1;
+        });
+        finite.AddCue(292, 280);
+        finite.AddObject(700, 120);
+        var limited = new World(finite);
+        limited.Shot(7.0, 170.0);
+        for (var i = 0; i < 8000 && !limited.AtRest(); i++) limited.Step();
+
+        t.Check("a finite allowance still registers its one payout",
+            limited.Stats.RailBoosts == 1, "boosts=" + limited.Stats.RailBoosts);
+        t.Check("but the ball keeps bouncing long after the allowance is spent",
+            limited.Stats.RailTransforms > limited.Stats.RailBoosts,
+            $"boosts={limited.Stats.RailBoosts} transforms={limited.Stats.RailTransforms}");
+        t.Check("payouts are always a subset of transforms, never a separate tally",
+            limited.Stats.RailBoosts <= limited.Stats.RailTransforms,
+            $"boosts={limited.Stats.RailBoosts} transforms={limited.Stats.RailTransforms}");
+    }
+
+    /// <summary>
+    /// E10: --no-fx must silence the WARP as well as the geometry, or the "no effects" baseline carries
+    /// the distortion and every measured footprint is inflated.
+    ///
+    /// Found by measurement, not by reading: comparing an idle-warp capture against --no-fx left 1.72% of
+    /// pixels differing, and --no-fx was supposed to be the effect-free frame. The residual turned out to
+    /// be the flash and bent-cushion geometry (correct, intentional), but the flag needed to guarantee the
+    /// shader was idle too before that could be established -- otherwise "the effect owns 1.72%" and "the
+    /// baseline is contaminated" are indistinguishable.
+    /// </summary>
+    public static void E10_ClearingEffectsAlsoIdlesTheWarp(TestRunner t)
+    {
+        t.Section("E10 - clearing the effects must also return the warp to pass-through");
+
+        var fx = Fresh();
+        Hit(fx);
+        t.Check("the impact is live and would warp", fx.TryGetImpact(out var live),
+            "no impact after a hit");
+        t.CheckClose("the live impact carries a real magnitude", live.PeakPush,
+            Effects.BoostedPushPx, 4, $"got {live.PeakPush}");
+
+        fx.Clear();
+        t.Check("after Clear there is no impact, so the shader idles",
+            !fx.TryGetImpact(out _), "an impact survived Clear");
+        t.Check("and the list is empty", fx.Count == 0, "count=" + fx.Count);
+    }
 }

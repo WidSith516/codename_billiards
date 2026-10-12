@@ -1,54 +1,60 @@
-# Capture the EXPORTED build's window, to verify the warp reaches the shipped game.
+# Capture the EXPORTED build by letting IT write the PNG, not by grabbing the screen.
 #
-# The dev-build captures prove the rendering code; they cannot prove the exported artifact, because
-# inside a PCK `res://` is read-only so `--out=` cannot work there. A window grab is the only way to see
-# what the shipped exe actually puts on screen.
+# WHY THIS REPLACED THE WINDOW-GRAB VERSION: a desktop grab proved nothing. Two captures of the SAME
+# state differed on 95.2% of pixels, because the compositor placed the window at (441,163) one run and
+# (100,100) the next and SetWindowPos did not take. The noise floor swamped the effect entirely.
+#
+# The export CAN screenshot itself: --out= is passed straight to Image.SavePng, which takes an OS path,
+# so an absolute path works from inside the packed build. (Only a res:// path fails, because a PCK is
+# read-only -- an earlier round generalised that one failure into "the export cannot be captured", which
+# was wrong and cost real time.)
+#
+# It also asserts on the play-scene boot markers. The export always boots menu.tscn, so without
+# --level=<id> it sits on the title screen, and an earlier "the export shows the rail impact" conclusion
+# was in fact a photograph of the menu.
 param(
+    [Parameter(Mandatory = $true)][string]$Name,
     [string]$Extra = "",
-    [string]$Out = "godot\evidence\export_check.png"
+    [string]$Exe = "dist\REWIND.exe",
+    [int]$WaitSeconds = 14
 )
 
-Add-Type -AssemblyName System.Drawing
-Add-Type @"
-using System;
-using System.Runtime.InteropServices;
-public class Win {
-    [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr h, out RECT r);
-    [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr h);
-    [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr h, int c);
-    [StructLayout(LayoutKind.Sequential)] public struct RECT { public int L, T, R, B; }
-}
-"@
+$root = (Resolve-Path -LiteralPath ".").Path
+$outPosix = ($root -replace '\\', '/') + "/$Name.png"
+$outWin = Join-Path $root "$Name.png"
+Remove-Item $outWin -ErrorAction SilentlyContinue
 
-$args = @("--rendering-driver", "d3d12", "--")
-if ($Extra -ne "") { $args += $Extra -split ' ' }
+$stdout = "cap_$Name.out.txt"
+$stderr = "cap_$Name.err.txt"
 
-$p = Start-Process "dist\REWIND.exe" -ArgumentList $args -PassThru
-Start-Sleep -Seconds 9
+$argList = @("--rendering-driver", "d3d12", "--", "--out=$outPosix", "--capture-frames=30")
+if ($Extra -ne "") { $argList += $Extra -split ' ' }
+
+$p = Start-Process $Exe -ArgumentList $argList -PassThru `
+    -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+
+$deadline = (Get-Date).AddSeconds($WaitSeconds)
+while ((Get-Date) -lt $deadline -and -not (Test-Path $outWin)) { Start-Sleep -Milliseconds 250 }
+Start-Sleep -Milliseconds 700
 $p.Refresh()
+if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force }
 
-if ($p.HasExited) {
-    Write-Output "EXITED early: code=$($p.ExitCode)"
-    exit 1
+$log = Get-Content $stdout -ErrorAction SilentlyContinue
+
+if (-not ($log | Where-Object { $_ -match 'KERNEL_VIEW_READY' })) {
+    Write-Output "FAIL [$Name]: never reached the play scene (would have been a menu shot)"
+    $log | Select-Object -First 12
+    exit 2
 }
 
-[Win]::ShowWindow($p.MainWindowHandle, 9) | Out-Null   # SW_RESTORE
-[Win]::SetForegroundWindow($p.MainWindowHandle) | Out-Null
-Start-Sleep -Milliseconds 900
+if (-not (Test-Path $outWin)) {
+    Write-Output "FAIL [$Name]: no PNG written; the capture never ran"
+    $log | Select-Object -Last 12
+    Get-Content $stderr -ErrorAction SilentlyContinue | Select-Object -First 8
+    exit 3
+}
 
-$r = New-Object Win+RECT
-[Win]::GetWindowRect($p.MainWindowHandle, [ref]$r) | Out-Null
-$w = $r.R - $r.L
-$h = $r.B - $r.T
-Write-Output "window ${w}x${h} at ($($r.L),$($r.T))"
-
-if ($w -le 0 -or $h -le 0) { Write-Output "BAD RECT"; Stop-Process -Id $p.Id -Force; exit 1 }
-
-$bmp = New-Object System.Drawing.Bitmap $w, $h
-$g = [System.Drawing.Graphics]::FromImage($bmp)
-$g.CopyFromScreen($r.L, $r.T, 0, 0, (New-Object System.Drawing.Size $w, $h))
-$bmp.Save((Resolve-Path -LiteralPath ".").Path + "\" + $Out, [System.Drawing.Imaging.ImageFormat]::Png)
-$g.Dispose(); $bmp.Dispose()
-
-Write-Output "saved $Out"
-Stop-Process -Id $p.Id -Force
+# Echo the kernel's own view of the frame: these are the numbers a claim about this capture rests on.
+$state = $log | Where-Object { $_ -match 'rail state|\[play\] level=' }
+Write-Output "OK [$Name] -> $Name.png"
+$state | ForEach-Object { Write-Output "    $_" }
