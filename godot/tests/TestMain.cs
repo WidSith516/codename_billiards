@@ -203,11 +203,14 @@ public partial class TestMain : Node
 
         if (suite == "all" || suite == "fx")
         {
-            Run(runner, "E01", RailEffectTests.E01_BoostedHitCreatesRippleAndStreak);
-            Run(runner, "E02", RailEffectTests.E02_UnboostedHitShowsNoPayout);
+            Run(runner, "E01", RailEffectTests.E01_OneHitCreatesOneImpact);
+            Run(runner, "E02", RailEffectTests.E02_ImpactReachesTheShader);
             Run(runner, "E03", RailEffectTests.E03_EffectsExpire);
             Run(runner, "E04", RailEffectTests.E04_RevealCompletes);
             Run(runner, "E05", RailEffectTests.E05_ContactWallIsRecoveredFromReflection);
+            Run(runner, "E06", RailEffectTests.E06_ElasticReboundOvershootsRest);
+            Run(runner, "E07", RailEffectTests.E07_DentIsLocalAndConnected);
+            Run(runner, "E08", RailEffectTests.E08_BoostedAndSpentDiffer);
         }
 
         if (negative)

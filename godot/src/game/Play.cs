@@ -46,15 +46,56 @@ public partial class Play : Node2D
     /// real viewport size into a device-pixel scale for the decorative bands.</summary>
     private const float DesignCanvasWidth = 1040.0f;
 
+    /// <summary>The design canvas height. The warp target is rendered at the full design size so the
+    /// impact's pixel-space distances (dent sigma, push) mean the same thing as level coordinates.</summary>
+    private const float DesignCanvasHeight = 560.0f;
+
+    /// <summary>Shorthand for the warp render target size, in px.</summary>
+    private const int DesignWidth = (int)DesignCanvasWidth;
+    private const int DesignHeight = (int)DesignCanvasHeight;
+
+    /// <summary>
+    /// Which 60 Hz frame of a live impact the <c>--state=rail</c> capture freezes on.
+    ///
+    /// Frame 0 is the peak of the elastic envelope (cos(0) = 1), which is the only moment the cushion
+    /// is compressed as far as it goes. See the comment at the capture site: because the envelope is a
+    /// damped COSINE it passes through zero on the way back, so freezing at an arbitrary age can
+    /// photograph a fully-settled table.
+    /// </summary>
+    private const double PeakHoldAge = 0.0;
+
     private World _world;
     private LevelData _level;
     private readonly AimPredictor.Cache _aimCache = new AimPredictor.Cache();
     private TimelineTrail _trail;
     private readonly RewindVisualizer _rewindVis = new RewindVisualizer();
 
-    /// <summary>Transient cosmetic effects (rail ripples, contact streaks, pot bursts). Never read by
+    /// <summary>Transient cosmetic effects (rail impacts, pot bursts, card reveals). Never read by
     /// the simulation, so they cannot affect it.</summary>
     private readonly Effects _effects = new Effects();
+
+    /// <summary>The table surface's render target and the material that UV-displaces it on impact.
+    /// Null when the warp shader is unavailable, in which case the surface draws unwarped.</summary>
+    private SubViewport _warpViewport;
+    private Node2D _warpSource;
+    private ShaderMaterial _warpMaterial;
+
+    /// <summary>The room backdrop. A ShowBehindParent child, so it renders BEFORE the warped table
+    /// layer; both sit under everything Play's own _Draw paints.</summary>
+    private Node2D _roomLayer;
+
+    /// <summary>Set by <c>--dump-warp=</c>: write the warp render target itself to disk, so "the target
+    /// is empty" can be told apart from "the shader output is wrong".</summary>
+    private string _dumpWarpPath;
+
+    /// <summary>The impact currently fed to the warp shader, cached so the idle transition can be
+    /// detected without rebuilding the vector every frame.</summary>
+    private bool _warpActive;
+    private Vector2 _impactContact;
+    private Vector2 _impactNormal;
+    private float _impactPush;
+    private float _impactAge;
+    private Color _impactTint = Colors.White;
 
     /// <summary>Index the player has highlighted in the card hand, or -1.</summary>
     private int _cardHover = -1;
@@ -215,7 +256,13 @@ public partial class Play : Node2D
 
         // Apply the saved presentation theme BEFORE anything is loaded or drawn, so the table texture,
         // pocket style and ball colours all agree. Themes are colours only -- no physics, no geometry.
-        Palette.ApplyTheme(Menu.ThemeIndex);
+        //
+        // --theme=N overrides the saved choice. Needed because the theme decides which table-artwork
+        // branch runs, and that branch is now routed through the warp like every other; without an
+        // override the non-default themes could only be reached by clicking through the menu, so a
+        // capture-based check of them was impossible.
+        var themeArg = IntArg("--theme=", -1);
+        Palette.ApplyTheme(themeArg >= 0 ? themeArg : Menu.ThemeIndex);
 
         _tableTexture = GD.Load<Texture2D>("res://assets/h5/table.svg");
         TextureFilter = TextureFilterEnum.Linear;
@@ -312,16 +359,11 @@ public partial class Play : Node2D
         _level = LevelLoader.Load(levelPath);
         _world = new World(_level);
 
-        // Godot retains this draw list. The starfield and rails only need to be submitted once.
-        _tableBackground = new Node2D { Name = "TableBackground", ShowBehindParent = true };
-        _tableBackground.Draw += () =>
-        {
-            _tableBackground.DrawRect(new Rect2(-600, -600, 2400, 2000), Palette.RoomBg);
-            var inner = new Rect2((float)_level.TableLeft, (float)_level.TableTop,
-                (float)_level.TableWidth, (float)_level.TableHeight);
-            if (Palette.ActiveTheme == 0) DrawSpaceTable(inner, _tableBackground);
-        };
-        AddChild(_tableBackground);
+        // ---- the table surface, rendered into a texture so it can be DISPLACED ----------------
+        // BuildTableWarp creates the nodes: a SubViewport holds the table, and a sibling Node2D blits
+        // it back through the impact-warp shader. The room backdrop stays in the main canvas
+        // (Play.DrawRoom), because the warp target is transparent outside the table art.
+        BuildTableWarp();
 
         // The event-sound differencing baseline. It MUST be set here, the moment the world exists,
         // and not down with the audio setup: every --selftest / --trace-shot branch below returns
@@ -617,18 +659,22 @@ public partial class Play : Node2D
                 break;
 
             case "rail":
-                // Freeze the world at the instant a rail is hit so the ripple and the contact streak are
-                // both on screen. The effect is spawned through the SAME production path the frame loop
-                // uses (SpawnRailEffects), so the capture proves the shipped code, not a parallel one.
+                // Freeze the world at the instant a rail is hit, with the impact at PEAK deformation.
+                //
+                // The effect is spawned through the SAME production path the frame loop uses
+                // (SpawnRailEffects) and the warp is fed through the same UpdateWarp, so the capture
+                // proves the shipped code rather than a parallel one.
                 SetAim(7.0, 170.0);
                 FireShot();
                 for (var i = 0; i < 6000; i++)
                 {
-                    var before = _world.Stats.RailTransforms;
+                    var beforeRails = _world.Stats.RailTransforms;
+                    var beforeBoosts = _world.Stats.RailBoosts;
                     _world.Step();
-                    if (_world.Stats.RailTransforms > before)
+                    if (_world.Stats.RailTransforms > beforeRails)
                     {
-                        SpawnRailEffects(_world.Stats.RailTransforms - before);
+                        SpawnRailEffects(_world.Stats.RailTransforms - beforeRails,
+                            _world.Stats.RailBoosts - beforeBoosts);
                         break;
                     }
                 }
@@ -636,22 +682,32 @@ public partial class Play : Node2D
                 _freezeWorld = true;
                 _captureHoldEffects = _outPath != null;
 
-                // Age the effect to mid-life before holding it. At birth the wavefront radius is only the
-                // cushion's half-width, so the captured ring is a ~15 px arc at the contact point -- the
-                // mechanic works but the screenshot proves nothing about the "spreading" the user asked
-                // for. One Update() call advances it to the point where the wave has travelled.
-                _effects.Update(0.35);
+                // Hold the impact at its PEAK, not at an arbitrary age. The elastic envelope is
+                // cos-based, so it passes through zero on the way back: capturing at t=0.35 s (which the
+                // old version did, when the effect WAS the fade) would now land on or near a zero
+                // crossing and photograph a table that looks untouched. A capture has to be taken at a
+                // moment the effect is actually at its strongest or it proves nothing.
+                if (_captureHoldEffects)
+                {
+                    // --hold-age= lets a capture be taken at any point in the oscillation, which is how
+                    // the compression -> rest -> overshoot sequence is photographed. Without it only the
+                    // peak is reachable and the rebound cannot be shown at all.
+                    var holdAge = DoubleArg("--hold-age=", PeakHoldAge / 60.0);
+                    _effects.Update(holdAge);
+                }
 
                 // --no-fx renders the identical frozen state with the effects suppressed, so the two
                 // captures can be differenced to prove exactly which pixels the effect owns. Without this
                 // the only available comparison is between two different game states, which differ
                 // everywhere and proves nothing.
                 if (HasArg("--no-fx")) _effects.Clear();
+                UpdateWarp();
 
                 GD.Print($"[play] rail state: railTransforms={_world.Stats.RailTransforms} " +
                          $"effects={_effects.Count} cue=({_world.Cue.Position.X:F0},{_world.Cue.Position.Y:F0}) " +
                          $"r={_world.Cue.Radius:F1} v=({_world.Cue.Velocity.X:F0},{_world.Cue.Velocity.Y:F0}) " +
-                         $"wall={ContactWallOf(_world.Cue)}");
+                         $"wall={ContactWallOf(_world.Cue)} warpActive={_warpActive} " +
+                         $"push={_impactPush:F1}");
                 break;
 
             case "cards":
@@ -1245,6 +1301,9 @@ public partial class Play : Node2D
         // time, so a 0.85 s ripple would be gone by then and the screenshot would show an empty table.
         // Holding them is capture plumbing only; live play ages them normally.
         if (!_captureHoldEffects) _effects.Update(delta);
+        // The impact feed must follow the effects update, so the shader and the geometry it
+        // accompanies are computed from the same instant rather than a frame apart.
+        UpdateWarp();
         UpdateCards();
         var now = Time.GetTicksUsec() / 1000.0;
         if (_lastFrameAt > 0.0)
@@ -1275,6 +1334,25 @@ public partial class Play : Node2D
         if (_frames < Math.Max(_minFrames, _captureFrames)) return;
 
         _captureQuit = true;
+
+        // Dump the warp target itself FIRST, if asked. Doing it before the composite means the two files
+        // describe the same frame, and it answers the question the composite cannot: is the target empty,
+        // or is the shader misreading it?
+        if (_dumpWarpPath != null && _warpViewport != null)
+        {
+            var raw = _warpViewport.GetTexture()?.GetImage();
+            if (raw == null)
+            {
+                GD.Print("[play] WARP_DUMP FAIL no texture image");
+            }
+            else
+            {
+                var werr = raw.SavePng(_dumpWarpPath);
+                GD.Print($"[play] WARP_DUMP file={_dumpWarpPath} err={werr} " +
+                         $"size={raw.GetWidth()}x{raw.GetHeight()}");
+            }
+        }
+
         var image = GetViewport().GetTexture().GetImage();
         if (image == null)
         {
@@ -1705,7 +1783,7 @@ public partial class Play : Node2D
             var used = _world.Cue != null ? _world.Cue.WallBoostsUsed : 0;
             var pitch = 0.95f + Math.Min(used, 6) * 0.06f;
             _audio?.Play(SoundBank.Cue.RailBounce, 0.75f, pitch);
-            SpawnRailEffects(rails);
+            SpawnRailEffects(rails, s.RailBoosts - _prevStats.RailBoosts);
         }
 
         var pockets = s.PocketCaptures - _prevStats.PocketCaptures;
@@ -1759,13 +1837,11 @@ public partial class Play : Node2D
     /// of how many steps have passed since the contact, because the reflection direction is what the
     /// reflection wrote.
     /// </summary>
-    private void SpawnRailEffects(int count)
+    private void SpawnRailEffects(int count, int boosts)
     {
         var ball = _world.Cue;
         if (ball == null || _level == null) return;
 
-        var pos = new Vector2((float)ball.Position.X, (float)ball.Position.Y);
-        var r = (float)ball.Radius;
         var heading = new Vector2((float)ball.Velocity.X, (float)ball.Velocity.Y);
 
         var wall = ContactWallOf(ball);
@@ -1774,23 +1850,27 @@ public partial class Play : Node2D
         var along = ContactAlongOf(ball);
         var contact = ContactPointOf(ball);
 
-        // Whether the rail actually PAID OUT. The player must be able to SEE the allowance run out,
-        // because otherwise "the rail stopped giving" looks identical to "the rail did nothing".
-        var boosted = ball.CanTakeWallBoost;
+        // Whether the rail actually PAID OUT, taken from the kernel's own count rather than from the
+        // ball's allowance. Reading CanTakeWallBoost here is always false for a hit that paid, because
+        // the kernel consumes the allowance in the same call that spends it -- so every impact was
+        // drawn as the weak "spent" variant and the strong one was unreachable. See SimStats.RailBoosts.
+        var boosted = boosts > 0;
 
+        // ONE impact, never a fan of them.
+        //
+        // The previous version spawned up to two more copies offset along the wall whenever a frame
+        // contained several bounces. That was a workaround for thin-stroke effects: a single 1.5 px
+        // ring carried so little presence that stacking copies was the only way to make a multi-bounce
+        // frame visible. A displacement-based impact needs no stacking -- it is already a large,
+        // soft-edged deformation, and duplicates would read as a lumpy, obviously fake smear rather
+        // than as one cushion being hit. The user asked for FEWER effects with MORE force, and this is
+        // exactly that trade.
         _effects.RailHit(wall, along, contact, heading, Palette.RailBoost, boosted);
-        if (count > 1 && boosted)
-        {
-            // Extra bounces this frame: offset duplicates along the wall so they read as a wavefront.
-            for (var i = 1; i < Math.Min(count, 3); i++)
-            {
-                var offset = (i % 2 == 1 ? 1.0f : -1.0f) * i * 46.0f;
-                _effects.RailHit(wall, along + offset, contact, heading, Palette.RailBoost, false);
-            }
-        }
 
-        _ = r;
-        _ = pos;
+        // (count is retained in the signature for the caller's stat delta and is deliberately unused:
+        // the deformation already spans the whole contact region, so a second bounce in the same frame
+        // falls inside the same dent and adds nothing to draw.)
+        _ = count;
     }
 
     /// <summary>
@@ -2095,7 +2175,9 @@ public partial class Play : Node2D
         if (_world == null) return;
         var t0 = Time.GetTicksUsec();
 
-        DrawRoom();
+        // The room backdrop and the warped table are both ShowBehindParent children, so they are
+        // already submitted before this method runs. Drawing them again here would paint the room
+        // straight over the table.
         DrawTable();
 
         // ---- rail effects, in TABLE space ----------------------------------------------------
@@ -2107,8 +2189,7 @@ public partial class Play : Node2D
                      $"tableBox={TableBox()}");
         }
 
-        _effects.DrawRailRipples(this, TableBox());
-        _effects.DrawStreaks(this);
+        _effects.DrawRailImpacts(this, TableBox());
         _effects.DrawPotBursts(this);
 
         if (_trail.ShowTrail) _trail.Draw();
@@ -2162,50 +2243,134 @@ public partial class Play : Node2D
         _authoredVertexCounts = _trail.CachedVertexCount;
     }
 
-    private void DrawRoom()
+    /// <summary>
+    /// Set up the table surface's render target and the impact-warp material that displaces it.
+    ///
+    /// STRUCTURE: SubViewport (the table drawn transparent, at design size) -> ColorRect carrying
+    /// impact_warp.gdshader -> added to this node, which is a Node2D behind the table's own draw list.
+    /// Play's immediate-mode _Draw then paints balls, HUD and cards ON TOP of the warped surface.
+    ///
+    /// WHY NOT WARP IN THE MAIN VIEWPORT: SCREEN_TEXTURE is restricted under gl_compatibility, and
+    /// sampling the whole screen would drag the HUD and the decorative bands into the distortion.
+    /// A dedicated target means the warp can only ever affect the table.
+    ///
+    /// FAILURE MODE IS DELIBERATE: if the shader is missing the surface still renders, unwarped. The
+    /// effect is decoration, so a missing resource must never cost the player the table.
+    /// </summary>
+    private void BuildTableWarp()
     {
-        if (_tableBackground != null) return;
-        // Node coordinates, scaled into the canvas by ViewScale. The rects are sized so the visible
-        // window (0..928 x 0..500 at scale 1.12) is fully covered.
+        var size = new Vector2I(DesignWidth, DesignHeight);
+
+        // ---- LAYER ORDER, which is load-bearing here ------------------------------------------
+        // Both the room and the table are drawn as children with ShowBehindParent, so they land
+        // BELOW everything Play's own _Draw paints (balls, aim line, HUD, cards). Children render in
+        // tree order, so the room is added first and the table second.
         //
-        // The backdrop is deliberately drawn far larger than the design canvas. With
-        // stretch/aspect="keep" a window whose aspect differs from 1040x560 letterboxes the
-        // view, and anything outside these rects showed the engine's default clear colour as
-        // a hard BLACK bar at the bottom of the screen (observed in the exported build on a
-        // 1025x578 client area). Overscanning costs two triangles and makes the letterbox
-        // read as part of the room instead of as a bug.
-        DrawRect(new Rect2(-600, -600, 2400, 2000), Palette.RoomBg);
+        // This nesting is the reason the room cannot simply be painted from Play._Draw: the parent's
+        // own draw commands all run AFTER its ShowBehindParent children, so a room rect drawn there
+        // would blanket the table. That is exactly the bug the first version of this method shipped --
+        // every pixel of the table was covered by the backdrop, and because the backdrop is a flat
+        // fill the table still "looked" present in a coarse diff while nothing could be seen.
+        _roomLayer = new Node2D { Name = "RoomBackdrop", ShowBehindParent = true };
+        _roomLayer.Draw += () => DrawRoom(_roomLayer);
+        AddChild(_roomLayer);
+
+        var shader = GD.Load<Shader>("res://shaders/impact_warp.gdshader");
+        if (shader == null)
+        {
+            // No shader: draw the surface directly, exactly as before this feature. The effect is
+            // decoration, so a missing resource must never cost the player the table.
+            _tableBackground = new Node2D { Name = "TableSurface", ShowBehindParent = true };
+            _tableBackground.Draw += () => DrawTableSurface(_tableBackground);
+            AddChild(_tableBackground);
+            GD.Print("[play] impact warp unavailable (shader missing); table drawn unwarped");
+            return;
+        }
+
+        // ---- source: the table, rendered transparent into its own target ----------------------
+        // A SubViewport rather than the main canvas because a UV offset needs a TEXTURE to sample.
+        // Displacing each draw call's coordinates instead would move the geometry but not the artwork,
+        // and could not show the surface tearing or refracting -- which is the effect that was asked
+        // for ("uv偏移和扭曲").
+        //
+        // The target is the design size, so a dent measured in level px is the same px in texture
+        // space and the two cannot drift apart.
+        _warpViewport = new SubViewport
+        {
+            Name = "TableSurfaceTarget",
+            Size = size,
+            TransparentBg = true,
+            RenderTargetUpdateMode = SubViewport.UpdateMode.Always,
+            GuiDisableInput = true,
+        };
+
+        _warpSource = new Node2D { Name = "TableSurfaceSource" };
+        _warpSource.Draw += () => DrawTableSurface(_warpSource);
+        _warpViewport.AddChild(_warpSource);
+        AddChild(_warpViewport);
+
+        // The subtarget must render BEFORE the main viewport samples it, or the quad reads a texture
+        // that has not been drawn into yet this frame and the table comes out blank or one frame stale.
+        _warpViewport.RenderTargetUpdateMode = SubViewport.UpdateMode.Always;
+
+        // --dump-warp= writes the render target itself to disk. Without this there is no way to tell
+        // "the shader is wrong" from "the target is empty": both present as a dark table, and the
+        // capture only ever shows the final composite.
+        var dump = Arg("--dump-warp=");
+        if (dump != null) _dumpWarpPath = "res://evidence/" + dump;
+
+        // ---- consumer: the same surface blitted back through the warp shader ------------------
+        // CRITICAL: this node is a SIBLING of the viewport, never a child. A quad inside the viewport
+        // it is meant to be reading is a feedback loop -- it would sample the target it is currently
+        // rendering into.
+        _warpMaterial = new ShaderMaterial { Shader = shader };
+        _warpMaterial.SetShaderParameter("u_size", new Vector2(size.X, size.Y));
+        PushWarpUniforms(idle: true);
+
+        _tableBackground = new Node2D
+        {
+            Name = "TableSurfaceWarped",
+            ShowBehindParent = true,
+            Material = _warpMaterial,
+            // Nearest: the target is rendered at exactly the design resolution, so filtering could
+            // only soften an otherwise pixel-exact pass-through.
+            TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+        };
+
+        _tableBackground.Draw += () =>
+        {
+            // draw_texture_rect points the shader's TEXTURE at this viewport and puts UV at 0..1
+            // across the rect, which is the mapping the shader assumes.
+            _tableBackground.DrawTextureRect(
+                _warpViewport.GetTexture(),
+                new Rect2(0, 0, DesignWidth, DesignHeight),
+                false);
+        };
+
+        AddChild(_tableBackground);
     }
 
     /// <summary>
-    /// The table. Two sources, in priority order:
+    /// Everything that belongs to the table SURFACE -- cloth, rails, artwork, the faint quarter markers
+    /// -- drawn into <paramref name="ci"/> so the impact can displace it.
     ///
-    ///  1. the re-used H5 prototype artwork (`res://assets/h5/table.svg`), which is stitched to the
-    ///     level's physical surface so alternate table sizes still line up;
-    ///  2. <see cref="DrawProceduralTable"/>, a rail frame plus cushion bevel, used when that texture
-    ///     is missing so a shipped build never degrades to a bare canvas.
-    ///
-    /// Both are drawn so the visible cushion edge coincides with the physics boundary
-    /// (TableLeft/Right/Top/Bottom). Decorate the inside and balls would appear to bounce off nothing.
+    /// Shared by every theme. The H5 artwork branch used to paint straight into the parent, which meant
+    /// the warp silently applied to the space theme only: the artwork was drawn on top of the warped
+    /// quad and covered it.
     /// </summary>
-    private void DrawTable()
+    private void DrawTableSurface(Node2D ci)
     {
         var inner = new Rect2(
             (float)_level.TableLeft, (float)_level.TableTop,
             (float)_level.TableWidth, (float)_level.TableHeight);
 
-        // The SPACE theme does NOT use the H5 table artwork. That artwork is painted cloth -- a picture
-        // of a real table -- and its green felt covers the physics box exactly, so every space colour
-        // underneath would be hidden. The theme draws its own table instead, which is also where its
-        // character comes from.
         if (Palette.ActiveTheme == 0)
         {
-            if (_tableBackground == null) DrawSpaceTable(inner, this);
-            DrawPockets();
-            DrawWhiteHoles();
+            DrawSpaceTable(inner, ci);
             return;
         }
 
+        // ---- classic / midnight-blue: the H5 prototype artwork ----
         if (_tableTexture != null)
         {
             // The H5 artwork is authored for the 1040x560 design canvas: its felt occupies
@@ -2235,26 +2400,152 @@ public partial class Play : Node2D
             var artPos = new Vector2(
                 innerCx - artFeltCx * sx,
                 innerCy - artFeltCy * sy);
-            DrawTextureRect(_tableTexture, new Rect2(artPos, new Vector2(artW * sx, artH * sy)), false);
+            ci.DrawTextureRect(_tableTexture,
+                new Rect2(artPos, new Vector2(artW * sx, artH * sy)), false);
         }
         else
         {
-            DrawProceduralTable(inner);
+            DrawProceduralTable(inner, ci);
         }
 
-        // Faint quarter markers so the player can judge angles (the prototype had nothing).
+        // Faint quarter markers so the player can judge angles (the prototype had nothing). They are
+        // marks ON the cloth, so they belong to the surface and deform with it.
         for (var i = 1; i < 4; i++)
         {
             var x = inner.Position.X + inner.Size.X * i / 4.0f;
-            DrawLine(new Vector2(x, inner.Position.Y), new Vector2(x, inner.Position.Y + 10.0f), Palette.FeltGrid, 1.0f);
-            DrawLine(new Vector2(x, inner.End.Y - 10.0f), new Vector2(x, inner.End.Y), Palette.FeltGrid, 1.0f);
+            ci.DrawLine(new Vector2(x, inner.Position.Y), new Vector2(x, inner.Position.Y + 10.0f),
+                Palette.FeltGrid, 1.0f);
+            ci.DrawLine(new Vector2(x, inner.End.Y - 10.0f), new Vector2(x, inner.End.Y),
+                Palette.FeltGrid, 1.0f);
             var y = inner.Position.Y + inner.Size.Y * i / 4.0f;
-            DrawLine(new Vector2(inner.Position.X, y), new Vector2(inner.Position.X + 10.0f, y), Palette.FeltGrid, 1.0f);
-            DrawLine(new Vector2(inner.End.X - 10.0f, y), new Vector2(inner.End.X, y), Palette.FeltGrid, 1.0f);
+            ci.DrawLine(new Vector2(inner.Position.X, y), new Vector2(inner.Position.X + 10.0f, y),
+                Palette.FeltGrid, 1.0f);
+            ci.DrawLine(new Vector2(inner.End.X - 10.0f, y), new Vector2(inner.End.X, y),
+                Palette.FeltGrid, 1.0f);
+        }
+    }
+
+    /// <summary>
+    /// Feed the current impact into the warp material, or switch it off when nothing is happening.
+    ///
+    /// The IDLE PATH MATTERS: with strength 0 the shader takes an exact pass-through branch, so the
+    /// table is byte-identical to the unwarped render while nothing is going on. That keeps the
+    /// distortion from quietly softening every frame of normal play, and it means a capture with no
+    /// impact is still a valid baseline.
+    /// </summary>
+    private void PushWarpUniforms(bool idle)
+    {
+        if (_warpMaterial == null) return;
+
+        if (idle)
+        {
+            _warpMaterial.SetShaderParameter("u_impact", new Vector4(0, 0, 0, 0));
+            return;
+        }
+
+        // --warp-push= overrides the magnitude. Used to prove the warp pipeline independently of the
+        // effect's own tuning: a felt-coloured region is nearly uniform, so a small displacement of it
+        // produces identical pixels and cannot be measured by differencing. An exaggerated push makes
+        // the displacement unmistakable, which is what turns "the diff changed" into "the surface
+        // actually moved".
+        var push = _impactPush;
+        var forced = DoubleArg("--warp-push=", double.NaN);
+        if (!double.IsNaN(forced)) push = (float)forced;
+
+        _warpMaterial.SetShaderParameter("u_impact",
+            new Vector4(_impactContact.X, _impactContact.Y, push, _impactAge));
+        _warpMaterial.SetShaderParameter("u_normal",
+            new Vector2(_impactNormal.X, _impactNormal.Y));
+        _warpMaterial.SetShaderParameter("u_tint",
+            new Vector4(_impactTint.R, _impactTint.G, _impactTint.B, 1.0f));
+    }
+
+    /// <summary>
+    /// Hand the strongest live impact to the shader. Called once per frame from _Process, before the
+    /// draw, so the warp and the geometry it accompanies are computed from the same instant.
+    /// </summary>
+    private void UpdateWarp()
+    {
+        if (_warpMaterial == null) return;
+
+        if (_world == null || !_effects.TryGetImpact(out var impact))
+        {
+            if (_warpActive) { PushWarpUniforms(idle: true); _warpActive = false; }
+            return;
+        }
+
+        _impactContact = impact.Contact;
+        _impactNormal = impact.Normal;
+        _impactPush = impact.PeakPush;
+        _impactAge = impact.Age;
+        _impactTint = impact.Tint;
+        _warpActive = true;
+        PushWarpUniforms(idle: false);
+    }
+
+    /// <summary>
+    /// The room backdrop, always drawn in the main canvas UNDER the warped table surface.
+    ///
+    /// This used to early-return when the background node existed, because that node drew the room as
+    /// its first primitive. The room can no longer live there: the table now renders into a transparent
+    /// SubViewport (so the warp shader has a texture to displace), and a transparent target cannot be
+    /// relied on to cover the letterbox area. Drawing it here, in the parent, keeps the backdrop in the
+    /// one place that is always opaque and never warped.
+    /// </summary>
+    /// <summary>
+    /// The room backdrop, drawn into the ShowBehindParent layer UNDER the warped table surface.
+    ///
+    /// This used to early-return when the background node existed, because that node drew the room as
+    /// its first primitive. The room can no longer live there: the table renders into a transparent
+    /// SubViewport (so the warp shader has a texture to displace), and a transparent target cannot be
+    /// relied on to cover the letterbox area. Keeping it in its own layer, below the table, is the one
+    /// place that is always opaque and never warped.
+    /// </summary>
+    private void DrawRoom(Node2D ci)
+    {
+        // Node coordinates, scaled into the canvas by ViewScale. The rects are sized so the visible
+        // window (0..928 x 0..500 at scale 1.12) is fully covered.
+        //
+        // The backdrop is deliberately drawn far larger than the design canvas. With
+        // stretch/aspect="keep" a window whose aspect differs from 1040x560 letterboxes the
+        // view, and anything outside these rects showed the engine's default clear colour as
+        // a hard BLACK bar at the bottom of the screen (observed in the exported build on a
+        // 1025x578 client area). Overscanning costs two triangles and makes the letterbox
+        // read as part of the room instead of as a bug.
+        ci.DrawRect(new Rect2(-600, -600, 2400, 2000), Palette.RoomBg);
+    }
+
+    /// <summary>
+    /// The table. Two sources, in priority order:
+    ///
+    ///  1. the re-used H5 prototype artwork (`res://assets/h5/table.svg`), which is stitched to the
+    ///     level's physical surface so alternate table sizes still line up;
+    ///  2. <see cref="DrawProceduralTable"/>, a rail frame plus cushion bevel, used when that texture
+    ///     is missing so a shipped build never degrades to a bare canvas.
+    ///
+    /// Both are drawn so the visible cushion edge coincides with the physics boundary
+    /// (TableLeft/Right/Top/Bottom). Decorate the inside and balls would appear to bounce off nothing.
+    /// </summary>
+    private void DrawTable()
+    {
+        var inner = new Rect2(
+            (float)_level.TableLeft, (float)_level.TableTop,
+            (float)_level.TableWidth, (float)_level.TableHeight);
+
+        // The surface is NOT drawn from here: BuildTableWarp already put it either into the warp target
+        // or (with no shader) into _tableBackground, for every theme. The guard is on _tableBackground,
+        // which is null only if BuildTableWarp never ran; testing for the warp source instead would draw
+        // the table a second time on top of itself in the no-shader path.
+        //
+        // What remains here is the content that must NOT be distorted: the pocket mouths and white holes
+        // are openings IN the surface, and dragging them through the warp would make the holes swim,
+        // which reads as a rendering fault rather than as an impact.
+        if (_tableBackground == null)
+        {
+            DrawTableSurface(this);
         }
 
         DrawPockets();
-
         DrawWhiteHoles();
     }
 
@@ -2351,19 +2642,20 @@ public partial class Play : Node2D
     /// three-band cushion bevel. Kept so a missing texture degrades to a plain but correct table
     /// rather than a bare canvas.
     /// </summary>
-    private void DrawProceduralTable(Rect2 inner)
+    private void DrawProceduralTable(Rect2 inner, Node2D ci = null)
     {
+        ci ??= this;
         const float railThick = 26.0f;
         var outer = inner.Grow(railThick);
-        DrawRect(outer, Palette.RailShadow);
-        DrawRect(outer.Grow(-3.0f), Palette.RailWood);
-        DrawRect(outer.Grow(-3.0f), Palette.RailLight, false, 1.0f);
+        ci.DrawRect(outer, Palette.RailShadow);
+        ci.DrawRect(outer.Grow(-3.0f), Palette.RailWood);
+        ci.DrawRect(outer.Grow(-3.0f), Palette.RailLight, false, 1.0f);
 
-        DrawRect(inner.Grow(8.0f), Palette.CushionLight);
-        DrawRect(inner.Grow(4.0f), Palette.CushionMid);
-        DrawRect(inner, Palette.CushionInner);
+        ci.DrawRect(inner.Grow(8.0f), Palette.CushionLight);
+        ci.DrawRect(inner.Grow(4.0f), Palette.CushionMid);
+        ci.DrawRect(inner, Palette.CushionInner);
 
-        DrawRect(inner, Palette.Felt);
+        ci.DrawRect(inner, Palette.Felt);
     }
 
     /// <summary>

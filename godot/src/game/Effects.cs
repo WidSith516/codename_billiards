@@ -6,20 +6,31 @@ using Rewind.Sim;
 namespace Rewind.Game;
 
 /// <summary>
-/// Transient visual effects: the cushion ripple the user asked for, the light streak that rebounds
-/// from the contact point, pot bursts, and card-draw flourishes.
+/// Transient visual effects: the rail impact, pot bursts, and card-draw flourishes.
 ///
 /// WHY THIS IS ITS OWN FILE, with its own lifetime: every effect here is purely cosmetic and must
 /// never be able to affect the simulation. Keeping them in a list processed by the view means the
-/// kernel has no idea they exist, so a dropped frame or a paused game can never change physics. That
-/// separation is also what let the earlier rewind visuals be added without touching a single locked
-/// constant.
+/// kernel has no idea they exist, so a dropped frame or a paused game can never change physics.
 ///
-/// The rail effect is the one the user specified in detail:
-///  * the ripple spreads across the WHOLE WALL, not a blob at the impact site, and it is clipped to
-///    the wall band so it reads as the cushion deforming rather than as a screen-space flash;
-///  * the streaking light is created AT THE CONTACT POINT and travels back along the ball's new
-///    (reflected) heading.
+/// THE RAIL IMPACT WAS REBUILT, and the reason is worth recording because the old version looked
+/// reasonable in code and weak on screen. It drew two thin elliptical ring outlines plus a comet of
+/// three 1.5-3 px lines. That is ANNOTATION: it draws lines NEAR an event without displacing anything.
+/// On a 360-disc starfield a 1.5 px line carries no sense of mass, which is exactly what the user
+/// reported ("流光效果和撞击感太弱").
+///
+/// What replaces it is an OPTICAL event plus a MATERIAL one:
+///   1. the table surface is displaced through a UV offset field (see shaders/impact_warp.gdshader),
+///      so the starfield and the cushion edge visibly slide and tear at the contact;
+///   2. the cushion's own edge is bent and springs back, drawn as real geometry.
+///
+/// BOTH ARE DRIVEN BY THE SAME TWO FORMULAS below, deliberately. The UV warp is a shader and the
+/// cushion bend is canvas geometry, so they cannot literally share code -- but they share the
+/// CONSTANTS and the closed form, and <see cref="ElasticEnvelope"/> / <see cref="DentWeight"/> are the
+/// single authoritative copy for the C# side. If the two disagree, the dent and the distortion
+/// visibly detach from each other, which is the failure this arrangement exists to prevent.
+///
+/// EVERYTHING HERE IS DECORATION. Nothing reads these values; they cannot move a ball, a number or a
+/// test. A missing shader degrades to an unwarped table, never to a broken frame.
 /// </summary>
 public sealed class Effects
 {
@@ -49,10 +60,55 @@ public sealed class Effects
         return best;
     }
 
+    /// <summary>
+    /// Inward normal of a wall -- the direction pointing INTO the table, away from the cushion.
+    ///
+    /// The dent is DIRECTIONAL: a cushion struck on its right face gives way to the right. A purely
+    /// radial displacement would read as a lens held over the table, not as a collision.
+    ///
+    /// Wall ids match <see cref="WallFromHeading"/> and Play's Contact*Of helpers:
+    /// 0 = left (x = TableLeft), 1 = right (x = TableRight), 2 = top (small y), 3 = bottom (large y).
+    /// </summary>
+    public static Vector2 InwardNormal(int wall)
+    {
+        switch (wall)
+        {
+            case 0: return new Vector2(1.0f, 0.0f);
+            case 1: return new Vector2(-1.0f, 0.0f);
+            case 2: return new Vector2(0.0f, 1.0f);
+            case 3: return new Vector2(0.0f, -1.0f);
+            default: return Vector2.Zero;
+        }
+    }
+
+    /// <summary>
+    /// The elastic envelope: how hard the material is displaced right now, as a signed fraction.
+    ///
+    /// cos() is what makes this an IMPACT rather than a flash, and it is the single most important
+    /// line in this file. It goes positive (the cushion compresses), then NEGATIVE (it springs back
+    /// past its rest position), then positive again (a smaller second compression), while the
+    /// exponential squeezes the whole thing toward zero. The alternating sign IS the rebound.
+    ///
+    /// A plain decay curve -- exp(-k*t), the obvious choice -- can only ever be >= 0, so it can only
+    /// ever describe "something lit up and faded". It cannot describe "something was STRUCK". Given the
+    /// user's report of a weak impact, that distinction is the fix.
+    /// </summary>
+    public static float ElasticEnvelope(double age, float omega, float decay)
+        => (float)(Math.Exp(-decay * age) * Math.Cos(omega * age));
+
+    /// <summary>
+    /// How much of the deformation a point <paramref name="dist"/> px from the contact receives.
+    ///
+    /// A Gaussian, because the cushion is a CONNECTED material: it cannot dent in one 12 px spot.
+    /// Sigma is deliberately several ball-radii wide (see <see cref="DentSigma"/>) so the disturbance
+    /// spreads along the rail the way a run of material actually compresses.
+    /// </summary>
+    public static float DentWeight(float dist, float sigma)
+        => (float)Math.Exp(-(dist * dist) / (2.0 * sigma * sigma));
+
     private enum Kind
     {
-        RailRipple,
-        RailStreak,
+        RailImpact,
         PotBurst,
         CardReveal,
     }
@@ -63,19 +119,55 @@ public sealed class Effects
         public double Age;
         public double Life;
         public Color Tint;
-        public float Strength = 1.0f;
 
-        /// <summary>RailRipple: which wall (0 = left, 1 = right, 2 = top, 3 = bottom).</summary>
+        /// <summary>RailImpact: which wall (see <see cref="InwardNormal"/>).</summary>
         public int Wall;
 
-        /// <summary>RailRipple: coordinate along the wall where the impact landed.</summary>
+        /// <summary>RailImpact: coordinate along the wall where the impact landed.</summary>
         public float Along;
 
-        /// <summary>Streak / burst: world position.</summary>
+        /// <summary>RailImpact / PotBurst: the contact point, in table coordinates.</summary>
         public Vector2 Origin;
 
-        /// <summary>Streak: unit direction of travel.</summary>
-        public Vector2 Direction;
+        /// <summary>RailImpact: peak displacement, px. Which of the two push values is chosen here,
+        /// at spawn, is what makes a spent rail visibly different from a paying one.</summary>
+        public float PeakPush;
+
+        /// <summary>RailImpact: whether the rail actually paid out (see <see cref="RailHit"/>).</summary>
+        public bool Boosted;
+    }
+
+    /// <summary>
+    /// One live impact, flattened for the warp shader. Produced by <see cref="TryGetImpact"/>.
+    ///
+    /// The envelope is NOT applied here: the shader evaluates it from <see cref="Age"/>, so the
+    /// oscillation is computed once and cannot be double-applied into a stronger-than-intended warp.
+    /// </summary>
+    public readonly struct Impact
+    {
+        public Impact(Vector2 contact, Vector2 normal, float peakPush, float age, Color tint)
+        {
+            Contact = contact;
+            Normal = normal;
+            PeakPush = peakPush;
+            Age = age;
+            Tint = tint;
+        }
+
+        /// <summary>Contact point in table px, which equals texture px for the warp target.</summary>
+        public Vector2 Contact { get; }
+
+        /// <summary>Inward wall normal: the axis the cushion yields along.</summary>
+        public Vector2 Normal { get; }
+
+        /// <summary>Peak displacement magnitude, px, before the envelope is applied.</summary>
+        public float PeakPush { get; }
+
+        /// <summary>Age in seconds, for the shader's own envelope evaluation.</summary>
+        public float Age { get; }
+
+        /// <summary>Tint of the impact, so the shader's shoulder highlight matches the rail readout.</summary>
+        public Color Tint { get; }
     }
 
     private readonly List<Fx> _items = new List<Fx>();
@@ -84,6 +176,44 @@ public sealed class Effects
     public int Count => _items.Count;
 
     public void Clear() => _items.Clear();
+
+    // ---- tuning ---------------------------------------------------------------------------------
+
+    /// <summary>
+    /// How far a boosted impact displaces the surface at its peak, in pixels.
+    ///
+    /// This is the "撞击感" dial. At 8 px the warp was measurable but not felt; 30 px visibly drags the
+    /// starfield and the cushion edge, and because the envelope is signed it does so in BOTH
+    /// directions over the life of the rebound.
+    /// </summary>
+    public const float BoostedPushPx = 30.0f;
+
+    /// <summary>A hit that did NOT pay out still deforms the cushion -- it just does it faintly, so the
+    /// player can see that energy was spent without confusing it with a full impact. This is the whole
+    /// readout for "the rail stopped giving".</summary>
+    public const float SpentPushPx = 11.0f;
+
+    /// <summary>Spring-back rate, rad/s. The first rebound lands at omega*t = pi, i.e. 0.105 s -- about
+    /// six frames at 60 Hz: fast enough to read as an impact, slow enough to see.</summary>
+    public const float Omega = 30.0f;
+
+    /// <summary>Decay, 1/s. exp(-7 * 0.55) = 0.021, so the oscillation is spent before the effect
+    /// expires and a new impact never fights a stale one.</summary>
+    public const float Decay = 7.0f;
+
+    /// <summary>Width of the compressed zone, px. Wider than the ball (radius ~12) because the cushion
+    /// compresses as a run of material rather than at a point.</summary>
+    public const float DentSigma = 88.0f;
+
+    /// <summary>Lifetime of a boosted impact, s.</summary>
+    private const double ImpactLife = 0.55;
+
+    /// <summary>Lifetime of a spent (non-paying) impact: shorter, because nothing was returned.</summary>
+    private const double SpentImpactLife = 0.34;
+
+    /// <summary>How long the contact flash lasts, s. Short on purpose: the old comet spread its light
+    /// over 180 px and ~0.55 s and read as nothing.</summary>
+    private const double FlashLife = 0.13;
 
     /// <summary>Advance every effect and drop the expired ones.</summary>
     public void Update(double delta)
@@ -98,36 +228,26 @@ public sealed class Effects
 
     /// <summary>
     /// A rail hit. <paramref name="wall"/> selects the cushion; <paramref name="along"/> is the
-    /// position along it in table coordinates; <paramref name="heading"/> is the ball's velocity
-    /// AFTER the reflection, which is what the streak follows.
+    /// position along it in table coordinates; <paramref name="origin"/> is the contact point.
     ///
     /// <paramref name="boosted"/> separates a hit that actually paid out energy from one that merely
-    /// bounced: the player must be able to SEE whether the rail is still giving, because the
-    /// allowance runs out and there is otherwise no way to tell.
+    /// bounced: the player must be able to SEE whether the rail is still giving, because the allowance
+    /// runs out and there is otherwise no way to tell. A spent hit still deforms, just far less.
     /// </summary>
     public void RailHit(int wall, float along, Vector2 origin, Vector2 heading, Color tint, bool boosted)
     {
-        var ripple = new Fx
-        {
-            Kind = Kind.RailRipple,
-            Life = boosted ? 0.85 : 0.45,
-            Wall = wall,
-            Along = along,
-            Tint = tint,
-            Strength = boosted ? 1.0f : 0.45f,
-        };
-        _items.Add(ripple);
+        _ = heading;   // the old comet followed this; a directioned dent does not need it
 
-        if (!boosted) return;
-
-        var dir = heading.LengthSquared() > 1e-9f ? heading.Normalized() : new Vector2(0, 1);
         _items.Add(new Fx
         {
-            Kind = Kind.RailStreak,
-            Life = 0.55,
+            Kind = Kind.RailImpact,
+            Life = boosted ? ImpactLife : SpentImpactLife,
+            Wall = wall,
+            Along = along,
             Origin = origin,
-            Direction = dir,
             Tint = tint,
+            PeakPush = boosted ? BoostedPushPx : SpentPushPx,
+            Boosted = boosted,
         });
     }
 
@@ -144,157 +264,140 @@ public sealed class Effects
     }
 
     /// <summary>
-    /// Draw the rail ripples in TABLE space, clipped to the cushion band.
+    /// The strongest live impact, flattened for the warp shader. False when nothing is happening, which
+    /// switches the shader to an exact pass-through.
     ///
-    /// The clip is the whole point: an unclipped ring would spill onto the felt and read as a ball
-    /// effect. Clipping to the rail's own rectangle means the wave visibly travels ALONG the wall and
-    /// dies at its ends, which is what "波纹散开，仅作用于墙面上" describes.
+    /// Returns the MAXIMUM by current displacement rather than the newest, because two contacts a few
+    /// frames apart (a fast ball can hit two rails inside one frame) should reinforce on screen rather
+    /// than have the older one silently cancelled by the newer.
     /// </summary>
-    public void DrawRailRipples(CanvasItem ci, Rect2 table)
+    public bool TryGetImpact(out Impact impact)
+    {
+        impact = default;
+        var found = false;
+        var bestPush = 0.0f;
+
+        foreach (var fx in _items)
+        {
+            if (fx.Kind != Kind.RailImpact) continue;
+
+            var normal = InwardNormal(fx.Wall);
+            if (normal == Vector2.Zero) continue;
+
+            var push = fx.PeakPush * Math.Abs(ElasticEnvelope(fx.Age, Omega, Decay));
+            if (found && push <= bestPush) continue;
+
+            impact = new Impact(fx.Origin, normal, fx.PeakPush, (float)fx.Age, fx.Tint);
+            bestPush = push;
+            found = true;
+        }
+
+        return found;
+    }
+
+    /// <summary>Current signed displacement of one impact at its centre, px. Positive = the cushion is
+    /// compressed outward, negative = it has sprung back through its rest position.</summary>
+    private static float PushAt(Fx fx) => fx.PeakPush * ElasticEnvelope(fx.Age, Omega, Decay);
+
+    /// <summary>
+    /// Draw the rail impacts in TABLE space: the contact flash and the bent cushion edge.
+    ///
+    /// The cushion edge is the one that sells the material. It is drawn as a polyline displaced by
+    /// exactly the Gaussian the UV warp uses, so it bows outward, springs back through straight, and
+    /// overshoots -- the same motion being applied to the surface underneath it.
+    /// </summary>
+    public void DrawRailImpacts(CanvasItem ci, Rect2 table)
     {
         foreach (var fx in _items)
         {
-            if (fx.Kind != Kind.RailRipple) continue;
+            if (fx.Kind != Kind.RailImpact) continue;
 
-            var t = (float)(fx.Age / fx.Life);
-            var eased = 1.0f - (1.0f - t) * (1.0f - t);      // fast out, slow settle
-            var radius = RailBand * 0.5f + eased * RippleReach;
-
-            // Opacity. Tuned up from 0.75 after measuring: the wave has to read ON TOP of the rail
-            // artwork, which is itself a mid-tone, and the aging curve (1-t) drops the tail fast. At 0.95
-            // the ring survives the art and still fades out well before the effect expires.
-            var alpha = (1.0f - t) * 0.95f * fx.Strength;
-            var tint = fx.Tint;
-            tint.A = alpha;
-
-            var band = RailBandRect(table, fx.Wall);
-
-            // Two ring outlines so the wave reads as a spread rather than a single swelling line.
-            for (var ring = 0; ring < 2; ring++)
-            {
-                var r = radius - ring * (RippleReach * 0.32f);
-                if (r <= 1.0f) continue;
-                var c = tint;
-                c.A = alpha * (ring == 0 ? 1.0f : 0.5f);
-                DrawClippedArc(ci, band, fx, r, c);
-            }
-        }
-    }
-
-    /// <summary>
-    /// Width of the cushion band the ripple lives in, px.
-    ///
-    /// The physics rail box is the FELT boundary; the visible cushion sits outside it. 16 px matched the
-    /// physical cushion width, but a 16 px band cannot show a wave "spreading across the wall" -- it
-    /// reads as a line. Widened to 26 so the wave has a face to travel over, which is what the user
-    /// asked to see.
-    /// </summary>
-    private const float RailBand = 26.0f;
-
-    /// <summary>
-    /// How far a ripple spreads along the wall, px.
-    ///
-    /// Tuned DOWN from 190 after measuring the first working capture: at 190 the two rings spanned
-    /// 684 px of a 910 px rail, so the wave read as a diffuse haze over the whole cushion rather than as
-    /// a wave emanating from a point. 120 keeps it visibly a local disturbance that travels out and
-    /// dies, which is what "波纹散开" describes.
-    /// </summary>
-    private const float RippleReach = 120.0f;
-
-    /// <summary>Line width of a ripple ring. Thicker than the default 1 px so it survives the scrim and
-    /// the rail artwork underneath it.</summary>
-    private const float RippleWidth = 2.6f;
-
-    private static Rect2 RailBandRect(Rect2 table, int wall)
-    {
-        switch (wall)
-        {
-            case 0: return new Rect2(table.Position.X - RailBand, table.Position.Y - RailBand,
-                RailBand, table.Size.Y + RailBand * 2.0f);
-            case 1: return new Rect2(table.Position.X + table.Size.X, table.Position.Y - RailBand,
-                RailBand, table.Size.Y + RailBand * 2.0f);
-            case 2: return new Rect2(table.Position.X - RailBand, table.Position.Y - RailBand,
-                table.Size.X + RailBand * 2.0f, RailBand);
-            default: return new Rect2(table.Position.X - RailBand, table.Position.Y + table.Size.Y,
-                table.Size.X + RailBand * 2.0f, RailBand);
-        }
-    }
-
-    /// <summary>
-    /// Draw one ripple ring, clipped to the wall band.
-    ///
-    /// THE GEOMETRY MATTERS AND THE OBVIOUS VERSION IS WRONG. A circle centred ON the cushion expands
-    /// perpendicular to the wall as much as along it, so clipping it to a 16 px band leaves a sliver a
-    /// few pixels tall: the wave is technically there and visually invisible. (Measured on the first
-    /// capture -- 32 pixels total, all of them from the streak, none from the ring.)
-    ///
-    /// What the user asked for is a wave that TRAVELS ACROSS THE WALL FACE. So the ring is the
-    /// intersection of the band with a circle whose radius is the wavefront distance, which for an
-    /// infinite band is a line at that distance from the contact point -- drawn as an arc that bulges
-    /// slightly, giving the "spreading outward" read while staying entirely on the cushion.
-    /// </summary>
-    private static void DrawClippedArc(CanvasItem ci, Rect2 band, Fx fx, float radius, Color color)
-    {
-        // The contact point, projected onto the band's centre line.
-        var horizontal = fx.Wall <= 1;
-        var center = horizontal
-            ? new Vector2(band.Position.X + RailBand * 0.5f, fx.Along)
-            : new Vector2(fx.Along, band.Position.Y + RailBand * 0.5f);
-
-        const int steps = 48;
-        var previous = Vector2.Zero;
-        var have = false;
-        var half = RailBand * 0.5f;
-
-        // A shallow elliptical arc along the wall: `along` is the axis the wave travels down, and the
-        // band's own half-width is the perpendicular extent, so the whole ring stays ON the wall.
-        for (var i = 0; i <= steps; i++)
-        {
-            var a = Mathf.Tau * i / steps;
-            var ax = Mathf.Cos(a) * radius;
-            var ay = Mathf.Sin(a) * half;
-            var p = horizontal ? center + new Vector2(ay, ax) : center + new Vector2(ax, ay);
-            if (!band.HasPoint(p))
-            {
-                have = false;
-                continue;
-            }
-
-            if (have) ci.DrawLine(previous, p, color, RippleWidth);
-            previous = p;
-            have = true;
-        }
-    }
-
-    /// <summary>
-    /// The rebound streak: a short comet that leaves the contact point along the ball's new heading.
-    /// Parented to the table, so it must be drawn in the same transform the balls use.
-    /// </summary>
-    public void DrawStreaks(CanvasItem ci)
-    {
-        foreach (var fx in _items)
-        {
-            if (fx.Kind != Kind.RailStreak) continue;
+            var inward = InwardNormal(fx.Wall);
+            if (inward == Vector2.Zero) continue;
+            var outward = -inward;   // the cushion gives way AWAY from the table
 
             var t = (float)(fx.Age / fx.Life);
             var alpha = (1.0f - t) * (1.0f - t);
 
-            // The head runs out from the contact point and the tail stretches behind it: the light
-            // is "created at the collision point", so it must not exist before it.
-            var travel = 30.0f + t * 150.0f;
-            var tail = 34.0f + t * 60.0f;
-            var head = fx.Origin + fx.Direction * travel;
-            var back = fx.Origin + fx.Direction * (travel - tail);
+            // ---- 1. the contact flash: small, bright, fast --------------------------------------
+            var flashT = Mathf.Clamp((float)(fx.Age / FlashLife), 0.0f, 1.0f);
+            if (flashT < 1.0f)
+            {
+                var fade = (1.0f - flashT) * (1.0f - flashT);
+                var c = fx.Tint;
+                c.A = fade * 0.85f;
+                ci.DrawCircle(fx.Origin, 5.0f + flashT * 9.0f, c, true, -1.0f, true);
+                c.A = fade * 0.45f;
+                ci.DrawCircle(fx.Origin, 9.0f + flashT * 22.0f, c, false, 2.0f, true);
+            }
 
-            var c = fx.Tint;
-            c.A = alpha;
-            ci.DrawLine(back, head, c, 3.0f);
-            c.A = alpha * 0.45f;
-            ci.DrawLine(fx.Origin, head, c, 1.5f);
+            // ---- 2. the bent cushion edge -------------------------------------------------------
+            var push = PushAt(fx);
+            if (Math.Abs(push) < 0.05f) continue;
 
-            var dot = fx.Tint;
-            dot.A = alpha;
-            ci.DrawCircle(fx.Origin, 3.5f * (1.0f - t * 0.5f), dot);
+            var lit = fx.Tint;
+            lit.A = Mathf.Clamp(alpha * 1.1f, 0.0f, 1.0f);
+            var fill = fx.Tint;
+            fill.A = Mathf.Clamp(alpha * 0.30f, 0.0f, 1.0f);
+
+            // Sample across +/-3 sigma: beyond that the Gaussian is under 1% and the extra points
+            // would only add pixels that never move.
+            const int steps = 64;
+            const float span = DentSigma * 3.0f;
+            var step = 2.0f * span / steps;
+
+            var previous = Vector2.Zero;      // deformed position of the previous sample
+            var previousRest = Vector2.Zero;  // its rest position
+            var have = false;
+
+            for (var i = 0; i <= steps; i++)
+            {
+                var s = -span + step * i;
+                var rest = CushionEdge(fx.Wall, table, fx.Along + s);
+                var p = rest + outward * (push * DentWeight(s, DentSigma));
+
+                if (have)
+                {
+                    ci.DrawLine(previous, p, lit, 3.0f);
+
+                    // The sliver between rest and deformed position, so the bend reads as compressed
+                    // material rather than as a line that moved. A quad per segment, ordered around
+                    // its perimeter so it is a simple polygon.
+                    ci.DrawColoredPolygon(new[] { previousRest, previous, p, rest }, fill);
+                }
+
+                previous = p;
+                previousRest = rest;
+                have = true;
+            }
+
+            // ---- 3. the compressed shoulder catching light --------------------------------------
+            // Displacement alone is hard to see on a flat-coloured rail; a soft highlight where the
+            // material is squeezed gives the eye the shape. Only while actually compressed (push > 0),
+            // so the rebound does not glow.
+            if (push > 0.0f)
+            {
+                var glow = fx.Tint;
+                glow.A = Mathf.Clamp(alpha * 0.30f, 0.0f, 1.0f);
+                ci.DrawCircle(fx.Origin, DentSigma * 0.5f, glow, true, -1.0f, true);
+            }
+        }
+    }
+
+    /// <summary>
+    /// The cushion's rest edge for a wall, at a given position along it.
+    ///
+    /// The table box IS the cushion's inner face -- the visible cushion sits just outside it -- so the
+    /// dent pulls from this line outward, into the rail band.
+    /// </summary>
+    private static Vector2 CushionEdge(int wall, Rect2 table, float along)
+    {
+        switch (wall)
+        {
+            case 0: return new Vector2(table.Position.X, along);
+            case 1: return new Vector2(table.Position.X + table.Size.X, along);
+            case 2: return new Vector2(along, table.Position.Y);
+            default: return new Vector2(along, table.Position.Y + table.Size.Y);
         }
     }
 

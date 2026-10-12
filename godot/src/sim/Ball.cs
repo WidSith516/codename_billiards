@@ -216,6 +216,23 @@ public sealed class SimStats
     /// <summary>Rapid-tap clusters whose third and later taps were ignored by the "only two" rule.</summary>
     public int RapidTapsSuppressed;
 
+    /// <summary>
+    /// Rail transforms that actually PAID OUT momentum, as opposed to merely reflecting.
+    ///
+    /// This exists because the view cannot otherwise tell the two apart, and the difference is
+    /// load-bearing for what the player sees. A rail hit that returns energy must read as a strong
+    /// impact and one that has run out of allowance must read as a weak one -- that contrast IS the
+    /// readout for "the rail stopped giving", which is otherwise invisible.
+    ///
+    /// The view used to infer it from the ball's own <see cref="Ball.CanTakeWallBoost"/> AFTER the step
+    /// had already run. But the kernel CONSUMES the allowance in the same call that pays it out
+    /// (World.ResolveRail increments WallBoostsUsed), so by the time the frame loop compared stat
+    /// deltas the allowance was always spent and EVERY hit was drawn as weak. Measured: push=11.0 (the
+    /// spent value) on a hit that demonstrably returned energy. Counting it inside the kernel, where
+    /// <c>boosted</c> is still in scope, is the only place the fact is available.
+    /// </summary>
+    public int RailBoosts;
+
     /// <summary>True once the balloon card has ended the run.</summary>
     public int BalloonFailures;
 
@@ -241,6 +258,7 @@ public sealed class SimStats
         AntimatterBoosts = other.AntimatterBoosts;
         DeathThroeKicks = other.DeathThroeKicks;
         RapidTapsSuppressed = other.RapidTapsSuppressed;
+        RailBoosts = other.RailBoosts;
         BalloonFailures = other.BalloonFailures;
         SubStepIntervals = other.SubStepIntervals;
         StepGuardHits = other.StepGuardHits;

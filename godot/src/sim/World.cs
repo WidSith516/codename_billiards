@@ -1376,6 +1376,12 @@ public sealed class World
 
             if (boosted) b.WallBoostsUsed++;
             Stats.RailTransforms++;
+
+            // Recorded INSIDE the kernel because this is the last point at which `boosted` exists.
+            // The view needs it to distinguish a hit that returned energy from one that had none left,
+            // and it cannot recover the fact afterwards: the line above consumes the allowance, so
+            // CanTakeWallBoost reads false from then on for exactly the hits that DID pay out.
+            if (boosted) Stats.RailBoosts++;
         }
 
         return true;
