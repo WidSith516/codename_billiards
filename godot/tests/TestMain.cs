@@ -222,6 +222,7 @@ public partial class TestMain : Node
             Run(runner, "T03", TouchTests.T03_ButtonsDoNotOverlap);
             Run(runner, "T04", TouchTests.T04_AvailabilityFollowsState);
             Run(runner, "T05", TouchTests.T05_EveryActionIsLabelled);
+            Run(runner, "T06", TouchTests.T06_PanelFoldTabIsReachable);
         }
 
         // A dedicated "G" prefix: R01/P01/W01 are already taken by the cue-retention, ball-type and

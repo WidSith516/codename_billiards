@@ -216,4 +216,69 @@ public static class TouchTests
         t.Check("the tab's own rect reports a hit at its centre",
             tab.HasPoint(tab.Position + tab.Size * 0.5f), $"tab={tab}");
     }
+
+    /// <summary>T06: the side panel's fold tab -- the phone's only way to hide the panel.
+    ///
+    /// WHY THIS FEATURE NEEDS A TEST: F1 hides the panel and is the single biggest lever on how much of
+    /// the table is visible, but a phone has no F1, so on mobile the panel was permanently stuck open
+    /// over a large part of the felt. The tab fixes that, and the things that can silently go wrong are
+    /// geometric: it can move between states (so the finger has to hunt for it), collide with the
+    /// panel's own text or the toast, or sit off screen.
+    /// </summary>
+    public static void T06_PanelFoldTabIsReachable(TestRunner t)
+    {
+        t.Section("T06 - the side panel's fold tab: on screen, fixed, and clear of everything");
+
+        var tab = Hud.PanelFoldRect();
+
+        t.Check("the fold tab has a fingertip-sized rect",
+            tab.Size.X >= 30 && tab.Size.Y >= 30, $"size {tab.Size}");
+        t.Check("the fold tab is on screen",
+            tab.Position.X >= 0 && tab.Position.X + tab.Size.X <= 1040.0f
+            && tab.Position.Y >= 0 && tab.Position.Y + tab.Size.Y <= 560.0f, $"tab={tab}");
+
+        // Below the top bar (y < 28), or it would sit under the level-name chips.
+        t.Check("the fold tab clears the top bar", tab.Position.Y >= 30.0f,
+            $"top={tab.Position.Y} vs top bar 28");
+
+        // Below the bottom replay band starts at 546, and clear of the toast (y 494..544).
+        t.Check("the fold tab clears the toast", tab.Position.Y + tab.Size.Y <= 494.0f,
+            $"bottom={tab.Position.Y + tab.Size.Y} vs toast top 494");
+        t.Check("the fold tab clears the bottom replay band", tab.Position.Y + tab.Size.Y <= 546.0f,
+            $"bottom={tab.Position.Y + tab.Size.Y} vs band 546");
+
+        // It must not fight the transport grid for the same tap.
+        foreach (var a in System.Enum.GetValues<TouchControls.Action>())
+        {
+            var r = TouchControls.Rect(a);
+            var disjoint = tab.Position.X + tab.Size.X <= r.Position.X
+                           || r.Position.X + r.Size.X <= tab.Position.X
+                           || tab.Position.Y + tab.Size.Y <= r.Position.Y
+                           || r.Position.Y + r.Size.Y <= tab.Position.Y;
+            t.Check($"the fold tab does not overlap the {a} button", disjoint, $"tab={tab} button={r}");
+        }
+
+        t.Check("the fold tab does not overlap the button grid's collapse tab",
+            !Overlaps(tab, TouchControls.CollapseToggleRect()),
+            $"panel tab={tab} grid tab={TouchControls.CollapseToggleRect()}");
+
+        // It sits INSIDE the panel's rectangle on purpose (that is the corner it belongs to), so the
+        // band it occupies has to be empty of panel text. The panel draws its text from x=16, and its
+        // content stops at x+226; the tab starts at 214, which is why this matters -- the assertion is
+        // that it starts far enough right that the panel's own first-column text cannot reach it. The
+        // rendered proof is tools/analysis/panel_fold.py; this is the arithmetic guard.
+        t.Check("the fold tab starts right of the panel's text column",
+            tab.Position.X >= 200.0f, $"tab left={tab.Position.X} -- panel text spans x 16..242");
+
+        // The single most important property: the SAME rect in both states. A tab that moves when
+        // tapped is a tab the player has to find again, and this is the only way to restore the panel.
+        t.Check("the fold tab's rect does not depend on the panel being open",
+            Hud.PanelFoldRect() == Hud.PanelFoldRect(), "the rect must be fixed across states");
+    }
+
+    private static bool Overlaps(Rect2 a, Rect2 b)
+        => !(a.Position.X + a.Size.X <= b.Position.X
+             || b.Position.X + b.Size.X <= a.Position.X
+             || a.Position.Y + a.Size.Y <= b.Position.Y
+             || b.Position.Y + b.Size.Y <= a.Position.Y);
 }

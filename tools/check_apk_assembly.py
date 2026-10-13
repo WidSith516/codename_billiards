@@ -66,6 +66,14 @@ must = [
     b"R01_StrikeIsOppositeThePull",
     b"P01_CueHasAWiderMouthOnly",
     b"W01_EveryBallRecordsItsOwnContact",
+
+    # The side panel's fold tab: the phone's ONLY way to hide the panel, since F1 does not exist there.
+    # A stale assembly here means the panel is still permanently stuck over the table on mobile, which
+    # was the specific complaint.
+    b"PanelFoldRect",
+    b"VerifyPanelFold",
+    b"T06_PanelFoldTabIsReachable",
+    b"NotifyTouchEntryHint",
 ]
 # A symbol that must NOT be present: the nudge actions were removed from the touch grid because touch
 # players drag the release marker instead. If they are still here, the assembly is stale.

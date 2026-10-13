@@ -240,30 +240,74 @@ public static class TouchControls
     /// </summary>
     private static void DrawCollapseToggle(CanvasItem ci, Font font, bool collapsed)
     {
-        var r = CollapseToggleRect();
+        // The button grid folds DOWN into the bottom-right corner, so an open grid points down (away)
+        // and a folded one points up (back out).
+        DrawChevronTab(ci, CollapseToggleRect(), collapsed,
+            collapsed ? Chevron.Up : Chevron.Down);
+    }
+
+    /// <summary>Which way a tab's chevron points. Named rather than a bool pair because "up" and "left"
+    /// are not expressible as one flag, and the panel folds on a different axis from the button grid.</summary>
+    public enum Chevron
+    {
+        Up,
+        Down,
+        Left,
+        Right,
+    }
+
+    /// <summary>
+    /// One chevron tab, shared by the button grid's tab and the side panel's tab.
+    ///
+    /// SHARED ON PURPOSE: the two tabs do the same job in two corners, so they must not drift into
+    /// looking like different controls. Only the direction differs -- the grid folds vertically, the
+    /// panel horizontally -- and the direction is passed in rather than derived, because a vertical
+    /// chevron on a horizontal fold points at nothing.
+    ///
+    /// The body styling is identical to a button's (same translucent fills, same accent border), so a
+    /// tab reads as part of the same control family. It is deliberately BRIGHTER when collapsed: at that
+    /// moment it is the only way to bring the hidden thing back, and it must not be missable.
+    ///
+    /// Drawn as two SEPARATE line segments rather than one three-point polyline: a polyline with a
+    /// shared apex forms a zero-area triangle, which Godot rejects ("Invalid polygon data,
+    /// triangulation failed") -- that error aborted a whole draw and silently cost a capture its PNG.
+    /// </summary>
+    public static void DrawChevronTab(CanvasItem ci, Rect2 r, bool collapsed, Chevron dir)
+    {
         ci.DrawRect(r, collapsed ? BodyPressed : BodyNormal);
         ci.DrawRect(r, Palette.Accent, false, 1.5f);
 
-        // A chevron pointing the way the panel will move. Drawn as two SEPARATE line segments rather than
-        // one three-point polyline, because a polyline through (left, right) with a shared apex forms a
-        // zero-area triangle and Godot rejects it ("Invalid polygon data, triangulation failed"), which
-        // aborted the whole draw and silently cost the capture its PNG.
         var c = r.Position + r.Size * 0.5f;
-        var d = 5.0f;
-        var h = 7.0f;
-        if (collapsed)
+        var d = 5.0f;   // half the span of the chevron's arms
+        var h = 7.0f;   // how far the apex stands off the arms
+
+        Vector2 apex, armA, armB;
+        switch (dir)
         {
-            // Collapsed: the tab points up, meaning "the controls come back up out of this corner".
-            var apex = c + new Vector2(0, -h * 0.6f);
-            ci.DrawLine(c + new Vector2(-d, h * 0.4f), apex, Palette.TextMain, 2.5f, true);
-            ci.DrawLine(c + new Vector2(d, h * 0.4f), apex, Palette.TextMain, 2.5f, true);
+            case Chevron.Up:
+                apex = c + new Vector2(0.0f, -h * 0.6f);
+                armA = c + new Vector2(-d, h * 0.4f);
+                armB = c + new Vector2(d, h * 0.4f);
+                break;
+            case Chevron.Down:
+                apex = c + new Vector2(0.0f, h * 0.6f);
+                armA = c + new Vector2(-d, -h * 0.4f);
+                armB = c + new Vector2(d, -h * 0.4f);
+                break;
+            case Chevron.Left:
+                apex = c + new Vector2(-h * 0.6f, 0.0f);
+                armA = c + new Vector2(h * 0.4f, -d);
+                armB = c + new Vector2(h * 0.4f, d);
+                break;
+            default:
+                apex = c + new Vector2(h * 0.6f, 0.0f);
+                armA = c + new Vector2(-h * 0.4f, -d);
+                armB = c + new Vector2(-h * 0.4f, d);
+                break;
         }
-        else
-        {
-            var apex = c + new Vector2(0, h * 0.4f);
-            ci.DrawLine(c + new Vector2(-d, -h * 0.6f), apex, Palette.TextMain, 2.5f, true);
-            ci.DrawLine(c + new Vector2(d, -h * 0.6f), apex, Palette.TextMain, 2.5f, true);
-        }
+
+        ci.DrawLine(armA, apex, Palette.TextMain, 2.5f, true);
+        ci.DrawLine(armB, apex, Palette.TextMain, 2.5f, true);
     }
 
     /// <summary>

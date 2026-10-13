@@ -191,8 +191,25 @@ public partial class Play : Node2D
     private bool _debugOverlay;
 
     /// <summary>Whether the whole left HUD panel is drawn. F1 toggles it so a recording sees a
-    /// clean table; the top bar is always drawn.</summary>
+    /// clean table; the top bar is always drawn.
+    ///
+    /// ON TOUCH THE SAME STATE IS REACHED FROM THE PANEL'S FOLD TAB, because a phone has no F1 -- which
+    /// is why the panel was previously impossible to hide on mobile, where it covers a large part of the
+    /// felt. One flag serves both inputs on purpose: the two must not be able to disagree about whether
+    /// the panel is showing.</summary>
     private bool _showHud = true;
+
+    /// <summary>Whether the touch build has already auto-folded the panel once for this level.
+    ///
+    /// The fold happens on the first shot because that is the moment the player stops reading rules and
+    /// starts playing, i.e. the moment the panel's 246px stop being useful and start being in the way.
+    /// It fires at most ONCE per level: a player who deliberately re-opens the panel mid-rally is making
+    /// a choice, and re-folding it on the next shot would fight them for the control.</summary>
+    private bool _touchAutoFolded;
+
+    /// <summary>Whether the touch build has shown its one-time control hint for this level. See
+    /// <see cref="NotifyTouchEntryHint"/>.</summary>
+    private bool _touchEntryHintShown;
 
     /// <summary>Guards the one-time progress write when the level is cleared.</summary>
     private bool _resultRecorded;
@@ -498,6 +515,28 @@ public partial class Play : Node2D
         // Coaching runs only in real play, never during a scripted capture: an evidence screenshot
         // must show the game, not a tutorial bubble.
         if (_stateName == null && Menu.TutorialPending) ResetTutorial();
+
+        // --hud=off forces the panel hidden from the first frame, for capturing the folded layout.
+        // It sets the SAME flag F1 and the touch tab set, so a capture proves what a player would see
+        // rather than exercising a parallel code path that could disagree with the real one.
+        if (Arg("--hud=") == "off")
+        {
+            _showHud = false;
+            _touchAutoFolded = true;   // a deliberate request, not the automatic fold
+        }
+
+        // The touch build gets ONE explanatory toast as it enters a level. It goes into the toast rather
+        // than into the side panel for two reasons: the panel is about to be folded away (so a hint
+        // printed there would vanish with it), and the panel's job is to report state, not to teach
+        // controls. Suppressed during scripted captures so an evidence screenshot is not showing a
+        // transient message.
+        //
+        // ALSO SUPPRESSED WHILE THE COACHING BUBBLES ARE UP. On a level's first visit both would fire at
+        // once and tell the player the same thing twice, in two different places: step 0's bubble is
+        // already pinned to the cue ball saying "按住白球往后拖，松手击球". The bubbles are the richer
+        // teacher (they point at the thing), so the toast defers to them and only appears on later
+        // visits, which is exactly the "tell me once, then get out of the way" behaviour wanted.
+        if (_touchControls && _stateName == null && !_tutorialActive) NotifyTouchEntryHint();
 
         // ...unless a capture explicitly asks for a coaching step, so the bubbles can be verified
         // without a human performing the actions.
@@ -829,6 +868,22 @@ public partial class Play : Node2D
         if (!_world.Shot(_aimAngle, _aimPower)) return;
         _aimCache.Invalidate();
         Notify($"击球  角度 {_aimAngle:F1}°  力度 {_aimPower:F0} px  速度 {_world.Cue.Speed:F0} px/s", Palette.Accent);
+
+        // The touch build folds the panel away on the first shot: the player has stopped reading and
+        // started playing, which is exactly when 246px of readouts becomes 246px in the way.
+        //
+        // REAL PLAY ONLY (_stateName == null), matching how the tutorial is gated. A scripted capture
+        // must not silently change its own UI state: --state=strike calls FireShot(), so without this
+        // guard every strike capture would come out with the panel folded and the evidence would stop
+        // matching what the state name promises.
+        //
+        // Fires once per level (see _touchAutoFolded); a player who re-opens the panel has made a choice
+        // and is not fought for the control afterwards.
+        if (_touchControls && !_touchAutoFolded && _stateName == null)
+        {
+            _showHud = false;
+            _touchAutoFolded = true;
+        }
     }
 
     private void Settle(int maxSteps = 12000)
@@ -853,7 +908,9 @@ public partial class Play : Node2D
 
         _rewindVis.Reset();
         _aimCache.Invalidate();
-        Notify("回溯中 · 按住 R 倒退，松开保留当时的逆向速度", Palette.RewindCue);
+        Notify(_touchControls
+            ? "回溯中 · 松开「回溯」按钮即在该点保留当时速度"
+            : "回溯中 · 按住 R 倒退，松开保留当时的逆向速度", Palette.RewindCue);
     }
 
     /// <summary>Crawl until the traversed arc reaches <paramref name="arc"/> px (or the path ends).</summary>
@@ -1536,12 +1593,16 @@ public partial class Play : Node2D
                     if (_rewindVis.Scrubbing) _rewindVis.EndScrub(keepPaused: false);
                     else _rewindVis.BeginScrub();
                     Notify(_rewindVis.Scrubbing
-                        ? "已暂停 · 拖动或用 ← → 把释放点向后移，按 R 在该点松开"
+                        ? (_touchControls
+                            ? "已暂停 · 拖动标记把释放点向后移，再松开「回溯」按钮在该点释放"
+                            : "已暂停 · 拖动或用 ← → 把释放点向后移，按 R 在该点松开")
                         : "继续回溯", Palette.RewindTarget);
                 }
                 else
                 {
-                    Notify("还没有可回溯的历史（先击球，再按住 R）", Palette.TextDim);
+                    Notify(_touchControls
+                        ? "还没有可回溯的历史（先击球，再按住「回溯」按钮）"
+                        : "还没有可回溯的历史（先击球，再按住 R）", Palette.TextDim);
                 }
 
                 break;
@@ -1627,6 +1688,19 @@ public partial class Play : Node2D
     private void HandleMouse(InputEventMouseButton button)
     {
         if (button.ButtonIndex != MouseButton.Left) return;
+
+        // The panel fold tab, alongside the button grid's tab and for the same reason: it is the only
+        // way to change the panel's visibility on a phone, so it is handled BEFORE the CardChoiceOpen
+        // guard below. A pending card draw shows a full-screen panel, and while it is up the player
+        // cannot see the side panel anyway -- but gating the tab on that state would mean the tab stops
+        // responding exactly when the player is most likely to be rearranging the screen.
+        if (_touchControls && button.Pressed && Hud.PanelFoldRect().HasPoint(button.Position))
+        {
+            _showHud = !_showHud;
+            // Re-opening by hand counts as a deliberate choice, so the automatic fold must not undo it.
+            _touchAutoFolded = true;
+            return;
+        }
 
         // The collapse tab is handled FIRST, and deliberately OUTSIDE the CardChoiceOpen guard below.
         // It is the only way to bring the buttons back, so a state that suppresses the buttons must not
@@ -1941,6 +2015,16 @@ public partial class Play : Node2D
         // Replay the coaching on an explicit reset: the player asked to try again, so re-prompting
         // the step they were on is useful rather than annoying.
         if (Menu.TutorialPending) ResetTutorial();
+
+        // A reset puts the level back to its default presentation too, which is "panel open". Without
+        // this, a touch player who folds the panel away and then resets would be left with a table that
+        // never shows the readouts for the new attempt, even though the shot is available again.
+        if (_touchControls)
+        {
+            _showHud = true;
+            _touchAutoFolded = false;
+        }
+
         Notify("关卡已重置 · 击球重新可用（调试键，不是规则）", Palette.TextDim);
     }
 
@@ -2298,9 +2382,28 @@ public partial class Play : Node2D
                 break;
 
             case 1:
-                BubbleAt(new Vector2(56, 96),
-                    "现在按住 R，让白球原路倒回来",
-                    "松手时它会保留当时的逆向速度，冲出一条新路线");
+                // The rewind lesson names the input, and the input is different on a phone: there is no
+                // R key, only the 回溯 button in the bottom-right. Naming a key the player does not have
+                // is the same mistake the panel used to make.
+                //
+                // The bubble MOVES with it. It used to sit at (56,96) -- over the side panel -- but on
+                // touch the panel has just folded itself away (the fold happens on the first shot, and
+                // this step starts right after it), so the bubble would be pointing at empty felt. It is
+                // anchored to the button it describes instead.
+                if (_touchControls)
+                {
+                    var rewind = TouchControls.Rect(TouchControls.Action.Rewind);
+                    BubbleAt(rewind.Position + rewind.Size * 0.5f + new Vector2(0, -46),
+                        "现在按住「回溯」按钮，让白球原路倒回来",
+                        "松开按钮时它会保留当时的逆向速度，冲出一条新路线");
+                }
+                else
+                {
+                    BubbleAt(new Vector2(56, 96),
+                        "现在按住 R，让白球原路倒回来",
+                        "松手时它会保留当时的逆向速度，冲出一条新路线");
+                }
+
                 break;
 
             case 2:
@@ -2372,6 +2475,24 @@ public partial class Play : Node2D
         _messageColor = color;
         _messageTimer = 4.0;
         if (_verbose) GD.Print($"[play] {message}");
+    }
+
+    /// <summary>
+    /// The touch build's single entry hint: what to touch, and where the transport buttons are.
+    ///
+    /// This is the one piece of teaching the panel used to carry, moved to the toast because the panel
+    /// now folds itself away on the first shot. It is shown once per level and deliberately does NOT
+    /// mention the keyboard-only rules (the rapid-tap "垂死挣扎" gesture, F1, the arrow keys) -- a phone
+    /// cannot perform those gestures, and naming them in the panel was the specific complaint.
+    ///
+    /// The hint that matters most is the aim direction: the cue is pulled BACK, so the ball leaves
+    /// OPPOSITE the finger. Nothing on screen makes that obvious to a new player.
+    /// </summary>
+    private void NotifyTouchEntryHint()
+    {
+        if (_touchEntryHintShown) return;
+        _touchEntryHintShown = true;
+        Notify("从白球向反方向拖动 · 松手击球     右下角按钮：回溯 / 暂停 / 重置 / 选关", Palette.Accent);
     }
 
     // =================================================================== draw
@@ -3400,9 +3521,9 @@ public partial class Play : Node2D
     /// </summary>
     private void VerifyPanelLayout()
     {
-        // Checked for BOTH layouts: the notification toast moves on touch (it lifts to clear the
-        // bottom-right buttons), so a check that only knew the desktop positions would pass while the
-        // touch layout covered the one block that carries errors and rule explanations.
+        // Checked for BOTH layouts, because the toast is NARROWER on touch (it stops at x 732 so the
+        // bottom-right buttons do not cover it). A check that only knew the desktop width would pass
+        // while the touch layout covered the one block that carries errors and rule explanations.
         var desktop = Hud.PanelLayoutSelfCheck(touchControls: false);
         Check("HUD blocks are ordered, on-screen and non-overlapping", desktop.Count == 0,
             desktop.Count == 0 ? "6 panel blocks 36..483 plus the toast 494..544 on a 1040x560 canvas"
@@ -3414,6 +3535,80 @@ public partial class Play : Node2D
                 : string.Join("; ", touch));
 
         VerifyCollapseToggle();
+        VerifyPanelFold();
+    }
+
+    /// <summary>
+    /// Drive the REAL input handler with a synthetic press on the PANEL fold tab.
+    ///
+    /// The pixel check (tools/analysis/panel_fold.py) proves the tab is drawn in the right place and
+    /// that folding frees the table. Neither says whether tapping it does anything -- and a tab that is
+    /// drawn but never handled is precisely the bug this feature exists to fix, because on a phone the
+    /// tab is the ONLY way to hide the panel (there is no F1).
+    ///
+    /// Also asserts the two behaviours the feature was specified with: the panel folds by itself once
+    /// after the first shot, and does NOT re-fold afterwards (a player who re-opens the panel has made a
+    /// choice, and having it re-folded on the next shot would fight them).
+    /// </summary>
+    private void VerifyPanelFold()
+    {
+        var wasEnabled = _touchControls;
+        var wasShown = _showHud;
+        var wasAuto = _touchAutoFolded;
+
+        _touchControls = true;
+        _showHud = true;
+        _touchAutoFolded = false;
+
+        // 1. tapping the tab closes the panel
+        var centre = Hud.PanelFoldRect().Position + Hud.PanelFoldRect().Size * 0.5f;
+        HandleMouse(Press(centre, true));
+        Check("tapping the panel tab folds the panel away", !_showHud, $"_showHud={_showHud}");
+
+        // 2. tapping it again brings the panel back, from the SAME place
+        HandleMouse(Press(centre, true));
+        Check("tapping the same spot brings the panel back", _showHud, $"_showHud={_showHud}");
+        Check("re-opening by hand marks the auto-fold as already spent", _touchAutoFolded,
+            "otherwise the next shot would fold the panel the player just re-opened");
+
+        // 3. the automatic fold, on a REAL shot. ResetLevel is used rather than calling FireShot on
+        // whatever state the enclosing self-test left behind: a level allows exactly one shot, so a
+        // bare FireShot here is usually REFUSED (it early-returns before the fold logic), which is how
+        // the first version of this check produced a false failure.
+        Check("(precondition) the self-test is running outside a scripted capture", _stateName == null,
+            $"_stateName={_stateName ?? "null"} -- the fold is gated to real play, so this check is "
+            + "meaningless during a --state capture");
+
+        ResetLevel();
+        _showHud = true;
+        _touchAutoFolded = false;
+        SetAim(0.0, 170.0);
+        FireShot();
+        Check("the first shot folds the panel by itself", !_showHud,
+            $"_showHud={_showHud} autoFolded={_touchAutoFolded}");
+        Check("and the shot really was fired (otherwise this check proved nothing)",
+            _world.ShotUsed, $"shotUsed={_world.ShotUsed}");
+
+        // 4. a player who RE-OPENS the panel is not fought for the control: the fold fires once per
+        // level, not once per shot. This is the actual job of _touchAutoFolded -- without it, the
+        // "player asked for the readouts" case would be silently overruled.
+        ResetLevel();                    // fresh level: shot available, panel open, flag cleared
+        var centre2 = Hud.PanelFoldRect().Position + Hud.PanelFoldRect().Size * 0.5f;
+        HandleMouse(Press(centre2, true));   // fold
+        HandleMouse(Press(centre2, true));   // unfold -- the player wants the readouts
+        Check("(precondition) the panel is open again with the auto-fold spent",
+            _showHud && _touchAutoFolded, $"_showHud={_showHud} autoFolded={_touchAutoFolded}");
+
+        SetAim(0.0, 170.0);
+        FireShot();
+        Check("firing after re-opening the panel does NOT fold it again", _showHud,
+            $"_showHud={_showHud} -- the player re-opened it deliberately");
+        Check("(precondition) that second shot also really fired", _world.ShotUsed,
+            $"shotUsed={_world.ShotUsed}");
+
+        _touchControls = wasEnabled;
+        _showHud = wasShown;
+        _touchAutoFolded = wasAuto;
     }
 
     /// <summary>

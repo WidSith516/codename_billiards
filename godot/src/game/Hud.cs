@@ -113,10 +113,46 @@ public static class Hud
     public static void Draw(CanvasItem ci, Font font, Model m)
     {
         DrawTopBar(ci, font, m);
+
         // F1 hides the entire left panel, not just the numeric block: for a gameplay slice the
         // panel is the single biggest thing covering the table.
         if (m.ShowPanel) DrawLeftPanel(ci, font, m);
+
+        // ON TOUCH, THE PANEL GETS AN ON-SCREEN FOLD TAB, because F1 does not exist on a phone. It is
+        // drawn OUTSIDE the ShowPanel check -- collapsed it is the ONLY way back, so making it
+        // conditional on the thing it controls would strand the player with no panel and no way to
+        // recall it. Same reasoning as the button grid's tab.
+        if (m.TouchControls)
+        {
+            TouchControls.DrawChevronTab(ci, PanelFoldRect(), !m.ShowPanel,
+                m.ShowPanel ? TouchControls.Chevron.Left : TouchControls.Chevron.Right);
+        }
+
+        // The toast is drawn LAST and OUTSIDE DrawLeftPanel. It used to live inside that method, which
+        // meant folding the panel away also hid every error and rule message -- the one thing on screen
+        // that is not decoration. It is the table column's overlay, not part of the panel.
+        if (!string.IsNullOrEmpty(m.Message))
+        {
+            DrawMessage(ci, font, m);
+        }
     }
+
+    /// <summary>
+    /// Where the side panel's fold tab sits.
+    ///
+    /// ONE FIXED RECT, IDENTICAL IN BOTH STATES. The obvious alternative -- letting the tab travel with
+    /// the drawer, to the screen edge when folded -- moves the control 200+ px the instant it is tapped.
+    /// A control whose position is only correct in the state you just left is a control you have to hunt
+    /// for, and this one is the ONLY way to bring the panel back. So it stays where the finger left it.
+    ///
+    /// WHY NOT THE LITERAL TOP-LEFT CORNER: the panel's own text starts at x=16/y=50 ("击球" and its
+    /// status line), so a tab at the corner would cover the panel's first readout in the state where the
+    /// panel is visible. This sits in the panel's top-right, which is empty (the panel's content stops at
+    /// x=242, and the only text near y 40..72 begins at x=16), and it stays clear of the top bar (y<28)
+    /// and of the toast (y 494). Folded, it floats alone in the same place.
+    /// </summary>
+    public static Rect2 PanelFoldRect()
+        => new Rect2(214.0f, 38.0f, 34.0f, 34.0f);
 
     // --------------------------------------------------------------- top bar
 
@@ -252,8 +288,10 @@ public static class Hud
                 Text(ci, font, x, Math.Max(ry + 22, 291), $"待碰撞 {m.ForecastContacts}", 12, Palette.ContactSoon);
             }
         }
-        else
+        else if (!m.TouchControls)
         {
+            // The F1 hint is a KEYBOARD hint. On a phone there is no F1, and the panel is folded with
+            // the on-screen tab instead, so printing it would advertise a key the player does not have.
             Text(ci, font, x, 228, "F1  显示调试面板", 11, Palette.TextDim);
         }
 
@@ -282,18 +320,11 @@ public static class Hud
             cy2 += 21.0f;
         }
 
-        // The rapid-tap rule must be visible: without a readout, "my third tap did nothing" and
-        // "the game is broken" are the same experience.
-        if (m.ShotUsed && !m.Won && !m.Lost)
-        {
-            var taps = m.RapidTapCount;
-            var label = taps == 0 ? "R 连击 0/2"
-                : taps == 1 ? "R 连击 1/2 · 下一击 = 垂死挣扎"
-                : "R 连击已满 · 需移动 10px 以上才能再回溯";
-            Text(ci, font, x, cy2, label, 11, taps >= 2 ? Palette.Bad : Palette.TextDim);
-            cy2 += 18.0f;
-        }
-
+        // The rapid-tap COUNTER used to be printed here ("R 连击 1/2 · 下一击 = 垂死挣扎"). It is gone:
+        // it described a keyboard gesture (repeatedly pressing R) and its wording was an announcement of
+        // a rule, not a readout of the run's state -- the panel's job. The rule itself is unchanged and
+        // still enforced by the kernel; see CardTests for the tap-counter assertions. The two lines
+        // below stay because they ARE state: whether the run is already lost, and why.
         if (m.BalloonArmed)
         {
             Text(ci, font, x, cy2, "⚠ 气球已充气：速度归零即失败", 12, Palette.Bad);
@@ -310,7 +341,13 @@ public static class Hud
         }
 
         // --- transport hint ------------------------------------------------ y 306 .. 322
-        if (m.ShotUsed && !m.Won)
+        //
+        // KEYBOARD ONLY. These lines name the R and P keys, which a phone does not have; on touch the
+        // equivalent actions are the four labelled buttons in the bottom-right corner, and the rewind
+        // button already says "按住回溯 · 松开保留速度" in TouchControls. Printing the key form on a phone
+        // would describe a control the player cannot use -- the same reason the CONTROLS legend below
+        // switches to touch wording.
+        if (m.ShotUsed && !m.Won && !m.TouchControls)
         {
             Text(ci, font, x, 342, m.Rewinding ? (m.Scrubbing ? "P  在标记处松开" : "P  暂停 + 微调") : "按住 R  回溯",
                 12, Palette.RewindCue);
@@ -345,11 +382,7 @@ public static class Hud
                 tky += 14;
             }
 
-            if (!string.IsNullOrEmpty(m.Message))
-            {
-                DrawMessage(ci, font, m);
-            }
-
+            // The toast is NOT drawn here (see Draw()): it must survive the panel being folded away.
             return;
         }
 
@@ -376,10 +409,7 @@ public static class Hud
             ky += 14;
         }
 
-        if (!string.IsNullOrEmpty(m.Message))
-        {
-            DrawMessage(ci, font, m);
-        }
+        // The toast is NOT drawn here (see Draw()): it must survive the panel being folded away.
     }
 
     /// <summary>
