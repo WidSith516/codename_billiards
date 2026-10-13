@@ -39,6 +39,33 @@ must = [
     b"--touch-controls",        # the desktop override flag (a literal -> UTF-16 in the #US heap)
     b"T01_GridFitsThePanel",    # the layout regression test
     b"T05_EveryActionIsLabelled",
+
+    # The controls moved into the bottom-right corner of the felt and gained a collapse tab. These are
+    # the symbols that only exist in that build: if the buttons were still inside the side panel, the
+    # APK would install and look plausible while being the previous layout.
+    b"CollapseToggleRect",
+    b"_touchCollapsed",
+
+    # The cue stick, i.e. the direction fix. A phone player cannot discover "drag away from the target"
+    # without it, so a stale assembly here means the port is unplayable rather than merely stale.
+    b"DrawCollapseToggle",
+    b"CueShaft",
+    b"CueFerrule",
+
+    # The kernel-side rail-contact log: this is what makes every ball's rail hit produce an effect
+    # instead of only the cue's boosted ones.
+    b"RailHitEvent",
+    b"CopyRailEventsSince",
+
+    # The cue-only pocket widening.
+    b"CuePocketRadiusScale",
+
+    # The gameplay regression tests for the three gameplay changes. Their names inside the shipped
+    # assembly are the strongest single signal that this is the build that was verified, not an older
+    # one that merely has the same shape (the tests only exist in the new source).
+    b"R01_StrikeIsOppositeThePull",
+    b"P01_CueHasAWiderMouthOnly",
+    b"W01_EveryBallRecordsItsOwnContact",
 ]
 # A symbol that must NOT be present: the nudge actions were removed from the touch grid because touch
 # players drag the release marker instead. If they are still here, the assembly is stale.

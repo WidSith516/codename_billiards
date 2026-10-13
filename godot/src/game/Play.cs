@@ -106,6 +106,17 @@ public partial class Play : Node2D
     /// table, which is how a drag-aim is distinguished from a button press.</summary>
     private TouchControls.Action? _touchPressed;
 
+    /// <summary>Whether the four on-screen buttons are folded away to leave the table unobstructed.
+    /// Starts visible: a player who has never seen the controls has to be able to find them, and the
+    /// whole point of the port is that the keyboard-only actions become reachable.</summary>
+    private bool _touchCollapsed;
+
+    /// <summary>Rail contacts the view has already drawn into an effect. The kernel appends to a ring
+    /// buffer and this is the high-water mark, so a frame draws exactly the contacts that landed since
+    /// the previous frame and never replays one.</summary>
+    private long _railEventSeq;
+    private readonly System.Collections.Generic.List<Rewind.Sim.World.RailHitEvent> _railEvents = new();
+
     /// <summary>The impact currently fed to the warp shader, cached so the idle transition can be
     /// detected without rebuilding the vector every frame.</summary>
     private bool _warpActive;
@@ -1617,6 +1628,18 @@ public partial class Play : Node2D
     {
         if (button.ButtonIndex != MouseButton.Left) return;
 
+        // The collapse tab is handled FIRST, and deliberately OUTSIDE the CardChoiceOpen guard below.
+        // It is the only way to bring the buttons back, so a state that suppresses the buttons must not
+        // also suppress the way to restore them -- otherwise a pending card draw would strand the
+        // controls off-screen with no way to recall them once the draw is resolved.
+        if (_touchControls && button.Pressed && TouchControls.CollapseToggleRect().HasPoint(button.Position))
+        {
+            _touchCollapsed = !_touchCollapsed;
+            _touchPressed = null;
+            _touchHeld = null;
+            return;
+        }
+
         // A pending draw owns the mouse too: the only legal click is on a card.
         if (CardChoiceOpen)
         {
@@ -1638,7 +1661,7 @@ public partial class Play : Node2D
         {
             if (button.Pressed)
             {
-                var action = TouchControls.Hit(button.Position);
+                var action = TouchControls.Hit(button.Position, _touchCollapsed);
                 if (action.HasValue
                     && TouchControls.Enabled(action.Value, _world.ShotUsed, _world.Rewinding,
                         false, _world.Won, _world.Lost))
@@ -1722,8 +1745,20 @@ public partial class Play : Node2D
                 return;
             }
 
-            var angle = Mathf.RadToDeg(Mathf.Atan2(drag.Y, drag.X));
-            _aimAngle = angle;
+            // THE CUE STRIKES OPPOSITE THE PULL -- the ball does NOT follow the finger.
+            //
+            // This is a cue stick, not a slingshot you carry: you draw the stick BACK behind the ball and
+            // let go, so the ball leaves AWAY from your hand. The previous version aimed along the drag
+            // vector itself, which meant pulling down-left sent the ball down-left -- the player was
+            // pushing the ball around rather than striking it, and every shot felt mirrored.
+            //
+            // The +180 makes this agree with SetAim(), which had this right all along: it places the drag
+            // point at `cue - dir(angle) * power`, i.e. behind the ball. The two paths disagreed, and the
+            // captured frames (which go through SetAim) therefore showed the correct geometry while live
+            // play showed the mirrored one -- which is why the input self-test's own label says "the pull
+            // direction reversed" while asserting the un-reversed value.
+            var pullDeg = Mathf.RadToDeg(Mathf.Atan2(drag.Y, drag.X));
+            _aimAngle = Rewind.Sim.Angles.Wrap180(pullDeg + 180.0);
             _aimPower = Math.Min(len, (float)_world.Config.PowerMax);
             _hasAim = true;
             FireShot();
@@ -2005,40 +2040,43 @@ public partial class Play : Node2D
     /// of how many steps have passed since the contact, because the reflection direction is what the
     /// reflection wrote.
     /// </summary>
+    /// <summary>
+    /// Spawn one rail deformation per contact the kernel recorded this frame.
+    ///
+    /// REPLACES a version that took only a COUNT and then reconstructed the geometry from the cue ball.
+    /// That reconstruction was the bug the player reported: it read the cue's position and reflected
+    /// heading, so a contact made by an OBJECT ball (with the cue parked mid-table) produced wall = -1
+    /// and the function returned without drawing. Because the cue's rail allowance is unlimited while
+    /// object balls have none, the symptom presented as "an impact effect only appears when a rail
+    /// boost happens" -- the effect was in fact only ever drawn for the cue.
+    ///
+    /// The events now carry the truth (wall, contact point, ball, payout, speed) straight from the
+    /// kernel, so every ball's contact is drawn at the place it happened.
+    /// </summary>
     private void SpawnRailEffects(int count, int boosts)
     {
-        var ball = _world.Cue;
-        if (ball == null || _level == null) return;
-
-        var heading = new Vector2((float)ball.Velocity.X, (float)ball.Velocity.Y);
-
-        var wall = ContactWallOf(ball);
-        if (wall < 0) return;
-
-        var along = ContactAlongOf(ball);
-        var contact = ContactPointOf(ball);
-
-        // Whether the rail actually PAID OUT, taken from the kernel's own count rather than from the
-        // ball's allowance. Reading CanTakeWallBoost here is always false for a hit that paid, because
-        // the kernel consumes the allowance in the same call that spends it -- so every impact was
-        // drawn as the weak "spent" variant and the strong one was unreachable. See SimStats.RailBoosts.
-        var boosted = boosts > 0;
-
-        // ONE impact, never a fan of them.
-        //
-        // The previous version spawned up to two more copies offset along the wall whenever a frame
-        // contained several bounces. That was a workaround for thin-stroke effects: a single 1.5 px
-        // ring carried so little presence that stacking copies was the only way to make a multi-bounce
-        // frame visible. A displacement-based impact needs no stacking -- it is already a large,
-        // soft-edged deformation, and duplicates would read as a lumpy, obviously fake smear rather
-        // than as one cushion being hit. The user asked for FEWER effects with MORE force, and this is
-        // exactly that trade.
-        _effects.RailHit(wall, along, contact, heading, Palette.RailBoost, boosted);
-
-        // (count is retained in the signature for the caller's stat delta and is deliberately unused:
-        // the deformation already spans the whole contact region, so a second bounce in the same frame
-        // falls inside the same dent and adds nothing to draw.)
         _ = count;
+        _ = boosts;
+
+        if (_level == null) return;
+
+        _railEvents.Clear();
+        _railEventSeq = _world.CopyRailEventsSince(_railEventSeq, _railEvents);
+        if (_railEvents.Count == 0) return;
+
+        foreach (var ev in _railEvents)
+        {
+            // The wall and contact come from the kernel. Only the heading is still derived, and only
+            // for the effect's own orientation, from a vector that necessarily points away from the
+            // wall just struck.
+            var heading = new Vector2(
+                (float)_world.Balls[ev.BallIndex].Velocity.X,
+                (float)_world.Balls[ev.BallIndex].Velocity.Y);
+
+            _effects.RailHit(ev.Wall, ev.Along,
+                new Vector2((float)ev.Contact.X, (float)ev.Contact.Y),
+                heading, Palette.RailBoost, ev.Boosted);
+        }
     }
 
     /// <summary>
@@ -2397,7 +2435,7 @@ public partial class Play : Node2D
         // it was drawn for.
         if (_touchControls && !CardChoiceOpen)
         {
-            TouchControls.Draw(this, _font, _touchHeld,
+            TouchControls.Draw(this, _font, _touchHeld, _touchCollapsed,
                 _world.ShotUsed, _world.Rewinding, _world.Won, _world.Lost);
         }
 
@@ -2973,22 +3011,74 @@ public partial class Play : Node2D
             if (pred != null && pred.Valid) AimPredictor.Draw(this, pred, _font);
         }
 
-        if (_dragging)
+        // The cue stick, drawn BEHIND the ball along -aim, and pulled back further the harder the shot.
+        //
+        // This replaces the old "pull-back band": a line from the ball to the finger plus a ring. That
+        // line pointed AT the finger, which is the direction the ball does NOT go, and drawing it made
+        // the mirrored aim look intentional. A stick removes the ambiguity -- the tip is at the ball, the
+        // butt is in the hand, and the ball obviously leaves the other way.
+        //
+        // WHILE DRAGGING IT USES THE LIVE DRAG, not _aimAngle: _aimAngle is only assigned on RELEASE, so
+        // a stick keyed to it would appear for the first time at the exact moment the shot fires and the
+        // player would never see the thing they are aiming with. The live values are computed here from
+        // the same expression the release uses, so what is drawn is what will be struck.
+        var aiming = !_world.ShotUsed && !_world.Rewinding &&!_world.Won;
+        if (aiming && (_dragging || _hasAim))
         {
-            var cue = CueScreen();
-            var drag = _dragPoint - cue;
-            var len = drag.Length();
-            var dir = len > 1e-3f ? drag / len : Vector2.Zero;
-            var clamped = Math.Min(len, (float)_world.Config.PowerMax);
-            var t = clamped / (float)_world.Config.PowerMax;
-
-            // Pull-back band: the drag is measured backwards from the cue, i.e. a slingshot.
-            DrawLine(cue, cue + dir * Math.Min(len, 260.0f), Palette.MeterLow.Lerp(Palette.MeterHigh, t), 3.0f, true);
-            DrawCircle(cue + dir * clamped, 7.0f, Palette.MeterLow.Lerp(Palette.MeterHigh, t), false, 2.0f, true);
-            if (len > (float)_world.Config.PowerMax)
+            float drawAngle, drawPower;
+            if (_dragging)
             {
-                DrawCircle(cue + dir * clamped, 11.0f, Palette.Warn, false, 1.4f, true);
-                DrawString(_font, cue + dir * clamped + new Vector2(10, -10), "满力", HorizontalAlignment.Left, -1, 11, Palette.Warn);
+                var drag = _dragPoint - CueScreen();
+                var len = drag.Length();
+                // Too short to be a shot yet: no stick, matching the release's refusal.
+                if (len < 1e-3f) return;
+                drawAngle = (float)Rewind.Sim.Angles.Wrap180(
+                    (double)Mathf.RadToDeg(Mathf.Atan2(drag.Y, drag.X)) + 180.0);
+                drawPower = Math.Min(len, (float)_world.Config.PowerMax);
+            }
+            else
+            {
+                drawAngle = (float)_aimAngle;
+                drawPower = (float)_aimPower;
+            }
+
+            var cue = CueScreen();
+            var aim = Vec2.FromAngleDegrees(drawAngle);
+            var aimDir = new Vector2((float)aim.X, (float)aim.Y);
+            var back = -aimDir;                       // from the ball toward the hand
+            var t = Mathf.Clamp(drawPower / (float)_world.Config.PowerMax, 0.0f, 1.0f);
+
+            // Standoff grows with power: an un-drawn stick almost touches the ball, a full-power one is
+            // pulled well clear, so the gap itself reads as "how hard".
+            var r = (float)_world.Cue.Radius;
+            var standoff = r + 6.0f + t * 54.0f;
+            var shaftLen = 300.0f;
+
+            var tipPos = cue + back * standoff;
+            var buttPos = cue + back * (standoff + shaftLen);
+
+            // The taper: a cue is thick at the butt. Drawn as two overlapping strokes of decreasing
+            // width rather than a polygon, because a polygon needs the perpendicular and the widths
+            // would have to be hand-tuned for every angle.
+            DrawLine(tipPos, buttPos, Palette.CueShaftDark, 7.0f, true);
+            DrawLine(tipPos, cue + back * (standoff + shaftLen * 0.55f), Palette.CueShaft, 5.0f, true);
+            DrawLine(buttPos, cue + back * (standoff + shaftLen * 0.72f), Palette.CueWrap, 6.0f, true);
+
+            // Leather tip, then the pale ferrule behind it, so the business end is unmistakable.
+            DrawLine(tipPos, tipPos + back * 7.0f, Palette.CueTip, 6.0f, true);
+            DrawLine(tipPos + back * 7.0f, tipPos + back * 15.0f, Palette.CueFerrule, 5.5f, true);
+
+            // Power bar along the stick: fills toward the tip as power rises, so the strength is legible
+            // without looking at the HUD meter.
+            var barFrom = cue + back * (standoff + shaftLen * 0.20f);
+            var barTo = cue + back * (standoff + shaftLen * 0.62f);
+            DrawLine(barFrom, barTo, Palette.PanelEdge, 3.0f, true);
+            DrawLine(barFrom, barFrom.Lerp(barTo, t), Palette.MeterLow.Lerp(Palette.MeterHigh, t), 3.0f, true);
+
+            if (drawPower >= (float)_world.Config.PowerMax)
+            {
+                DrawString(_font, tipPos + new Vector2(10, -10), "满力", HorizontalAlignment.Left, -1, 11,
+                    Palette.Warn);
             }
         }
     }
@@ -3179,8 +3269,15 @@ public partial class Play : Node2D
         var expectedPower = Math.Min((double)pullBack.Length(), _world.Config.PowerMax);
         Check("a drag from the cue ball produces exactly one strike", _world.ShotUsed,
             $"shotUsed={_world.ShotUsed} angle={_aimAngle:F3} power={_aimPower:F3}");
-        Check("the drag angle is the pull direction reversed", Math.Abs(_aimAngle) < 1e-3,
-            $"angle={_aimAngle:F3} deg (expected 0.0 for a pull along +x)");
+        // Pull back along +x, so the cue must leave along -x: the aim angle is the pull direction
+        // REVERSED. The label always said so; the assertion used to check 0.0, i.e. the ball travelling
+        // the same way as the hand. That was the bug -- the cue stick strikes opposite the pull.
+        Check("the ball leaves OPPOSITE the pull (a cue strikes, it does not push)",
+            Math.Abs(Math.Abs(_aimAngle) - 180.0) < 1e-3,
+            $"angle={_aimAngle:F3} deg (expected 180.0 for a pull along +x)");
+        Check("the ball really moves away from the hand",
+            _world.Cue.Velocity.X < -1e-6,
+            $"vx={_world.Cue.Velocity.X:F3} (a +x pull must produce a -x launch)");
         Check("the drag distance is the shot power", Math.Abs(_aimPower - expectedPower) < 1e-6,
             $"power={_aimPower:F3} drag={expectedPower:F3}");
         Check("the launch speed is power x SpeedPerPower",
@@ -3303,9 +3400,72 @@ public partial class Play : Node2D
     /// </summary>
     private void VerifyPanelLayout()
     {
-        var problems = Hud.PanelLayoutSelfCheck();
-        Check("HUD blocks are ordered, on-screen and non-overlapping", problems.Count == 0,
-            problems.Count == 0 ? "7 blocks 36..554 on a 1040x560 canvas" : string.Join("; ", problems));
+        // Checked for BOTH layouts: the notification toast moves on touch (it lifts to clear the
+        // bottom-right buttons), so a check that only knew the desktop positions would pass while the
+        // touch layout covered the one block that carries errors and rule explanations.
+        var desktop = Hud.PanelLayoutSelfCheck(touchControls: false);
+        Check("HUD blocks are ordered, on-screen and non-overlapping", desktop.Count == 0,
+            desktop.Count == 0 ? "6 panel blocks 36..483 plus the toast 494..544 on a 1040x560 canvas"
+                : string.Join("; ", desktop));
+
+        var touch = Hud.PanelLayoutSelfCheck(touchControls: true);
+        Check("the touch HUD layout keeps the toast clear of the on-screen buttons", touch.Count == 0,
+            touch.Count == 0 ? "toast 262,494 470x50 (right edge 732) clears the grid's left edge 754"
+                : string.Join("; ", touch));
+
+        VerifyCollapseToggle();
+    }
+
+    /// <summary>
+    /// Drive the REAL input handler with a synthetic press on the collapse tab, so the wiring is
+    /// checked and not merely the geometry.
+    ///
+    /// WHY THIS AND NOT JUST TouchTests: the unit tests prove the tab's rect is where it should be and
+    /// that a collapsed grid reports no hits. They say nothing about whether Play actually consults the
+    /// tab -- a tab that is drawn correctly but never handled is exactly the failure that leaves a
+    /// player with buttons they cannot hide. So this presses it through _UnhandledInput.
+    ///
+    /// The handler is called DIRECTLY rather than by pushing an InputEvent through the engine: the
+    /// synthetic-feed helpers exist for the pointer self-test, and reusing them here would re-test the
+    /// feed rather than the branch this check is about.
+    /// </summary>
+    private void VerifyCollapseToggle()
+    {
+        var wasEnabled = _touchControls;
+        var wasCollapsed = _touchCollapsed;
+
+        // The handler is a no-op unless touch controls are on, so the check is only meaningful in that
+        // mode; assert that rather than silently passing.
+        _touchControls = true;
+        _touchCollapsed = false;
+
+        var centre = TouchControls.CollapseToggleRect().Position + TouchControls.CollapseToggleRect().Size * 0.5f;
+        HandleMouse(new InputEventMouseButton
+        {
+            ButtonIndex = MouseButton.Left,
+            Pressed = true,
+            Position = centre,
+        });
+
+        Check("tapping the collapse tab folds the buttons away", _touchCollapsed,
+            $"_touchCollapsed={_touchCollapsed} after a press at {centre}");
+
+        Check("and a folded grid reports no button under the finger",
+            TouchControls.Hit(new Vector2(900.0f, 480.0f), _touchCollapsed) == null,
+            "a folded button was still hittable, so the folded state is cosmetic only");
+
+        HandleMouse(new InputEventMouseButton
+        {
+            ButtonIndex = MouseButton.Left,
+            Pressed = true,
+            Position = centre,
+        });
+
+        Check("tapping it again brings the buttons back", !_touchCollapsed,
+            $"_touchCollapsed={_touchCollapsed}");
+
+        _touchControls = wasEnabled;
+        _touchCollapsed = wasCollapsed;
     }
 
     /// <summary>

@@ -33,6 +33,99 @@ public sealed class World
     /// </summary>
     private const double ContactSlop = 1e-7;
 
+    /// <summary>
+    /// One rail contact, recorded where it actually happened.
+    ///
+    /// WHY THE KERNEL HAS TO RECORD THIS AT ALL: the view used to reconstruct the contact after the
+    /// fact, from the CUE ball's position and reflected heading. That works for cue hits and is WRONG
+    /// for every other ball -- an object ball bouncing off a cushion while the cue sits in the middle
+    /// of the table produced "wall = -1" and the view returned without drawing anything. Since the cue
+    /// has an unlimited rail allowance and object balls have none, the visible result was "a rail
+    /// effect only appears when the cue gets a boost", which is exactly what the player reported.
+    ///
+    /// The data lives nowhere else: the reflected heading identifies the wall only until the ball is
+    /// hit again, the position identifies it only until the ball leaves the cushion, and the ball's
+    /// identity is lost entirely once the frame is over. So it is captured at the moment of contact.
+    ///
+    /// NOT part of the state hash or the JSON codec, and it must not be: it is a viewpoint (like the
+    /// effect list) rather than simulation state, and adding it to the hash would change the
+    /// determinism signature for a purely cosmetic feature.
+    /// </summary>
+    public readonly struct RailHitEvent
+    {
+        public RailHitEvent(int ballIndex, int wall, float along, Vec2 contact, bool boosted, double speed)
+        {
+            BallIndex = ballIndex;
+            Wall = wall;
+            Along = along;
+            Contact = contact;
+            Boosted = boosted;
+            Speed = speed;
+        }
+
+        /// <summary>Index into <see cref="Balls"/>, so the view can tell the cue from an object ball.</summary>
+        public int BallIndex { get; }
+
+        /// <summary>Wall id: 0 left, 1 right, 2 top (small y), 3 bottom (large y).</summary>
+        public int Wall { get; }
+
+        /// <summary>Position along the wall, in table coordinates (matches Effects.CushionEdge).</summary>
+        public float Along { get; }
+
+        /// <summary>The contact point, in table coordinates.</summary>
+        public Vec2 Contact { get; }
+
+        /// <summary>Whether this hit actually paid out energy (see SimStats.RailBoosts).</summary>
+        public bool Boosted { get; }
+
+        /// <summary>Ball speed at the moment of contact, px/s. Drives how hard the impact reads.</summary>
+        public double Speed { get; }
+    }
+
+    /// <summary>Ring buffer of recent rail contacts. Bounded because a scripted capture can run
+    /// thousands of steps without a frame ever draining it, and an unbounded log would grow without
+    /// limit. 64 is far more than one frame can produce (measured worst case: 4).</summary>
+    private const int RailEventCapacity = 64;
+    private readonly RailHitEvent[] _railEvents = new RailHitEvent[RailEventCapacity];
+    private int _railEventNext;
+    private long _railEventsTotal;
+
+    /// <summary>Monotonic count of rail contacts ever recorded. The view stores the last value it saw
+    /// and asks for everything after it, so it never needs the ring buffer's own indices.</summary>
+    public long RailEventsTotal => _railEventsTotal;
+
+    /// <summary>
+    /// Copy every rail contact recorded since <paramref name="sinceSeq"/> into <paramref name="into"/>,
+    /// returning the new sequence number to pass next time.
+    ///
+    /// If more events arrived than the ring can hold, the OLDEST are silently skipped -- the count is
+    /// still advanced correctly, so the caller cannot get stuck replaying stale events. Losing the
+    /// oldest is the right failure: a frame that produced 64 impacts is a physics artifact, and drawing
+    /// the most recent few is more useful than drawing none.
+    /// </summary>
+    public long CopyRailEventsSince(long sinceSeq, List<RailHitEvent> into)
+    {
+        if (into == null) return _railEventsTotal;
+
+        var oldest = Math.Max(0, _railEventsTotal - RailEventCapacity);
+        var from = Math.Max(sinceSeq, oldest);
+        for (var seq = from; seq < _railEventsTotal; seq++)
+        {
+            var slot = (int)(seq % RailEventCapacity);
+            into.Add(_railEvents[slot]);
+        }
+
+        return _railEventsTotal;
+    }
+
+    private void RecordRailEvent(int ballIndex, int wall, Vec2 contact, bool boosted, double speed)
+    {
+        var along = wall <= 1 ? (float)contact.Y : (float)contact.X;
+        _railEvents[(int)(_railEventsTotal % RailEventCapacity)] =
+            new RailHitEvent(ballIndex, wall, along, contact, boosted, speed);
+        _railEventsTotal++;
+    }
+
     private readonly int[] _railTransformUsedThisStep;
 
     /// <summary>[ball, hole] membership from the previous step, used to fire a white hole only on the
@@ -1377,6 +1470,39 @@ public sealed class World
             if (boosted) b.WallBoostsUsed++;
             Stats.RailTransforms++;
 
+            // Record the contact for the view, in the same branch that counts the transform, so there
+            // is exactly one event per transform and the two can never disagree.
+            //
+            // The wall comes from the hit flags, which were themselves derived from the PRE-reflection
+            // velocity: after the sign flip above, the component pointing into the cushion is already
+            // negated, so the ball's velocity now points AWAY from the wall it just struck and naming
+            // the wall from it would name the opposite one. That is precisely the trap the old view-side
+            // reconstruction fell into by reading the reflected heading.
+            //
+            // A corner contact sets two flags; the dominant axis (larger approaching speed) wins,
+            // matching how the cushion would read if only one of the two could be felt.
+            var wallId = -1;
+            if (hitLeft || hitRight) wallId = hitLeft ? 0 : 1;
+            if (hitTop || hitBottom)
+            {
+                var horizontal = Math.Abs(vel.X);
+                var vertical = Math.Abs(vel.Y);
+                if (wallId < 0 || vertical > horizontal) wallId = hitTop ? 2 : 3;
+            }
+
+            if (wallId >= 0 && index >= 0)
+            {
+                var r = b.Radius;
+                var contact = wallId switch
+                {
+                    0 => new Vec2(Level.TableLeft + r, b.Position.Y),
+                    1 => new Vec2(Level.TableRight - r, b.Position.Y),
+                    2 => new Vec2(b.Position.X, Level.TableTop + r),
+                    _ => new Vec2(b.Position.X, Level.TableBottom - r),
+                };
+                RecordRailEvent(index, wallId, contact, boosted, vel.Length);
+            }
+
             // Recorded INSIDE the kernel because this is the last point at which `boosted` exists.
             // The view needs it to distinguish a hit that returned energy from one that had none left,
             // and it cannot recover the fact afterwards: the line above consumes the allowance, so
@@ -1707,11 +1833,21 @@ public sealed class World
     /// </summary>
     public bool InPocketCapture(Ball ball)
     {
+        // The multiplier is applied to EACH POCKET'S OWN radius rather than to the config default, so a
+        // level that overrides a pocket's size (LevelData reads "r" per pocket) keeps that override --
+        // only the cue's relative share of the mouth changes.
+        //
+        // Cue-only on purpose: PocketRadius is a locked shared value and the object-ball capture circle
+        // is what defines the win condition, so widening it globally would silently make every authored
+        // level easier instead of fixing the one thing the player reported.
+        var scale = ball != null && ball.IsCue ? Config.CuePocketRadiusScale : 1.0;
+        if (!(scale > 0.0)) scale = 1.0;
+
         foreach (var pocket in Level.Pockets)
         {
             var toCenter = pocket.Center - ball.Position;
-            var r2 = pocket.Radius * pocket.Radius;
-            if (toCenter.LengthSquared >= r2) continue;
+            var r = pocket.Radius * scale;
+            if (toCenter.LengthSquared >= r * r) continue;
             if (Vec2.Dot(ball.Velocity, toCenter) > 0.0) return true;
         }
 

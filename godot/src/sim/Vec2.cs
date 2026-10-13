@@ -79,3 +79,23 @@ public readonly struct Vec2 : IEquatable<Vec2>
         X.ToString("R", System.Globalization.CultureInfo.InvariantCulture) + "," +
         Y.ToString("R", System.Globalization.CultureInfo.InvariantCulture);
 }
+
+public static class Angles
+{
+    /// <summary>
+    /// Wrap an angle in degrees into (-180, 180].
+    ///
+    /// Lives in the simulation namespace rather than in the view because the aim direction is a
+    /// SIMULATION input: the same shot must come out of the mouse handler, a scripted capture (SetAim)
+    /// and a test. When the two view paths each carried their own arithmetic they disagreed about the
+    /// sign of the aim, which is precisely the bug this fixes -- one shared definition makes that
+    /// impossible to reintroduce.
+    /// </summary>
+    public static double Wrap180(double degrees)
+    {
+        var d = degrees % 360.0;
+        if (d <= -180.0) d += 360.0;
+        if (d > 180.0) d -= 360.0;
+        return d;
+    }
+}

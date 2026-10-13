@@ -271,6 +271,22 @@ public sealed class PhysicsConfig
     /// <summary>LOCKED. Pocket capture radius, px.</summary>
     public double PocketRadius = 24.0;
 
+    /// <summary>
+    /// Capture-radius multiplier applied to the CUE ball only. NOT part of the locked table -- it is a
+    /// player-requested difficulty change ("白球难以入洞，略微扩大白球入洞的判定范围").
+    ///
+    /// CUE ONLY, ON PURPOSE. <see cref="PocketRadius"/> is locked and shared by every ball, so scaling it
+    /// would also widen the capture circle the object balls need to reach -- and those define the win
+    /// condition, so that would silently make every authored level easier rather than fixing the one
+    /// thing the player reported. A separate multiplier keeps the change to the cue.
+    ///
+    /// WORTH KNOWING BEFORE RELYING ON THIS: the cue going down is NOT progress. Capture() applies the
+    /// tibo refund and returns without scoring or drawing, and a level allows one shot, so potting the
+    /// cue ends the level unless the player rewinds out of it. A larger capture circle therefore makes
+    /// this MISTAKE MORE LIKELY. Set the value to 1.0 to revert entirely.
+    /// </summary>
+    public double CuePocketRadiusScale = 1.3;
+
     /// <summary>LOCKED. Ball-ball restitution (equal mass), carried from the prototype.</summary>
     public double BallRestitution = 0.955;
 

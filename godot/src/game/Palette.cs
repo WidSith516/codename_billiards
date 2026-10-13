@@ -233,6 +233,16 @@ public static class Palette
     public static readonly Color AimCueDeflect = new Color("#b6ffd0");
     public static readonly Color AimBlocked = new Color("#ff5d5d");
 
+    /// <summary>The stick itself. Warm maple with a dark leather tip and a pale ferrule, so it reads as
+    /// a cue rather than as another aiming line. Deliberately unlike the AimLine's near-white: the line
+    /// is where the BALL will go, the stick is where the player's hand is, and confusing the two is the
+    /// exact error that had the ball following the finger.</summary>
+    public static readonly Color CueShaft = new Color("#c99a5b");
+    public static readonly Color CueShaftDark = new Color("#8a6534");
+    public static readonly Color CueFerrule = new Color("#eef3ef");
+    public static readonly Color CueTip = new Color("#3f6f9a");
+    public static readonly Color CueWrap = new Color("#2b2118");
+
     // ---------------------------------------------------------------- hud
     public static readonly Color PanelBg = new Color(0.04f, 0.06f, 0.07f, 0.86f);
     public static readonly Color PanelEdge = new Color("#3a4a44");

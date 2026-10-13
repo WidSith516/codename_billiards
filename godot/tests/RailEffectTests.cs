@@ -349,7 +349,15 @@ public static class RailEffectTests
         // table a single 170-power shot dies after about one cushion (measured: transforms=1), so a rally
         // long enough to outlast the allowance has to be arranged rather than assumed -- the first two
         // versions of this test asserted it and failed for exactly that reason.
-        var finite = TestSupport.Table(configure: c =>
+        //
+        // POCKETS ARE DISABLED HERE, and that is a fix rather than a convenience. This fixture is about
+        // rail transforms, and it never mentioned pockets; it silently relied on the cue happening not to
+        // be swallowed. When the cue's capture radius was widened by request (1.3x, so a finger's aim
+        // does not have to be perfect), the cue's long rally started passing close enough to a pocket to
+        // drop in -- and since potting the cue ends the rally, transforms froze at 1 and this assertion
+        // failed with boosts=1 transforms=1 cuePocketed=True. The observation is real and is the exact
+        // cost of the wider mouth; it just does not belong in a test about rails.
+        var finite = TestSupport.Table(pockets: false, configure: c =>
         {
             c.FrictionDecel = 60.0;
             c.For(BallType.Cue).MaxWallBoosts = 1;
@@ -360,6 +368,8 @@ public static class RailEffectTests
         limited.Shot(7.0, 170.0);
         for (var i = 0; i < 8000 && !limited.AtRest(); i++) limited.Step();
 
+        t.Check("the cue is still on the table, so the rally is not cut short by a pot",
+            !limited.Cue.Pocketed, $"pocketed={limited.Cue.Pocketed} captures={limited.Stats.PocketCaptures}");
         t.Check("a finite allowance still registers its one payout",
             limited.Stats.RailBoosts == 1, "boosts=" + limited.Stats.RailBoosts);
         t.Check("but the ball keeps bouncing long after the allowance is spent",

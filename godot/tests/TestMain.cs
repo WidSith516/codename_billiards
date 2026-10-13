@@ -224,6 +224,19 @@ public partial class TestMain : Node
             Run(runner, "T05", TouchTests.T05_EveryActionIsLabelled);
         }
 
+        // A dedicated "G" prefix: R01/P01/W01 are already taken by the cue-retention, ball-type and
+        // white-hole suites respectively (and P01 twice), so reusing them would make the gate output
+        // ambiguous about which test a failure came from.
+        if (suite == "all" || suite == "play")
+        {
+            Run(runner, "G01", GameplayTests.R01_StrikeIsOppositeThePull);
+            Run(runner, "G02", GameplayTests.R02_AimAngleIsTheReversedPull);
+            Run(runner, "G03", GameplayTests.P01_CueHasAWiderMouthOnly);
+            Run(runner, "G04", GameplayTests.W01_EveryBallRecordsItsOwnContact);
+            Run(runner, "G05", GameplayTests.W02_ObjectBallContactsAreRecorded);
+            Run(runner, "G06", GameplayTests.W03_ReadingIsIncremental);
+        }
+
         if (negative)
         {
             // An acceptance gate that cannot fail is worse than no gate.

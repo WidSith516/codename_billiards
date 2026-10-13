@@ -32,37 +32,42 @@ namespace Rewind.Game;
 public static class TouchControls
 {
     /// <summary>Design canvas, same units as every other UI rect in this project.</summary>
+    private const float CanvasW = 1040.0f;
     private const float CanvasH = 560.0f;
 
-    /// <summary>A button big enough for a fingertip. Android's own guidance is 48 dp; the panel is the
-    /// constraint here, so the grid is sized to fit the space the keyboard legend already occupies
-    /// rather than to a nominal minimum. 104x40 is still a large target -- comparable to a card.</summary>
-    private const float W = 104.0f;
-    private const float H = 40.0f;
-    private const float GapX = 8.0f;
-    private const float GapY = 8.0f;
+    /// <summary>A button big enough for a fingertip. Android's guidance is 48 dp; these sit over the
+    /// felt at the bottom right, where two 132x54 targets fit inside the table's lower-right corner
+    /// without reaching the middle pocket.</summary>
+    private const float W = 132.0f;
+    private const float H = 54.0f;
+    private const float GapX = 10.0f;
+    private const float GapY = 10.0f;
+    private const int Columns = 2;
 
-    /// <summary>Left edge of the button grid: inside the panel, which spans x 6..252.</summary>
-    private const float Left = 14.0f;
+    /// <summary>Margin from the canvas edges.</summary>
+    private const float MarginRight = 12.0f;
+    private const float MarginBottom = 46.0f;
 
     /// <summary>
-    /// Top edge of the grid. This is the block Hud.cs already reserves for the CONTROLS legend
-    /// (it starts at panel-bottom minus 108, i.e. y ~402, and runs to ~500).
+    /// The grid hugs the BOTTOM-RIGHT CORNER, as asked.
     ///
-    /// WHY THAT BLOCK, AND NOT A NEW STRIP: two earlier layouts were measured and both collided.
-    ///   * 2 cols x 3 rows at y 424 needed 144px of a strip only 86px tall, so the third row landed at
-    ///     y 524..568 -- past the 560px canvas edge AND over the bottom replay band (y>=546).
-    ///   * 3 cols x 2 rows was too WIDE: 3x104 + 2x8 = 328px against a 246px panel, so the third column
-    ///     sat over the table and the notification toast.
-    /// The legend block fits six buttons' worth of space and, on a touch device, is showing text that
-    /// does not apply -- "按 R" and "F1" are keys a phone does not have. So the block is shared: the
-    /// keyboard legend on desktop, the buttons on touch. Nothing is displaced and nothing is hidden.
+    /// WHY THIS MOVED OFF THE SIDE PANEL: the first version put the four buttons inside the left panel,
+    /// because that block was free and nothing on the table was covered. The player asked for the
+    /// conventional mobile arrangement instead -- where a thumb naturally rests -- so the buttons now
+    /// overlap the felt at the lower right. Two measured layouts were rejected along the way:
+    ///   * 2 cols x 3 rows at y 424 overflowed the canvas (the third row landed at y 524..568) and lay
+    ///     over the bottom replay band;
+    ///   * 3 cols x 2 rows was too wide for the 246px panel and spilled onto the table anyway.
+    ///
+    /// WHAT THE OVERLAP COSTS: buttons drawn over the felt can hide a ball resting in the lower-right
+    /// corner. That is accepted because the table's lower-right corner is the least useful place to
+    /// leave the cue (the pockets that finish a level are on the bottom rail but the corner is behind
+    /// them), and because the buttons are translucent so a ball is still partly visible through them.
+    /// The bottom edge stops at y = 514, above the bottom replay band at y >= 546.
+    /// The notification toast is kept clear by Hud moving it up when the touch controls are shown.
     /// </summary>
-    private const float Top = 414.0f;
-
-    /// <summary>Columns in the grid. Two: the panel is 246px wide and each button is 104, so three
-    /// columns would overflow into the table.</summary>
-    private const int Columns = 2;
+    private static float GridLeft => CanvasW - MarginRight - (Columns * W + (Columns - 1) * GapX);
+    private static float GridTop => CanvasH - MarginBottom - (2 * H + GapY);
 
     /// <summary>The actions, in draw order.</summary>
     public enum Action
@@ -79,9 +84,29 @@ public static class TouchControls
         Action.Reset, Action.Back,
     };
 
-    /// <summary>Where a button's rect is. The single source of truth for both draw and hit test.</summary>
-    public static Rect2 Rect(Action a)
+    /// <summary>The collapse toggle: hides the four buttons so the whole table is visible.
+    ///
+    /// WHY A TOGGLE AND NOT A SWIPE: the player asked for "可以缩放面板" (a collapsible panel) for the
+    /// mobile build. The literal request was about zooming the panel, and what the panel actually needs
+    /// on a phone is to get OUT OF THE WAY -- the table is the game, the readouts are reference. A tap
+    /// target is also unambiguous next to a drag-to-aim surface, whereas a swipe or pinch would have to
+    /// be told apart from aiming, which is the same gesture.
+    ///
+    /// Deliberately NOT routed through Action/Enabled: it is always available, it acts on the view
+    /// rather than on the kernel, and folding it into the same availability logic would let a state
+    /// (e.g. a pending card draw, a lost run) trap the controls on screen with no way to dismiss them.
+    /// </summary>
+    public static Rect2 CollapseToggleRect()
+        => new Rect2(CanvasW - MarginRight - 34.0f, GridTop - 44.0f, 34.0f, 34.0f);
+
+    /// <summary>Where a button's rect is, or an empty rect when the grid is collapsed (so the hit test
+    /// and the draw cannot disagree about a hidden button).
+    ///
+    /// The single source of truth for both draw and hit test.</summary>
+    public static Rect2 Rect(Action a, bool collapsed = false)
     {
+        if (collapsed) return new Rect2();
+
         var i = 0;
         for (var k = 0; k < Order.Length; k++)
         {
@@ -90,13 +115,15 @@ public static class TouchControls
 
         var col = i % Columns;
         var row = i / Columns;
-        return new Rect2(Left + col * (W + GapX), Top + row * (H + GapY), W, H);
+        return new Rect2(GridLeft + col * (W + GapX), GridTop + row * (H + GapY), W, H);
     }
 
-    /// <summary>Which button contains <paramref name="point"/>, or null. Hit-tested in the order the
-    /// buttons are drawn, which does not matter because the rects never overlap.</summary>
-    public static Action? Hit(Vector2 point)
+    /// <summary>Which button contains <paramref name="point"/>, or null. Returns null for every point
+    /// when collapsed, which is what makes a collapsed control genuinely non-interactive rather than
+    /// merely invisible.</summary>
+    public static Action? Hit(Vector2 point, bool collapsed = false)
     {
+        if (collapsed) return null;
         foreach (var a in Order)
         {
             if (Rect(a).HasPoint(point)) return a;
@@ -150,42 +177,93 @@ public static class TouchControls
     /// Draw the grid. <paramref name="held"/> is the action currently under a finger, so it can be
     /// shown pressed: without that feedback a hold-to-rewind button looks identical whether or not the
     /// game has registered the press, and the whole control is a guess.
+    ///
+    /// TRANSLUCENT, because these now sit OVER the felt: a fully opaque button would hide a ball behind
+    /// it, and a ball the player cannot see is a shot they cannot plan. Alpha is low enough to read the
+    /// cloth through, high enough that the label stays legible over both the dark felt and the bright
+    /// cushion.
     /// </summary>
-    public static void Draw(CanvasItem ci, Font font, Action? held,
+    public static void Draw(CanvasItem ci, Font font, Action? held, bool collapsed,
         bool shotUsed, bool rewinding, bool won, bool lost)
     {
+        DrawCollapseToggle(ci, font, collapsed);
+        if (collapsed) return;
+
         foreach (var a in Order)
         {
             var r = Rect(a);
             var on = Enabled(a, shotUsed, rewinding, false, won, lost);
             var pressed = held == a;
 
-            var body = !on ? Palette.Panel
-                : pressed ? Palette.Accent
-                : Palette.PanelRaised;
+            var body = !on ? BodyDisabled
+                : pressed ? BodyPressed
+                : BodyNormal;
             ci.DrawRect(r, body);
 
             // The border carries the state without relying on the fill alone: a pressed button must be
-            // distinguishable from a merely-enabled one even in a screenshot or on a dim screen.
-            var edge = !on ? Palette.PanelEdge
+            // distinguishable from a merely-enabled one even in a screenshot or on a dim screen, and
+            // the fill is deliberately faint so the felt shows through.
+            var edge = !on ? EdgeDisabled
                 : pressed ? Palette.TextMain
                 : Palette.Accent;
             ci.DrawRect(r, edge, false, pressed ? 3.0f : 1.5f);
 
             var label = Label(a);
             var color = on ? Palette.TextMain : Palette.TextDim;
-            var size = 15;
+            var size = 16;
             var w = font.GetStringSize(label, HorizontalAlignment.Left, -1, size).X;
+            // A dark shadow under the text, because the label can sit over bright felt or a light ball
+            // and a thin CJK glyph would otherwise vanish against it.
+            ci.DrawString(font, new Vector2(r.Position.X + (r.Size.X - w) * 0.5f + 1.0f,
+                r.Position.Y + r.Size.Y * 0.5f + 6.0f),
+                label, HorizontalAlignment.Left, -1, size, TextShadow);
             ci.DrawString(font, new Vector2(r.Position.X + (r.Size.X - w) * 0.5f,
                 r.Position.Y + r.Size.Y * 0.5f + 5.0f),
                 label, HorizontalAlignment.Left, -1, size, color);
         }
+    }
 
-        // A one-line reminder of the touch equivalent of holding R, because the button alone does not
-        // convey that RELEASING it is what commits the rewind.
-        var hint = held == Action.Rewind ? "松开 = 保留当时速度" : "按住回溯，松开保留速度";
-        ci.DrawString(font, new Vector2(Left, Top - 8.0f), hint, HorizontalAlignment.Left, -1, 11,
-            Palette.TextDim);
+    // Translucent bodies. Kept as named colours rather than inline literals so the "how see-through is
+    // the felt" decision is one number to tune, in one place, per state.
+    private static readonly Color BodyNormal = new Color(0.07f, 0.12f, 0.13f, 0.55f);
+    private static readonly Color BodyPressed = new Color(1.0f, 0.82f, 0.40f, 0.72f);
+    private static readonly Color BodyDisabled = new Color(0.05f, 0.08f, 0.09f, 0.40f);
+    private static readonly Color EdgeDisabled = new Color(0.23f, 0.29f, 0.27f, 0.55f);
+    private static readonly Color TextShadow = new Color(0.0f, 0.0f, 0.0f, 0.55f);
+
+    /// <summary>
+    /// The small always-available tab that hides or shows the four buttons.
+    ///
+    /// Drawn in both states: collapsed, it is the ONLY way back, so it can never be conditional on the
+    /// state that the buttons themselves are conditional on -- otherwise a pending card draw (which
+    /// suppresses the buttons) would leave the player with no controls and no way to recall them.
+    /// </summary>
+    private static void DrawCollapseToggle(CanvasItem ci, Font font, bool collapsed)
+    {
+        var r = CollapseToggleRect();
+        ci.DrawRect(r, collapsed ? BodyPressed : BodyNormal);
+        ci.DrawRect(r, Palette.Accent, false, 1.5f);
+
+        // A chevron pointing the way the panel will move. Drawn as two SEPARATE line segments rather than
+        // one three-point polyline, because a polyline through (left, right) with a shared apex forms a
+        // zero-area triangle and Godot rejects it ("Invalid polygon data, triangulation failed"), which
+        // aborted the whole draw and silently cost the capture its PNG.
+        var c = r.Position + r.Size * 0.5f;
+        var d = 5.0f;
+        var h = 7.0f;
+        if (collapsed)
+        {
+            // Collapsed: the tab points up, meaning "the controls come back up out of this corner".
+            var apex = c + new Vector2(0, -h * 0.6f);
+            ci.DrawLine(c + new Vector2(-d, h * 0.4f), apex, Palette.TextMain, 2.5f, true);
+            ci.DrawLine(c + new Vector2(d, h * 0.4f), apex, Palette.TextMain, 2.5f, true);
+        }
+        else
+        {
+            var apex = c + new Vector2(0, h * 0.4f);
+            ci.DrawLine(c + new Vector2(-d, -h * 0.6f), apex, Palette.TextMain, 2.5f, true);
+            ci.DrawLine(c + new Vector2(d, -h * 0.6f), apex, Palette.TextMain, 2.5f, true);
+        }
     }
 
     /// <summary>

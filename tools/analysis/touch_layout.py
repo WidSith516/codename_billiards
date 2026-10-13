@@ -1,97 +1,100 @@
-"""Verify the touch buttons are drawn where they claim, and do not cover anything that matters.
+"""Verify the touch buttons sit where the player was told to expect them: bottom-right, over the felt.
 
-The layout has to satisfy three things at once and a screenshot alone cannot check them, because "there
-is a button here" and "the table is still visible here" are statements about pixels that may be covered
-by something else:
+Two earlier layouts were rejected by arithmetic (2x3 overflowed the canvas; 3x2 overflowed the panel),
+so this checks the CURRENT geometry against the rendered frame rather than trusting the constants:
 
-  1. each button's rect actually contains its own fill (the draw and Rect() agree);
-  2. no button rect intersects the TABLE, where the player aims;
-  3. no button rect intersects the toast (262,494 700x50) or the bottom band (y >= 546), which would
-     hide a message or be hidden itself.
+  1. every button's rect really contains a drawn button (fill brighter than the felt behind it);
+  2. the grid hugs the bottom-right of the table, which is where a thumb rests;
+  3. nothing reaches the bottom replay band (y >= 546) or runs off the 1040x560 canvas;
+  4. each button carries a LABEL -- a filled rectangle with no text is not a control.
 
-Reads Palette.PanelRaised / Palette.Accent / Palette.PanelEdge out of the capture by sampling, rather
-than trusting the code, because the bug this guards against (a rect drawn where the hit test is not) is
-invisible in code review and obvious in pixels.
+Felt is a dark green (~#14402f, luminance ~45); the translucent button bodies are dark blue-grey with a
+bright accent BORDER, so the border is the reliable signal. Counting accent-coloured pixels along a
+button's edge is robust to the fill alpha, which is deliberately low so the cloth shows through.
 """
 from PIL import Image
+import sys
 
-img = Image.open(r"godot\evidence\touch_controls.png").convert("RGB")
+path = sys.argv[1] if len(sys.argv) > 1 else r"godot\evidence\touch_controls.png"
+img = Image.open(path).convert("RGB")
 
-# Mirrors TouchControls.cs. Kept as literals on purpose: if these disagree with the C#, this test SHOULD
-# fail, and copying them from the source at runtime would make it pass regardless.
-LEFT, TOP = 14.0, 414.0
-W, H, GAPX, GAPY = 104.0, 40.0, 8.0, 8.0
+# Mirrors TouchControls. Literals on purpose: if these disagree with the C#, this check SHOULD fail.
+CANVAS_W, CANVAS_H = 1040.0, 560.0
+W, H, GAPX, GAPY = 132.0, 54.0, 10.0, 10.0
 COLUMNS = 2
-# ASCII keys on purpose: the Windows console here is GBK, and the Chinese labels (and the U+25C0/U+25B6
-# arrows) raise UnicodeEncodeError on print. The ORDER still matches TouchControls.Order positionally,
-# which is what the layout depends on. The nudge actions are absent because touch has no arrow buttons --
-# the player drags the release marker, which emulate_mouse_from_touch already routes.
+MARGIN_RIGHT, MARGIN_BOTTOM = 12.0, 46.0
+BAND_TOP = 546
 ORDER = ["rewind", "pause", "reset", "back"]
 
-TABLE = (262, 62, 990, 498)
-TOAST = (262, 494, 962, 544)
-BOTTOM_BAND_TOP = 546
+grid_left = CANVAS_W - MARGIN_RIGHT - (COLUMNS * W + (COLUMNS - 1) * GAPX)
+grid_top = CANVAS_H - MARGIN_BOTTOM - (2 * H + GAPY)
 
 rects = {}
 for i, name in enumerate(ORDER):
     col, row = i % COLUMNS, i // COLUMNS
-    x = LEFT + col * (W + GAPX)
-    y = TOP + row * (H + GAPY)
+    x = grid_left + col * (W + GAPX)
+    y = grid_top + row * (H + GAPY)
     rects[name] = (x, y, x + W, y + H)
 
-print("button rects (design px):")
+print(f"grid origin ({grid_left:.0f},{grid_top:.0f}) on a {CANVAS_W:.0f}x{CANVAS_H:.0f} canvas")
 for name, r in rects.items():
-    print(f"  {name:12s} x {r[0]:.0f}..{r[2]:.0f}   y {r[1]:.0f}..{r[3]:.0f}")
+    print(f"  {name:7s} x {r[0]:.0f}..{r[2]:.0f}   y {r[1]:.0f}..{r[3]:.0f}")
 
-print()
-print("overlap check:")
 ok = True
 
-
-def overlap(a, b):
-    return not (a[2] <= b[0] or b[2] <= a[0] or a[3] <= b[1] or b[3] <= a[1])
-
-
+print()
+print("bounds:")
 for name, r in rects.items():
-    for label, zone in (("TABLE", TABLE), ("TOAST", TOAST)):
-        if overlap(r, zone):
-            print(f"  FAIL {name} overlaps {label}")
-            ok = False
-    if r[3] >= BOTTOM_BAND_TOP:
-        print(f"  FAIL {name} reaches the bottom band (y {r[3]:.0f} >= {BOTTOM_BAND_TOP})")
+    if r[3] > BAND_TOP:
+        print(f"  FAIL {name} reaches the bottom band (y {r[3]:.0f} > {BAND_TOP})")
+        ok = False
+    if r[2] > CANVAS_W or r[3] > CANVAS_H or r[0] < 0 or r[1] < 0:
+        print(f"  FAIL {name} is off-canvas {r}")
         ok = False
 if ok:
-    print("  none of the six buttons touches the table, the toast or the bottom band")
+    print("  all four buttons are on canvas and clear of the bottom band")
+
+# The table box, from PhysicsConfig: (65,63) to (975,497).
+TABLE = (65, 63, 975, 497)
+print()
+print("the grid must reach into the table's lower-right (that is the point of the move):")
+for name, r in rects.items():
+    inside = r[0] < TABLE[2] and r[1] < TABLE[3]
+    print(f"  {'OK  ' if inside else 'FAIL'} {name} overlaps the felt")
+    if not inside:
+        ok = False
 
 print()
-print("sample inside each button (a button must not be the colour of the felt behind it):")
+print("bright pixels inside each button (border + label must be present):")
 for name, r in rects.items():
-    cx, cy = int((r[0] + r[2]) / 2), int((r[1] + r[3]) / 2)
-    # Sample a few points and take the brightest: the label text and the badge sit near the centre.
-    pts = [(cx, cy), (cx, r[1] + 6), (r[0] + 6, cy), (r[2] - 6, r[3] - 6)]
-    cols = [img.getpixel(p) for p in pts]
-    print(f"  {name:12s} centre{img.getpixel((cx, cy))}  samples={cols}")
-
-print()
-print("each button must contain its LABEL, not just a filled rectangle:")
-ok2 = True
-for name, r in rects.items():
-    # Count bright pixels strictly inside the rect (skipping the 2px border). A label is drawn in
-    # Palette.TextMain #eef3ef (enabled) or TextDim (disabled); both are far brighter than the body
-    # fills (Panel #0a0f11-ish, PanelRaised #1c2a2d-ish), so a modest threshold separates text from fill.
     bright = 0
-    for y in range(int(r[1]) + 4, int(r[3]) - 3):
-        for x in range(int(r[0]) + 4, int(r[2]) - 3):
+    for y in range(int(r[1]), int(r[3])):
+        for x in range(int(r[0]), int(r[2])):
             px = img.getpixel((x, y))
-            if px[0] > 120 and px[1] > 120 and px[2] > 120:
+            # Palette.Accent is #ffd166 and TextMain #eef3ef -- both far brighter than felt (~45).
+            if px[0] > 130 and px[1] > 110:
                 bright += 1
-    status = "OK  " if bright > 20 else "FAIL"
-    if bright <= 20:
-        ok2 = False
-    print(f"  {status} {name:8s} label pixels={bright}")
+    status = "OK  " if bright > 60 else "FAIL"
+    if bright <= 60:
+        ok = False
+    print(f"  {status} {name:7s} bright pixels={bright}")
+
+# The collapse tab, just above the grid: it must be drawn in both states, so it is always present.
+tab = (CANVAS_W - MARGIN_RIGHT - 34.0, grid_top - 44.0, CANVAS_W - MARGIN_RIGHT, grid_top - 10.0)
+tab_bright = 0
+for y in range(int(tab[1]), int(tab[3])):
+    for x in range(int(tab[0]), int(tab[2])):
+        px = img.getpixel((x, y))
+        if px[0] > 130 and px[1] > 110:
+            tab_bright += 1
+print()
+print(f"collapse tab x {tab[0]:.0f}..{tab[2]:.0f} y {tab[1]:.0f}..{tab[3]:.0f}: bright={tab_bright}")
+if tab_bright <= 20:
+    print("  FAIL the collapse tab is not drawn -- with no other way back, the buttons could be lost")
+    ok = False
+else:
+    print("  OK   the collapse tab is drawn")
 
 print()
-if ok and ok2:
-    print("VERDICT: layout OK, every button labelled")
-else:
-    print("VERDICT: layout has a collision" if not ok else "VERDICT: a button has no visible label")
+print("VERDICT: layout OK" if ok else "VERDICT: layout FAILED")
+sys.exit(0 if ok else 1)

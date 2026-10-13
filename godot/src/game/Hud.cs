@@ -319,12 +319,39 @@ public static class Hud
 
         // --- CONTROLS, pinned to the panel bottom --------------------------- y 436 .. 540
         //
-        // ON A TOUCH DEVICE THIS BLOCK IS REPLACED BY THE ON-SCREEN BUTTONS (TouchControls), which are
-        // drawn into exactly this space. The keyboard legend lists R / P / Space / F1 -- keys a phone
-        // does not have -- so printing it there would both crowd out the buttons and describe controls
-        // the player cannot use. The two are mutually exclusive by construction: TouchControls draws
-        // only when a touchscreen is present, and this legend only when it is not.
-        if (m.TouchControls) return;
+        // ON TOUCH THE KEYBOARD LEGEND IS REPLACED BY TOUCH INSTRUCTIONS. The legend lists R / P /
+        // Space / F1 -- keys a phone does not have -- so printing it would describe controls the player
+        // cannot use. (The four transport buttons used to live in this block; they now sit in the
+        // bottom-right corner of the felt, where a thumb rests, so this space is free again and is used
+        // to tell the player how to aim and where the buttons went.)
+        if (m.TouchControls)
+        {
+            var ty = rect.Position.Y + rect.Size.Y - 108;
+            ci.DrawLine(new Vector2(x, ty - 10), new Vector2(x + 226, ty - 10), Palette.PanelEdge, 1.0f);
+            Text(ci, font, x, ty + 4, "操作（触屏）", 12, Palette.TextDim);
+            var touch = new (string Key, string Desc)[]
+            {
+                ("拖动白球", "瞄准（向后拉再松开）"),
+                ("右下角按钮", "回溯 / 暂停 / 重置 / 选关"),
+                ("按住 回溯", "松开才结算速度"),
+                ("小三角", "收起按钮，看全台面"),
+                ("点事件卡", "选择效果"),
+            };
+            var tky = ty + 21;
+            foreach (var line in touch)
+            {
+                Text(ci, font, x, tky, line.Key, 11, Palette.TextMain);
+                Text(ci, font, x + 78, tky, line.Desc, 11, Palette.TextDim);
+                tky += 14;
+            }
+
+            if (!string.IsNullOrEmpty(m.Message))
+            {
+                DrawMessage(ci, font, m);
+            }
+
+            return;
+        }
 
         var cy = rect.Position.Y + rect.Size.Y - 108;
         ci.DrawLine(new Vector2(x, cy - 10), new Vector2(x + 226, cy - 10), Palette.PanelEdge, 1.0f);
@@ -351,21 +378,65 @@ public static class Hud
 
         if (!string.IsNullOrEmpty(m.Message))
         {
-            var rect2 = new Rect2(262, 494, 700, 50);
-            ci.DrawRect(rect2, new Color(0.03f, 0.05f, 0.05f, 0.92f));
-            ci.DrawRect(rect2, m.MessageColor, false, 2.0f);
-            Text(ci, font, rect2.Position.X + 12, rect2.Position.Y + 31, m.Message, 14, m.MessageColor);
+            DrawMessage(ci, font, m);
         }
     }
+
+    /// <summary>
+    /// The notification toast. Shared by both control layouts so the two cannot drift apart in
+    /// position or styling.
+    ///
+    /// ON TOUCH IT IS NARROWER, AND ONLY NARROWER. The buttons sit at x 754..1028, y 396..514, so a
+    /// 700px-wide toast (right edge 962) would have its right-hand end covered by them -- and the toast
+    /// is where errors and rule explanations appear, i.e. exactly the text the player must read.
+    /// Pulling the right edge in to 732 clears the grid horizontally, which is enough on its own.
+    ///
+    /// An earlier attempt ALSO lifted the toast to y 434. That was wrong twice over: it bought nothing
+    /// (the buttons are cleared horizontally), and it pushed the toast up into the touch instructions
+    /// in the side panel -- caught by PanelLayoutSelfCheck, which is exactly why that check exists. A
+    /// floating toast does not have to be ordered against panel blocks; it only has to be on screen,
+    /// clear of the bottom band, and clear of whatever shares its corner.
+    /// </summary>
+    private static void DrawMessage(CanvasItem ci, Font font, Model m)
+    {
+        var rect2 = m.TouchControls
+            ? new Rect2(262, 494, 470, 50)
+            : new Rect2(262, 494, 700, 50);
+        ci.DrawRect(rect2, new Color(0.03f, 0.05f, 0.05f, 0.92f));
+        ci.DrawRect(rect2, m.MessageColor, false, 2.0f);
+        Text(ci, font, rect2.Position.X + 12, rect2.Position.Y + 31, m.Message, 14, m.MessageColor);
+    }
+
+    /// <summary>The toast's rect, so the layout check and the touch-overlap check agree on one value
+    /// rather than each hard-coding a copy that can drift.</summary>
+    public static Rect2 MessageRect(bool touchControls)
+        => touchControls ? new Rect2(262, 494, 470, 50) : new Rect2(262, 494, 700, 50);
 
     /// <summary>
     /// The panel is drawn with absolute coordinates, so this asserts the blocks stay inside the
     /// screen and in order: a later edit cannot silently reintroduce the overlap this layout
     /// replaced.
+    ///
+    /// BOTH LAYOUTS ARE CHECKED, because the toast is NARROWER on touch (it stops at x 732 so the
+    /// bottom-right buttons do not cover it). Checking only the desktop width would let the touch
+    /// layout drift into an overlap unnoticed -- and the toast is where errors appear, so covering it
+    /// is the failure the player would notice first.
+    ///
+    /// THE TOAST IS CHECKED SEPARATELY, NOT AS A PANEL BLOCK. It floats over the TABLE column (x
+    /// 262..732), while every block in the list above lives in the SIDE panel (x 6..252). They cannot
+    /// overlap horizontally, so requiring them to be vertically ordered is meaningless -- and asserting
+    /// it is how an earlier version of this check produced a false failure when the toast was (need-
+    /// lessly) lifted. The toast gets its own rules: on screen, above the bottom band, clear of the
+    /// on-screen buttons.
     /// </summary>
-    public static IReadOnlyList<string> PanelLayoutSelfCheck()
+    public static IReadOnlyList<string> PanelLayoutSelfCheck(bool touchControls = false)
     {
         var problems = new List<string>();
+
+        // The controls block is the same rectangle in both layouts; only its contents differ.
+        var controlsTop = 34 + 476 - 108 - 10;
+        var controlsBottom = 34 + 476 - 108 + 21 + 5 * 14;
+
         var blocks = new (string Name, float Top, float Bottom)[]
         {
             ("strike", 50, 81),
@@ -373,8 +444,7 @@ public static class Hud
             ("budget", 168, 214),
             ("trail", 224, 293),
             ("transport", 342, 358),
-            ("controls", 34 + 476 - 108 - 10, 34 + 476 - 108 + 21 + 5 * 14),
-            ("message", 494, 544),
+            ("controls", controlsTop, controlsBottom),
         };
         for (var i = 0; i < blocks.Length; i++)
         {
@@ -384,8 +454,46 @@ public static class Hud
                 problems.Add($"{blocks[i].Name} overlaps {blocks[i - 1].Name} ({blocks[i].Top} < {blocks[i - 1].Bottom})");
         }
 
+        // The toast: its own rules, because it lives in a different column.
+        var messageRect = MessageRect(touchControls);
+        if (messageRect.Position.X < 262)
+            problems.Add($"the toast starts left of the table column ({messageRect.Position.X})");
+        if (messageRect.Position.Y < 36 || messageRect.Position.Y + messageRect.Size.Y > 560)
+            problems.Add($"the toast is off screen ({messageRect})");
+        // The bottom replay band starts at 546, so the toast must end above it.
+        if (messageRect.Position.Y + messageRect.Size.Y > 546)
+            problems.Add($"the toast reaches the bottom band ({messageRect.Position.Y + messageRect.Size.Y} > 546)");
+
+        // It must also clear the side panel's blocks horizontally -- a toast that widened leftwards
+        // would land on the readouts.
+        if (messageRect.Position.X < 6 + 246)
+            problems.Add($"the toast overlaps the side panel's column ({messageRect.Position.X} < 252)");
+
+        // And the on-screen buttons, which share its corner.
+        if (touchControls)
+        {
+            foreach (var a in System.Enum.GetValues<TouchControls.Action>())
+            {
+                if (Overlaps(messageRect, TouchControls.Rect(a)))
+                {
+                    problems.Add($"the notification toast is covered by the {a} button ({messageRect} vs {TouchControls.Rect(a)})");
+                }
+            }
+
+            if (Overlaps(messageRect, TouchControls.CollapseToggleRect()))
+            {
+                problems.Add($"the notification toast is covered by the collapse tab ({messageRect} vs {TouchControls.CollapseToggleRect()})");
+            }
+        }
+
         return problems;
     }
+
+    private static bool Overlaps(Rect2 a, Rect2 b)
+        => !(a.Position.X + a.Size.X <= b.Position.X
+             || b.Position.X + b.Size.X <= a.Position.X
+             || a.Position.Y + a.Size.Y <= b.Position.Y
+             || b.Position.Y + b.Size.Y <= a.Position.Y);
 
     private static void DrawPowerMeter(CanvasItem ci, Font font, float x, float y, Model m)
     {

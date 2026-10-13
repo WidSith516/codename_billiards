@@ -184,14 +184,25 @@ public sealed class Effects
     ///
     /// This is the "撞击感" dial. At 8 px the warp was measurable but not felt; 30 px visibly drags the
     /// starfield and the cushion edge, and because the envelope is signed it does so in BOTH
-    /// directions over the life of the rebound.
+    /// directions over the life of the rebound. Raised to 36 alongside <see cref="SpentPushPx"/> so the
+    /// two keep the 2:1 ratio that makes "the rail stopped giving" readable, while every contact is now
+    /// strong enough to see on its own.
     /// </summary>
-    public const float BoostedPushPx = 30.0f;
+    public const float BoostedPushPx = 36.0f;
 
-    /// <summary>A hit that did NOT pay out still deforms the cushion -- it just does it faintly, so the
+    /// <summary>
+    /// A hit that did NOT pay out still deforms the cushion -- it just does it more faintly, so the
     /// player can see that energy was spent without confusing it with a full impact. This is the whole
-    /// readout for "the rail stopped giving".</summary>
-    public const float SpentPushPx = 11.0f;
+    /// readout for "the rail stopped giving".
+    ///
+    /// Raised from 11 px, which the player reported as no effect at all. Note the earlier diagnosis in
+    /// this file blamed this number for the missing impacts, and that was WRONG: the real cause was that
+    /// non-cue contacts were never drawn at all (see Play.SpawnRailEffects). This value is now sized on
+    /// its own merits -- clearly visible, while staying comfortably under half of
+    /// <see cref="BoostedPushPx"/> so the payout contrast survives (E08 requires a strictly greater than
+    /// 2:1 ratio, so an exact half would fail it).
+    /// </summary>
+    public const float SpentPushPx = 16.0f;
 
     /// <summary>Spring-back rate, rad/s. The first rebound lands at omega*t = pi, i.e. 0.105 s -- about
     /// six frames at 60 Hz: fast enough to read as an impact, slow enough to see.</summary>
@@ -230,9 +241,14 @@ public sealed class Effects
     /// A rail hit. <paramref name="wall"/> selects the cushion; <paramref name="along"/> is the
     /// position along it in table coordinates; <paramref name="origin"/> is the contact point.
     ///
-    /// <paramref name="boosted"/> separates a hit that actually paid out energy from one that merely
-    /// bounced: the player must be able to SEE whether the rail is still giving, because the allowance
-    /// runs out and there is otherwise no way to tell. A spent hit still deforms, just far less.
+    /// <paramref name="boosted"/> selects the stronger or the weaker displacement magnitude. Both are
+    /// now clearly visible; the ratio between them is the readout for "the rail is still giving energy"
+    /// (see <see cref="SpentPushPx"/>).
+    ///
+    /// Deliberately NOT graded by impact speed. That was tried and reverted: it makes the effect's
+    /// magnitude a function of the ball's velocity, which turns every exact-value assertion about the
+    /// deformation into a range, and the player asked for a stronger impact, not for a speed-dependent
+    /// one. The two-magnitude contrast is the only differentiation this needs.
     /// </summary>
     public void RailHit(int wall, float along, Vector2 origin, Vector2 heading, Color tint, bool boosted)
     {
@@ -363,7 +379,17 @@ public sealed class Effects
                     // The sliver between rest and deformed position, so the bend reads as compressed
                     // material rather than as a line that moved. A quad per segment, ordered around
                     // its perimeter so it is a simple polygon.
-                    ci.DrawColoredPolygon(new[] { previousRest, previous, p, rest }, fill);
+                    //
+                    // SKIPPED WHEN DEGENERATE. At the tails of the Gaussian the deformation is a
+                    // fraction of a pixel -- DentWeight(3 sigma) is ~1.2e-4, so at push 36 that is
+                    // 0.004 px -- and the quad's four corners collapse onto two. A zero-area polygon
+                    // makes Godot's triangulation fail ("Invalid polygon data, triangulation failed"),
+                    // which logged an error every frame and is why this check exists. Drawing it would
+                    // also add nothing: a 0.004 px sliver is below one pixel.
+                    if (QuadArea(previousRest, previous, p, rest) >= 0.01f)
+                    {
+                        ci.DrawColoredPolygon(new[] { previousRest, previous, p, rest }, fill);
+                    }
                 }
 
                 previous = p;
@@ -382,6 +408,18 @@ public sealed class Effects
                 ci.DrawCircle(fx.Origin, DentSigma * 0.5f, glow, true, -1.0f, true);
             }
         }
+    }
+
+    /// <summary>Absolute area of a quad, by the shoelace formula, in px^2. Used to skip the degenerate
+    /// slivers at the tails of the dent: a zero-area polygon makes Godot's triangulation fail and logs
+    /// an error every frame.</summary>
+    private static float QuadArea(Vector2 a, Vector2 b, Vector2 c, Vector2 d)
+    {
+        var sum = a.X * b.Y - b.X * a.Y
+                  + b.X * c.Y - c.X * b.Y
+                  + c.X * d.Y - d.X * c.Y
+                  + d.X * a.Y - a.X * d.Y;
+        return Math.Abs(sum) * 0.5f;
     }
 
     /// <summary>

@@ -395,6 +395,7 @@ public sealed class LevelData
                 case "rewindPotBonus": cfg.RewindPotBonus = v; break;
                 case "rewindMinReleaseFrac": cfg.RewindMinReleaseFrac = v; break;
                 case "pocketRadius": cfg.PocketRadius = v; break;
+                case "cuePocketRadiusScale": cfg.CuePocketRadiusScale = v; break;
                 case "rewindCrawlPxPerS": cfg.RewindCrawlPxPerS = v; break;
                 case "subStepTravelBudget": cfg.SubStepTravelBudget = v; break;
                 case "subStepRelativeTravelBudget": cfg.SubStepRelativeTravelBudget = v; break;

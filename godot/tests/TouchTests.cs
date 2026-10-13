@@ -21,35 +21,61 @@ namespace Rewind.Tests;
 /// </summary>
 public static class TouchTests
 {
-    private static Rect2 R(TouchControls.Action a) => TouchControls.Rect(a);
+    private static Rect2 R(TouchControls.Action a) => TouchControls.Rect(a, collapsed: false);
 
-    /// <summary>T01: the panel is the only block that has room, and the whole grid must fit inside it.</summary>
+    /// <summary>T01: the grid must stay on screen, clear of the bottom replay band, and inside the
+    /// felt's lower-right corner it deliberately overlaps.</summary>
     public static void T01_GridFitsThePanel(TestRunner t)
     {
-        t.Section("T01 - the button grid fits inside the left panel and inside the canvas");
+        t.Section("T01 - the button grid fits the canvas and clears the bottom band");
 
-        // The left panel, from Hud.DrawLeftPanel: new Rect2(6, 34, 246, 476).
-        var panel = new Rect2(6, 34, 246, 476);
-        // The replay band occupies y >= 546, and the canvas ends at 560. Both are hard limits.
+        // The table box, from PhysicsConfig defaults: (65,63) to (975,497).
+        var table = new Rect2(65, 63, 910, 434);
+        // The replay band occupies y >= 546 and the canvas ends at 560. Both are hard limits.
         const float bandTop = 546.0f;
         const float canvasH = 560.0f;
+        const float canvasW = 1040.0f;
 
         foreach (var a in System.Enum.GetValues<TouchControls.Action>())
         {
             var r = R(a);
-            t.Check($"{a}: inside the panel horizontally",
-                r.Position.X >= panel.Position.X && r.Position.X + r.Size.X <= panel.Position.X + panel.Size.X,
-                $"x {r.Position.X}..{r.Position.X + r.Size.X} vs panel {panel.Position.X}..{panel.Position.X + panel.Size.X}");
-            t.Check($"{a}: inside the panel vertically",
-                r.Position.Y >= panel.Position.Y && r.Position.Y + r.Size.Y <= panel.Position.Y + panel.Size.Y,
-                $"y {r.Position.Y}..{r.Position.Y + r.Size.Y} vs panel {panel.Position.Y}..{panel.Position.Y + panel.Size.Y}");
+            t.Check($"{a}: on screen horizontally",
+                r.Position.X >= 0 && r.Position.X + r.Size.X <= canvasW,
+                $"x {r.Position.X}..{r.Position.X + r.Size.X}");
+            t.Check($"{a}: on screen vertically",
+                r.Position.Y >= 0 && r.Position.Y + r.Size.Y <= canvasH,
+                $"y {r.Position.Y}..{r.Position.Y + r.Size.Y}");
             t.Check($"{a}: clears the bottom replay band",
                 r.Position.Y + r.Size.Y <= bandTop,
                 $"bottom {r.Position.Y + r.Size.Y} vs band top {bandTop}");
-            t.Check($"{a}: inside the canvas",
-                r.Position.Y + r.Size.Y <= canvasH,
-                $"bottom {r.Position.Y + r.Size.Y} vs canvas {canvasH}");
+
+            // The buttons are SUPPOSED to overlap the felt now (bottom-right, where a thumb rests), so
+            // this asserts the overlap is real rather than forbidding it. If an edit ever pushed them
+            // off the table entirely the layout would still look fine while no longer being where the
+            // player was told to expect it.
+            t.Check($"{a}: sits over the felt as intended",
+                r.Position.X < table.Position.X + table.Size.X
+                && r.Position.Y < table.Position.Y + table.Size.Y,
+                $"{r} vs table {table}");
+
+            // Tappable size: a target smaller than ~44 px on this canvas is awkward, and the whole point
+            // of the port is that these replace keys.
+            t.Check($"{a}: is a fingertip-sized target",
+                r.Size.X >= 44 && r.Size.Y >= 44, $"size {r.Size}");
         }
+
+        // The collapsed state must make every button unhittable, not merely invisible.
+        var collapsedHit = TouchControls.Hit(new Vector2(900, 480), collapsed: true);
+        t.Check("when collapsed, no button is hit anywhere",
+            collapsedHit == null, $"got {collapsedHit}");
+        var allCollapsed = true;
+        foreach (var a in System.Enum.GetValues<TouchControls.Action>())
+        {
+            if (TouchControls.Rect(a, collapsed: true).Size != Vector2.Zero) allCollapsed = false;
+        }
+
+        t.Check("when collapsed, Rect returns an empty rect for every action", allCollapsed,
+            "a collapsed button still reports a rect, so the hit test and the draw could disagree");
     }
 
     /// <summary>T02: the rect the player sees is the rect the hit test uses, borders included.</summary>
@@ -148,25 +174,46 @@ public static class TouchTests
             TouchControls.Enabled(TouchControls.Action.Back, true, false, false, false, true));
     }
 
-    /// <summary>
-    /// T05: every action has a visible label.
-    ///
-    /// A filled rectangle with no text is an unusable control, and the label lookup is a switch that
-    /// returns a default empty string -- so a newly added action would silently render as a blank box.
-    /// This is the check that catches it.
-    /// </summary>
+    /// <summary>T05: every action has a visible label, and the collapse tab is always available.</summary>
     public static void T05_EveryActionIsLabelled(TestRunner t)
     {
-        t.Section("T05 - every button carries a label");
+        t.Section("T05 - every button carries a label, and the collapse tab is always reachable");
 
         foreach (var a in System.Enum.GetValues<TouchControls.Action>())
         {
             var label = TouchControls.Label(a);
             t.Check($"{a} has a non-empty label", !string.IsNullOrEmpty(label), $"got '{(label ?? "null")}'");
-            // A CJK label must not be so long that it overflows its 104px button at 15px type. 6 chars
-            // is a generous ceiling for this face and leaves margin inside the rect.
+            // A CJK label must not be so long that it overflows its button at 16px type. 6 chars is a
+            // generous ceiling for this face and leaves margin inside the 132px rect.
             t.Check($"{a} label is short enough for the button", label != null && label.Length <= 6,
                 $"'{label}' is {label?.Length} chars");
         }
+
+        // The collapse tab is the ONLY way to bring the buttons back, so it must never be conditional on
+        // the state that hides them. If it were folded into Enabled(), a pending card draw (which
+        // suppresses the buttons) would leave the player with no controls and no way to recall them.
+        var tab = TouchControls.CollapseToggleRect();
+        t.Check("the collapse tab has a real, non-empty rect", tab.Size.X > 0 && tab.Size.Y > 0,
+            $"tab={tab}");
+        t.Check("the collapse tab is on screen", tab.Position.X >= 0
+            && tab.Position.X + tab.Size.X <= 1040.0f
+            && tab.Position.Y >= 0 && tab.Position.Y + tab.Size.Y <= 560.0f, $"tab={tab}");
+
+        // It must not sit on top of any button, or the two would fight for the same tap.
+        foreach (var a in System.Enum.GetValues<TouchControls.Action>())
+        {
+            var r = TouchControls.Rect(a);
+            var disjoint = tab.Position.X + tab.Size.X <= r.Position.X
+                           || r.Position.X + r.Size.X <= tab.Position.X
+                           || tab.Position.Y + tab.Size.Y <= r.Position.Y
+                           || r.Position.Y + r.Size.Y <= tab.Position.Y;
+            t.Check($"the collapse tab does not overlap the {a} button", disjoint, $"tab={tab} button={r}");
+        }
+
+        // And it must be reachable by the same hit test the input uses. It is checked separately from
+        // Hit() because Hit() intentionally knows nothing about the tab (the tab bypasses the Enabled
+        // gate entirely).
+        t.Check("the tab's own rect reports a hit at its centre",
+            tab.HasPoint(tab.Position + tab.Size * 0.5f), $"tab={tab}");
     }
 }
