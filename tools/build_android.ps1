@@ -229,6 +229,13 @@ try {
     Write-Output ""
     Write-Output ("SIGNED APK: $final  ({0:N0} bytes)" -f (Get-Item $final).Length)
 
+    # The pre-signature intermediates are removed. They are not deliverables -- they are what zipalign
+    # and apksigner consume -- but leaving them in dist/ is not merely untidy. `REWIND-unsigned.apk` sits
+    # beside the real APK with a similar name and NO signature block, so shipping it by mistake produces
+    # an app that refuses to install ("package appears to be invalid") with nothing on screen explaining
+    # why. Two such files had accumulated in dist/ before this.
+    Remove-Item $unsigned, $aligned -Force -ErrorAction SilentlyContinue
+
     # The badging dump is REPORTING ONLY, and it must not be able to fail the build.
     # `aapt dump badging` chokes on this manifest ("failed to read attribute 'android:required':
     # attribute is not an integer value") -- an aapt limitation with modern manifest attributes, not a
